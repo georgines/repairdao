@@ -37,11 +37,15 @@ describe("governanca", () => {
   it("valida votacao por tokens e janela aberta", () => {
     expect(propostaPodeReceberVoto(new Date("2026-04-01T10:00:00Z"), new Date("2026-04-01T11:00:00Z"), 1, false)).toBe(true);
     expect(propostaPodeReceberVoto(new Date("2026-04-01T10:00:00Z"), new Date("2026-04-01T11:00:00Z"), 0, false)).toBe(false);
+    expect(propostaPodeReceberVoto(new Date("2026-04-01T12:00:00Z"), new Date("2026-04-01T11:00:00Z"), 1, false)).toBe(false);
+    expect(propostaPodeReceberVoto(new Date("2026-04-01T10:00:00Z"), new Date("2026-04-01T11:00:00Z"), 1, true)).toBe(false);
     expect(garantirPodeReceberVoto(new Date("2026-04-01T10:00:00Z"), new Date("2026-04-01T11:00:00Z"), 1, false)).toBe(true);
+    expect(() => garantirPodeReceberVoto(new Date("2026-04-01T10:00:00Z"), new Date("2026-04-01T11:00:00Z"), 0, false)).toThrow(/nao e permitido/);
   });
 
   it("respeita encerramento, execucao, quorum e transicoes", () => {
     expect(propostaPodeSerEncerrada(new Date("2026-04-02T10:00:00Z"), new Date("2026-04-01T10:00:00Z"))).toBe(true);
+    expect(propostaPodeSerEncerrada(new Date("2026-04-01T09:00:00Z"), new Date("2026-04-01T10:00:00Z"))).toBe(false);
     expect(propostaPodeSerExecutada("encerrada", new Date("2026-04-02T10:00:00Z"), new Date("2026-04-01T10:00:00Z"), false)).toBe(true);
     expect(propostaPodeSerExecutada("encerrada", new Date("2026-04-01T09:00:00Z"), new Date("2026-04-01T10:00:00Z"), false)).toBe(false);
     expect(propostaPodeSerExecutada("encerrada", new Date("2026-04-02T10:00:00Z"), new Date("2026-04-01T10:00:00Z"), true)).toBe(false);
@@ -51,5 +55,6 @@ describe("governanca", () => {
     expect(propostaAprovada(400, 500, 1000)).toBe(false);
     expect(propostaPodeIrParaEstado("rascunho", "ativa")).toBe(true);
     expect(garantirTransicaoProposta("encerrada", "executada")).toBe("executada");
+    expect(() => garantirTransicaoProposta("rascunho", "executada")).toThrow(/Nao e permitido mover a proposta/);
   });
 });

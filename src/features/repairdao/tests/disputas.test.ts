@@ -27,6 +27,7 @@ describe("disputas", () => {
     expect(motivoDisputaValido("falha no servico")).toBe(true);
     expect(disputaPodeReceberEvidencia(new Date("2026-04-01T10:00:00Z"), new Date("2026-04-01T11:00:00Z"), "foto do defeito")).toBe(true);
     expect(disputaPodeReceberEvidencia(new Date("2026-04-01T12:00:00Z"), new Date("2026-04-01T11:00:00Z"), "foto do defeito")).toBe(false);
+    expect(disputaPodeReceberEvidencia(new Date("2026-04-01T10:00:00Z"), new Date("2026-04-01T11:00:00Z"), "   ")).toBe(false);
   });
 
   it("bloqueia voto para parte envolvida, ja votante e sem tokens", () => {
@@ -39,10 +40,12 @@ describe("disputas", () => {
 
   it("respeita transicoes validas e calculo de slash", () => {
     expect(disputaPodeSerAberta("concluida")).toBe(true);
+    expect(disputaPodeSerAberta("em_andamento")).toBe(true);
     expect(disputaPodeIrParaEstado("aberta", "janela_votacao")).toBe(true);
     expect(disputaPodeSerResolvida("encerrada", new Date("2026-04-02T10:00:00Z"), new Date("2026-04-01T10:00:00Z"))).toBe(true);
     expect(disputaPodeSerResolvida("encerrada", new Date("2026-04-01T09:00:00Z"), new Date("2026-04-01T10:00:00Z"))).toBe(false);
     expect(garantirTransicaoDisputa("janela_votacao", "encerrada")).toBe("encerrada");
+    expect(() => garantirTransicaoDisputa("aberta", "resolvida")).toThrow(/Nao e permitido mover a disputa/);
     expect(calcularSlashDoPerdedor(100)).toBe(20);
   });
 });

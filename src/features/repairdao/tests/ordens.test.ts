@@ -39,14 +39,21 @@ describe("ordens", () => {
     expect(ordemPodeIrParaEstado("em_andamento", "concluida")).toBe(true);
     expect(ordemPodeIrParaEstado("concluida", "resolvida")).toBe(false);
     expect(garantirTransicaoOrdem("disputada", "resolvida")).toBe("resolvida");
+    expect(() => garantirTransicaoOrdem("criada", "resolvida")).toThrow(/Nao e permitido mover a ordem/);
   });
 
   it("libera aceitacao, conclusao, confirmacao, disputa e resolucao nos estados corretos", () => {
     expect(ordemPodeReceberOrcamento("criada")).toBe(true);
+    expect(ordemPodeReceberOrcamento("em_andamento")).toBe(false);
     expect(ordemPodeSerAceita("criada")).toBe(true);
+    expect(ordemPodeSerAceita("concluida")).toBe(false);
     expect(ordemPodeSerConcluida("em_andamento")).toBe(true);
+    expect(ordemPodeSerConcluida("criada")).toBe(false);
     expect(ordemPodeSerConfirmada("concluida")).toBe(true);
+    expect(ordemPodeSerConfirmada("em_andamento")).toBe(false);
     expect(ordemPodeEntrarEmDisputa("concluida")).toBe(true);
+    expect(ordemPodeEntrarEmDisputa("criada")).toBe(false);
     expect(ordemPodeSerResolvida("disputada")).toBe(true);
+    expect(ordemPodeSerResolvida("concluida")).toBe(false);
   });
 });

@@ -41,10 +41,17 @@ describe("validacoes", () => {
 
   it("valida tokens, deposito e duracao de proposta", () => {
     expect(tokensPositivos(1)).toBe(true);
+    expect(tokensPositivos(0)).toBe(false);
+    expect(tokensPositivos(undefined)).toBe(false);
     expect(depositoAtivoValido(true)).toBe(true);
+    expect(depositoAtivoValido(false)).toBe(false);
     expect(duracaoPropostaValida(30)).toBe(true);
+    expect(duracaoPropostaValida(31)).toBe(false);
     expect(garantirTokensPositivos(1, "voto")).toBe(1);
+    expect(() => garantirTokensPositivos(0, "voto")).toThrow(/maior que zero/);
+    expect(() => garantirTokensPositivos(undefined, "voto")).toThrow(/maior que zero/);
     expect(garantirDuracaoProposta(30)).toBe(30);
+    expect(() => garantirDuracaoProposta(31)).toThrow(/duracao da proposta/);
     expect(() => garantirDepositoAtivo(false, "acao")).toThrow(/exige deposito ativo/);
   });
 });

@@ -6,7 +6,6 @@ import {
   ehPapelValido,
   garantirPapelValido,
   garantirPodeAbrirDisputa,
-  garantirPodeReceberVoto,
   garantirPodeVotarEmDisputa,
   garantirPodeVotarEmGovernanca,
   papelPodeAbrirDisputa,
