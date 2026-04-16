@@ -10,6 +10,9 @@
 !.yarn/releases
 !.yarn/versions
 .github
+.mcp.json
+.codex
+.vscode
 
 # testing
 /coverage
