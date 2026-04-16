@@ -43,8 +43,12 @@ describe("governanca", () => {
   it("respeita encerramento, execucao, quorum e transicoes", () => {
     expect(propostaPodeSerEncerrada(new Date("2026-04-02T10:00:00Z"), new Date("2026-04-01T10:00:00Z"))).toBe(true);
     expect(propostaPodeSerExecutada("encerrada", new Date("2026-04-02T10:00:00Z"), new Date("2026-04-01T10:00:00Z"), false)).toBe(true);
+    expect(propostaPodeSerExecutada("encerrada", new Date("2026-04-01T09:00:00Z"), new Date("2026-04-01T10:00:00Z"), false)).toBe(false);
+    expect(propostaPodeSerExecutada("encerrada", new Date("2026-04-02T10:00:00Z"), new Date("2026-04-01T10:00:00Z"), true)).toBe(false);
     expect(governancaAtingiuQuorum(1000)).toBe(true);
+    expect(governancaAtingiuQuorum(999)).toBe(false);
     expect(propostaAprovada(600, 200, 1000)).toBe(true);
+    expect(propostaAprovada(400, 500, 1000)).toBe(false);
     expect(propostaPodeIrParaEstado("rascunho", "ativa")).toBe(true);
     expect(garantirTransicaoProposta("encerrada", "executada")).toBe("executada");
   });

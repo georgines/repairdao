@@ -33,14 +33,16 @@ describe("disputas", () => {
     expect(disputaPodeReceberVoto(new Date("2026-04-01T10:00:00Z"), new Date("2026-04-01T11:00:00Z"), 1, false, false)).toBe(true);
     expect(disputaPodeReceberVoto(new Date("2026-04-01T10:00:00Z"), new Date("2026-04-01T11:00:00Z"), 1, true, false)).toBe(false);
     expect(disputaPodeReceberVoto(new Date("2026-04-01T10:00:00Z"), new Date("2026-04-01T11:00:00Z"), 1, false, true)).toBe(false);
+    expect(disputaPodeReceberVoto(new Date("2026-04-01T12:00:00Z"), new Date("2026-04-01T11:00:00Z"), 1, false, false)).toBe(false);
     expect(() => garantirPodeReceberVoto(new Date("2026-04-01T10:00:00Z"), new Date("2026-04-01T11:00:00Z"), 0, false, false)).toThrow(/nao e permitido/);
   });
 
   it("respeita transicoes validas e calculo de slash", () => {
     expect(disputaPodeSerAberta("concluida")).toBe(true);
     expect(disputaPodeIrParaEstado("aberta", "janela_votacao")).toBe(true);
-    expect(garantirTransicaoDisputa("janela_votacao", "encerrada")).toBe("encerrada");
     expect(disputaPodeSerResolvida("encerrada", new Date("2026-04-02T10:00:00Z"), new Date("2026-04-01T10:00:00Z"))).toBe(true);
+    expect(disputaPodeSerResolvida("encerrada", new Date("2026-04-01T09:00:00Z"), new Date("2026-04-01T10:00:00Z"))).toBe(false);
+    expect(garantirTransicaoDisputa("janela_votacao", "encerrada")).toBe("encerrada");
     expect(calcularSlashDoPerdedor(100)).toBe(20);
   });
 });

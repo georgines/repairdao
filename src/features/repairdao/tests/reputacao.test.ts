@@ -34,9 +34,12 @@ describe("reputacao", () => {
   it("calcula badge alinhado a reputacao e respeita elegibilidade", () => {
     expect(calcularNivelBadgePorReputacao(1)).toBe(1);
     expect(calcularNivelBadgePorReputacao(5)).toBe(5);
+    expect(badgePodeExistir(false, 2)).toBe(true);
     expect(badgePodeExistir(true, 1)).toBe(true);
     expect(badgePodeExistir(false, 1)).toBe(false);
     expect(reputacaoPodeCairAbaixoDoNivelUm(0)).toBe(true);
+    expect(reputacaoPodeCairAbaixoDoNivelUm(1)).toBe(false);
     expect(reputacaoValidaParaAvaliacao(5)).toBe(true);
+    expect(reputacaoValidaParaAvaliacao(0)).toBe(false);
   });
 });
