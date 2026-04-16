@@ -37,6 +37,7 @@ describe("validacoes", () => {
     expect(notaEntreUmECinco(5)).toBe(true);
     expect(garantirNotaEntreUmECinco(5, "nota")).toBe(5);
     expect(() => garantirInteiroEntre(6, 1, 5, "faixa")).toThrow(/entre 1 e 5/);
+    expect(() => garantirInteiroEntre(3.5, 1, 5, "faixa")).toThrow(/entre 1 e 5/);
   });
 
   it("valida tokens, deposito e duracao de proposta", () => {
@@ -51,6 +52,7 @@ describe("validacoes", () => {
     expect(() => garantirTokensPositivos(0, "voto")).toThrow(/maior que zero/);
     expect(() => garantirTokensPositivos(undefined, "voto")).toThrow(/maior que zero/);
     expect(garantirDuracaoProposta(30)).toBe(30);
+    expect(() => garantirDuracaoProposta(0)).toThrow(/duracao da proposta/);
     expect(() => garantirDuracaoProposta(31)).toThrow(/duracao da proposta/);
     expect(() => garantirDepositoAtivo(false, "acao")).toThrow(/exige deposito ativo/);
   });

@@ -29,6 +29,7 @@ describe("reputacao", () => {
   it("aplica avaliacao positiva e negativa com clamp em zero", () => {
     expect(aplicarAvaliacaoReputacao(3, { direcao: "positiva", nota: 2 })).toBe(5);
     expect(aplicarAvaliacaoReputacao(3, { direcao: "negativa", nota: 4 })).toBe(0);
+    expect(() => aplicarAvaliacaoReputacao(3, { direcao: "positiva", nota: 0 })).toThrow(/nota da avaliacao/);
   });
 
   it("calcula badge alinhado a reputacao e respeita elegibilidade", () => {
