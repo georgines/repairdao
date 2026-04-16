@@ -63,7 +63,7 @@ export function garantirNotaEntreUmECinco(valor: number, campo = "nota"): number
   return garantirInteiroEntre(valor, 1, 5, campo);
 }
 
-export function tokensPositivos(valor?: number): boolean {
+export function tokensPositivos(valor?: number): valor is number {
   return typeof valor === "number" && numeroMaiorQueZero(valor);
 }
 
