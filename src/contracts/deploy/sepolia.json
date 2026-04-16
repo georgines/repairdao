@@ -1,0 +1,14 @@
+{
+  "network": "sepolia",
+  "deployedAt": "2026-04-16T11:36:42.855Z",
+  "deployer": "0x436EC016dE6dc1aEB1FeE77Ca6d68F2021681C4A",
+  "contracts": {
+    "RepairToken": "0xF61ab5D48bf5B3386C375d9B9965293e131f360A",
+    "RepairBadge": "0x891A989B5eB4c538029F3c9163d64BABc364C5A4",
+    "RepairDeposit": "0xc85B9046ef8118178e2d203504abf27bF8C56403",
+    "RepairReputation": "0x47Bb06A93A31D12FE084D3643F5a51b77817346a",
+    "RepairEscrow": "0xFDc767fb6C646027cb050B78f6bF5c3AfCDa06E7",
+    "RepairGovernance": "0x86bcE88453B112c49EbA51f2751e4a19FCc2D228",
+    "PriceFeed": "0x694AA1769357215DE4FAC081bf1f309aDC325306"
+  }
+}
