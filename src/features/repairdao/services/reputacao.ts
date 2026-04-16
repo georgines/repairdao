@@ -1,6 +1,6 @@
 import { REPAIRDAO_LIMITES } from "@/features/repairdao/constants";
-import { RepairDAODominioError } from "@/features/repairdao/errors";
 import { type AvaliacaoReputacaoRepairDAO, type DirecaoAvaliacaoRepairDAO, type NivelReputacaoRepairDAO, DIRECOES_AVALIACAO_REPAIRDAO } from "@/features/repairdao/types";
+import { garantirValorPermitido, clamp } from "@/features/repairdao/services/shared";
 import { garantirNotaEntreUmECinco, notaEntreUmECinco } from "@/features/repairdao/services/validacoes";
 
 export function ehDirecaoAvaliacaoValida(valor: string): valor is DirecaoAvaliacaoRepairDAO {
@@ -8,24 +8,13 @@ export function ehDirecaoAvaliacaoValida(valor: string): valor is DirecaoAvaliac
 }
 
 export function garantirDirecaoAvaliacao(valor: string): DirecaoAvaliacaoRepairDAO {
-  if (!ehDirecaoAvaliacaoValida(valor)) {
-    throw new RepairDAODominioError(
-      "direcao_avaliacao_invalida",
-      `Direcao de avaliacao invalida: ${valor}`,
-      { valor },
-    );
-  }
-
-  return valor;
+  return garantirValorPermitido(valor, DIRECOES_AVALIACAO_REPAIRDAO, "direcao_avaliacao_invalida", `Direcao de avaliacao invalida: ${valor}`);
 }
 
 export function nivelReputacaoDoTotalDePontos(pontos: number): NivelReputacaoRepairDAO {
   const nivelCalculado = Math.floor(pontos / REPAIRDAO_LIMITES.pontosParaSubirNivel) + 1;
 
-  return Math.min(
-    REPAIRDAO_LIMITES.reputacaoMaxima,
-    Math.max(REPAIRDAO_LIMITES.reputacaoMinima, nivelCalculado),
-  ) as NivelReputacaoRepairDAO;
+  return clamp(nivelCalculado, REPAIRDAO_LIMITES.reputacaoMinima, REPAIRDAO_LIMITES.reputacaoMaxima) as NivelReputacaoRepairDAO;
 }
 
 export function aplicarAvaliacaoReputacao(
@@ -43,10 +32,7 @@ export function aplicarAvaliacaoReputacao(
 export function calcularNivelBadgePorReputacao(
   nivelReputacao: NivelReputacaoRepairDAO,
 ): NivelReputacaoRepairDAO {
-  return Math.min(
-    REPAIRDAO_LIMITES.badgeMaximo,
-    Math.max(REPAIRDAO_LIMITES.badgeMinimo, nivelReputacao),
-  ) as NivelReputacaoRepairDAO;
+  return clamp(nivelReputacao, REPAIRDAO_LIMITES.badgeMinimo, REPAIRDAO_LIMITES.badgeMaximo) as NivelReputacaoRepairDAO;
 }
 
 export function badgePodeExistir(

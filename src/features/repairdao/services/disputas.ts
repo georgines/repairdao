@@ -1,6 +1,7 @@
 import { REPAIRDAO_LIMITES } from "@/features/repairdao/constants";
 import { RepairDAODominioError } from "@/features/repairdao/errors";
 import { ESTADOS_DISPUTA_REPAIRDAO, type EstadoDisputaRepairDAO } from "@/features/repairdao/types";
+import { garantirTransicaoEstado, garantirValorPermitido, clamp } from "@/features/repairdao/services/shared";
 import { garantirNumeroMaiorQueZero, garantirTextoNaoVazio, garantirTokensPositivos, textoNaoVazio, tokensPositivos } from "@/features/repairdao/services/validacoes";
 
 const TRANSICOES_VALIDAS: Record<EstadoDisputaRepairDAO, readonly EstadoDisputaRepairDAO[]> = {
@@ -15,15 +16,7 @@ export function ehEstadoDisputaValido(valor: string): valor is EstadoDisputaRepa
 }
 
 export function garantirEstadoDisputa(valor: string): EstadoDisputaRepairDAO {
-  if (!ehEstadoDisputaValido(valor)) {
-    throw new RepairDAODominioError(
-      "estado_disputa_invalido",
-      `Estado de disputa invalido: ${valor}`,
-      { valor },
-    );
-  }
-
-  return valor;
+  return garantirValorPermitido(valor, ESTADOS_DISPUTA_REPAIRDAO, "estado_disputa_invalido", `Estado de disputa invalido: ${valor}`);
 }
 
 export function motivoDisputaValido(motivo: string): boolean {
@@ -93,20 +86,12 @@ export function garantirTransicaoDisputa(
   estadoAtual: EstadoDisputaRepairDAO,
   proximoEstado: EstadoDisputaRepairDAO,
 ): EstadoDisputaRepairDAO {
-  if (!disputaPodeIrParaEstado(estadoAtual, proximoEstado)) {
-    throw new RepairDAODominioError(
-      "transicao_disputa_invalida",
-      `Nao e permitido mover a disputa de ${estadoAtual} para ${proximoEstado}.`,
-      { estadoAtual, proximoEstado },
-    );
-  }
-
-  return proximoEstado;
+  return garantirTransicaoEstado(estadoAtual, proximoEstado, TRANSICOES_VALIDAS, "transicao_disputa_invalida", "a disputa");
 }
 
 export function calcularSlashDoPerdedor(depositoAtual: number): number {
   const depositoValido = garantirNumeroMaiorQueZero(depositoAtual, "deposito atual");
   const slash = Math.floor(depositoValido * REPAIRDAO_LIMITES.slashPerdedorDisputaPercentual);
 
-  return Math.min(slash, depositoValido);
+  return clamp(slash, 0, depositoValido);
 }

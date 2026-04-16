@@ -1,5 +1,6 @@
 import { RepairDAODominioError } from "@/features/repairdao/errors";
 import { PAPEIS_REPAIRDAO, type ContextoPapelRepairDAO, type PapelRepairDAO } from "@/features/repairdao/types";
+import { garantirValorPermitido } from "@/features/repairdao/services/shared";
 import {
   depositoAtivoValido,
   garantirDepositoAtivo,
@@ -12,11 +13,7 @@ export function ehPapelValido(valor: string): valor is PapelRepairDAO {
 }
 
 export function garantirPapelValido(valor: string): PapelRepairDAO {
-  if (!ehPapelValido(valor)) {
-    throw new RepairDAODominioError("papel_invalido", `Papel invalido: ${valor}`, { valor });
-  }
-
-  return valor;
+  return garantirValorPermitido(valor, PAPEIS_REPAIRDAO, "papel_invalido", `Papel invalido: ${valor}`);
 }
 
 export function clientePodeCriarOrdem(contexto: ContextoPapelRepairDAO): boolean {

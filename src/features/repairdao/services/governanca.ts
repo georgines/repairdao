@@ -1,6 +1,7 @@
 import { REPAIRDAO_LIMITES } from "@/features/repairdao/constants";
 import { RepairDAODominioError } from "@/features/repairdao/errors";
 import { ESTADOS_PROPOSTA_REPAIRDAO, type EstadoPropostaRepairDAO } from "@/features/repairdao/types";
+import { garantirTransicaoEstado, garantirValorPermitido } from "@/features/repairdao/services/shared";
 import { duracaoPropostaValida, garantirDuracaoProposta, garantirNumeroMaiorQueZero, textoNaoVazio, tokensPositivos, garantirTokensPositivos } from "@/features/repairdao/services/validacoes";
 
 const TRANSICOES_VALIDAS: Record<EstadoPropostaRepairDAO, readonly EstadoPropostaRepairDAO[]> = {
@@ -16,15 +17,7 @@ export function ehEstadoPropostaValido(valor: string): valor is EstadoPropostaRe
 }
 
 export function garantirEstadoProposta(valor: string): EstadoPropostaRepairDAO {
-  if (!ehEstadoPropostaValido(valor)) {
-    throw new RepairDAODominioError(
-      "estado_proposta_invalido",
-      `Estado de proposta invalido: ${valor}`,
-      { valor },
-    );
-  }
-
-  return valor;
+  return garantirValorPermitido(valor, ESTADOS_PROPOSTA_REPAIRDAO, "estado_proposta_invalido", `Estado de proposta invalido: ${valor}`);
 }
 
 export function propostaPodeSerCriada(
@@ -119,13 +112,5 @@ export function garantirTransicaoProposta(
   estadoAtual: EstadoPropostaRepairDAO,
   proximoEstado: EstadoPropostaRepairDAO,
 ): EstadoPropostaRepairDAO {
-  if (!propostaPodeIrParaEstado(estadoAtual, proximoEstado)) {
-    throw new RepairDAODominioError(
-      "transicao_proposta_invalida",
-      `Nao e permitido mover a proposta de ${estadoAtual} para ${proximoEstado}.`,
-      { estadoAtual, proximoEstado },
-    );
-  }
-
-  return proximoEstado;
+  return garantirTransicaoEstado(estadoAtual, proximoEstado, TRANSICOES_VALIDAS, "transicao_proposta_invalida", "a proposta");
 }

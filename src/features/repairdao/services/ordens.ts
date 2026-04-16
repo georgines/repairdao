@@ -1,5 +1,5 @@
-import { RepairDAODominioError } from "@/features/repairdao/errors";
 import { ESTADOS_ORDEM_REPAIRDAO, type EstadoOrdemRepairDAO } from "@/features/repairdao/types";
+import { garantirTransicaoEstado, garantirValorPermitido } from "@/features/repairdao/services/shared";
 import { garantirNumeroMaiorQueZero, garantirTextoNaoVazio, textoNaoVazio } from "@/features/repairdao/services/validacoes";
 
 const TRANSICOES_VALIDAS: Record<EstadoOrdemRepairDAO, readonly EstadoOrdemRepairDAO[]> = {
@@ -15,11 +15,7 @@ export function ehEstadoOrdemValido(valor: string): valor is EstadoOrdemRepairDA
 }
 
 export function garantirEstadoOrdem(valor: string): EstadoOrdemRepairDAO {
-  if (!ehEstadoOrdemValido(valor)) {
-    throw new RepairDAODominioError("estado_ordem_invalido", `Estado de ordem invalido: ${valor}`, { valor });
-  }
-
-  return valor;
+  return garantirValorPermitido(valor, ESTADOS_ORDEM_REPAIRDAO, "estado_ordem_invalido", `Estado de ordem invalido: ${valor}`);
 }
 
 export function ordemPodeIrParaEstado(
@@ -33,15 +29,7 @@ export function garantirTransicaoOrdem(
   estadoAtual: EstadoOrdemRepairDAO,
   proximoEstado: EstadoOrdemRepairDAO,
 ): EstadoOrdemRepairDAO {
-  if (!ordemPodeIrParaEstado(estadoAtual, proximoEstado)) {
-    throw new RepairDAODominioError(
-      "transicao_ordem_invalida",
-      `Nao e permitido mover a ordem de ${estadoAtual} para ${proximoEstado}.`,
-      { estadoAtual, proximoEstado },
-    );
-  }
-
-  return proximoEstado;
+  return garantirTransicaoEstado(estadoAtual, proximoEstado, TRANSICOES_VALIDAS, "transicao_ordem_invalida", "a ordem");
 }
 
 export function ordemPodeSerCriada(descricao: string): boolean {
