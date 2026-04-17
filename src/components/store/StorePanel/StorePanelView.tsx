@@ -1,31 +1,39 @@
-import { Button, Card, Divider, Group, Stack, Text, TextInput, Title } from "@mantine/core";
-import { formatarUSD } from "@/services/wallet";
+import { Badge, Button, Card, Divider, Group, Stack, Text, TextInput, Title } from "@mantine/core";
 import { formatarNumero } from "@/services/wallet/formatters";
 
 export type StorePanelViewProps = {
 	ethBalance: string;
-	usdBalance: string;
+	rptBalance: string;
+	tokensPerEth: string;
+	rptPreview: string;
 	walletNotice: string | null;
 	quantityEth: string;
 	buying: boolean;
+	depositing: boolean;
 	error: string | null;
 	onQuantityEthChange: (value: string) => void;
 	onBuy: () => void;
+	onDeposit: () => void;
 	connected: boolean;
 };
 
 export function StorePanelView({
 	ethBalance,
-	usdBalance,
+	rptBalance,
+	tokensPerEth,
+	rptPreview,
 	walletNotice,
 	quantityEth,
 	buying,
+	depositing,
 	error,
 	onQuantityEthChange,
 	onBuy,
+	onDeposit,
 	connected,
 }: StorePanelViewProps) {
 	const podeComprar = connected && !buying;
+	const podeDepositar = connected && !depositing && Number(rptBalance) > 0;
 
 	return (
 		<Card
@@ -47,11 +55,23 @@ export function StorePanelView({
 				</Stack>
 
 				<Stack gap={2}>
-					<Text size="sm" fw={600}>
-						ETH {formatarNumero(ethBalance, 4)}
+					<Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+						Preço atual
+					</Text>
+					<Badge variant="light" color="green" size="lg">
+						1 ETH = {formatarNumero(tokensPerEth, 2)} RPT
+					</Badge>
+				</Stack>
+
+				<Stack gap={4}>
+					<Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+						Saldo atual
+					</Text>
+					<Text size="xl" fw={800}>
+						RPT {formatarNumero(rptBalance, 2)}
 					</Text>
 					<Text size="sm" c="dimmed">
-						USD {formatarUSD(usdBalance)}
+						ETH {formatarNumero(ethBalance, 4)}
 					</Text>
 					{walletNotice ? (
 						<Text size="xs" c="dimmed">
@@ -64,16 +84,22 @@ export function StorePanelView({
 
 				<Stack gap="sm">
 					<TextInput
-						label="Quantidade em ETH"
+						label="Quanto ETH quer gastar"
 						placeholder="0,10"
 						inputMode="decimal"
 						value={quantityEth}
 						onChange={(event) => onQuantityEthChange(event.currentTarget.value)}
 					/>
+					<Text size="sm" c="dimmed">
+						Você receberá cerca de {formatarNumero(rptPreview, 2)} RPT
+					</Text>
 
 					<Group grow align="stretch">
 						<Button onClick={onBuy} disabled={!podeComprar} loading={buying}>
-							Trocar ETH por RPT
+							Comprar RPT
+						</Button>
+						<Button variant="light" onClick={onDeposit} disabled={!podeDepositar} loading={depositing}>
+							Depositar RPT e ativar conta
 						</Button>
 					</Group>
 				</Stack>

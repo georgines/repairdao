@@ -4,12 +4,22 @@ import { describe, expect, it, vi } from "vitest";
 import { MantineProvider } from "@mantine/core";
 
 const storeMocks = vi.hoisted(() => ({
+	carregarMetricasDaLoja: vi.fn(),
 	obterEthereumProvider: vi.fn(),
+	depositarTokens: vi.fn(),
 	useWalletStatus: vi.fn(),
+}));
+
+vi.mock("@/services/store/storeMetrics", () => ({
+	carregarMetricasDaLoja: storeMocks.carregarMetricasDaLoja,
 }));
 
 vi.mock("@/services/wallet/provider", () => ({
 	obterEthereumProvider: storeMocks.obterEthereumProvider,
+}));
+
+vi.mock("@/services/store/tokenDeposit", () => ({
+	depositarTokens: storeMocks.depositarTokens,
 }));
 
 vi.mock("@/hooks/useWalletStatus", () => ({
@@ -35,14 +45,20 @@ describe("app/store/page", () => {
 				usdBalance: "0",
 			},
 		});
+		storeMocks.carregarMetricasDaLoja.mockResolvedValue({
+			rptBalanceRaw: 0n,
+			rptBalance: "0",
+			tokensPerEthRaw: 0n,
+			tokensPerEth: "0",
+		});
 
 		const markup = renderWithMantine(<StorePage />);
 
 		expect(markup).toContain("Trocar ETH por RPT");
-		expect(markup).toContain("Quantidade em ETH");
+		expect(markup).toContain("Quanto ETH quer gastar");
 		expect(markup).not.toContain("Conectar carteira");
 		expect(markup).toContain("ETH 0,0000");
-		expect(markup).toContain("USD US$");
+		expect(markup).toContain("RPT 0,00");
 		expect(markup).toContain("Carteira desconectada");
 	});
 });

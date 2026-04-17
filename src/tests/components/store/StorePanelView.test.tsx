@@ -45,41 +45,52 @@ describe("StorePanelView", () => {
 		const markup = renderWithMantine(
 			<StorePanelView
 				ethBalance="0.5"
-				usdBalance="1000"
+				rptBalance="10"
+				tokensPerEth="250"
+				rptPreview="62.5"
 				walletNotice={null}
 				quantityEth="0,25"
 				buying={false}
+				depositing={false}
 				error={null}
 				onQuantityEthChange={() => {}}
 				onBuy={() => {}}
+				onDeposit={() => {}}
 				connected={true}
 			/>,
 		);
 
 		expect(markup).toContain("Trocar ETH por RPT");
+		expect(markup).toContain("1 ETH = 250,00 RPT");
+		expect(markup).toContain("RPT 10,00");
 		expect(markup).toContain("ETH 0,5000");
-		expect(markup).toContain("USD US$");
-		expect(markup).toContain("Quantidade em ETH");
+		expect(markup).toContain("Quanto ETH quer gastar");
+		expect(markup).toContain("Você receberá cerca de 62,50 RPT");
 	});
 
 	it("mostra zero e aviso quando a carteira esta desconectada", () => {
 		const markup = renderWithMantine(
 			<StorePanelView
 				ethBalance="0"
-				usdBalance="0"
+				rptBalance="0"
+				tokensPerEth="0"
+				rptPreview="0"
 				walletNotice="Carteira desconectada"
 				quantityEth="0,10"
 				buying={false}
+				depositing={false}
 				error={null}
 				onQuantityEthChange={() => {}}
 				onBuy={() => {}}
+				onDeposit={() => {}}
 				connected={false}
 			/>,
 		);
 
 		expect(markup).toContain("ETH 0,0000");
-		expect(markup).toContain("USD US$");
+		expect(markup).toContain("RPT 0,00");
 		expect(markup).toContain("Carteira desconectada");
+		expect(markup).toContain("1 ETH = 0,00 RPT");
 	});
 
 	it("propaga mudanças e ações da interface", async () => {
@@ -91,13 +102,17 @@ describe("StorePanelView", () => {
 				<MantineProvider>
 					<StorePanelView
 						ethBalance="0"
-						usdBalance="0"
+						rptBalance="0"
+						tokensPerEth="0"
+						rptPreview="0"
 						walletNotice="Carteira desconectada"
 						quantityEth="0,10"
 						buying={false}
+						depositing={false}
 						error="falha de compra"
 						onQuantityEthChange={onQuantityEthChange}
 						onBuy={onBuy}
+						onDeposit={vi.fn()}
 						connected={true}
 					/>
 				</MantineProvider>,

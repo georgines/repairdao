@@ -3,6 +3,8 @@ import type { InterfaceAbi } from "ethers";
 
 export const REPAIR_TOKEN_ABI = [
   { type: "function", name: "buy", stateMutability: "payable", inputs: [], outputs: [] },
+  { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ name: "balance", type: "uint256" }] },
+  { type: "function", name: "tokensPerEth", stateMutability: "view", inputs: [], outputs: [{ name: "rate", type: "uint256" }] },
   {
     type: "function",
     name: "mint",

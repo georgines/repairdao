@@ -6,13 +6,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MantineProvider } from "@mantine/core";
 
 const serviceMocks = vi.hoisted(() => ({
+	carregarMetricasDaLoja: vi.fn(),
 	comprarToken: vi.fn(),
+	depositarTokens: vi.fn(),
 	obterEthereumProvider: vi.fn(),
 	useWalletStatus: vi.fn(),
 }));
 
+vi.mock("@/services/store/storeMetrics", () => ({
+	carregarMetricasDaLoja: serviceMocks.carregarMetricasDaLoja,
+}));
+
 vi.mock("@/services/wallet/tokenPurchase", () => ({
 	comprarToken: serviceMocks.comprarToken,
+}));
+
+vi.mock("@/services/store/tokenDeposit", () => ({
+	depositarTokens: serviceMocks.depositarTokens,
 }));
 
 vi.mock("@/services/wallet/provider", () => ({
@@ -62,6 +72,12 @@ describe("StorePanel", () => {
 				usdBalance: "1000",
 			},
 		});
+		serviceMocks.carregarMetricasDaLoja.mockResolvedValue({
+			rptBalanceRaw: 5500000000000000000n,
+			rptBalance: "5.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
+		});
 	});
 
 	afterEach(async () => {
@@ -85,7 +101,7 @@ describe("StorePanel", () => {
 		});
 
 		const buttons = Array.from(container.querySelectorAll("button"));
-		const buyButton = buttons.find((button) => button.textContent?.includes("Trocar ETH por RPT"));
+		const buyButton = buttons.find((button) => button.textContent?.includes("Comprar RPT"));
 		if (!buyButton) {
 			throw new Error("Botao de compra nao encontrado.");
 		}
@@ -96,7 +112,7 @@ describe("StorePanel", () => {
 		});
 
 		expect(serviceMocks.comprarToken).toHaveBeenCalledWith(expect.any(Object), "0,10");
-		expect(container.textContent).toContain("ETH 0,5000");
+		expect(serviceMocks.carregarMetricasDaLoja).toHaveBeenCalledWith(expect.any(Object), "0x1234567890abcdef1234567890abcdef12345678");
 	});
 
 	it("mostra zero quando a carteira esta desconectada", async () => {
@@ -122,6 +138,7 @@ describe("StorePanel", () => {
 
 		expect(container.textContent).toContain("ETH 0,0000");
 		expect(container.textContent).toContain("Carteira desconectada");
+		expect(container.textContent).toContain("RPT 0,00");
 		expect(serviceMocks.comprarToken).not.toHaveBeenCalled();
 	});
 });
