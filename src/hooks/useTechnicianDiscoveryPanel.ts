@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useWalletStatus } from "@/hooks/useWalletStatus";
+import { obterEthereumProvider } from "@/services/wallet/provider";
 import type { UserSearchFilters, UserSummary } from "@/services/users";
 import {
 	filterUsersByReputation,
@@ -8,6 +10,8 @@ import {
 	searchUsers,
 	sortUsers,
 } from "@/services/users";
+import { createServiceRequest } from "@/services/serviceRequests/serviceRequestClient";
+import { criarOrdemServicoNoContrato } from "@/services/serviceRequests/serviceRequestBlockchain";
 
 type UseTechnicianDiscoveryPanelProps = {
 	initialTechnicians: UserSummary[];
@@ -23,23 +27,32 @@ type UseTechnicianDiscoveryPanelResult = {
 	technicianModalMode: "details" | "hire" | null;
 	technicianModalOpened: boolean;
 	hasResults: boolean;
+	serviceDescription: string;
+	submittingRequest: boolean;
+	requestError: string | null;
 	onQueryChange: (value: string) => void;
 	onMinReputationChange: (value: string | number) => void;
 	onSelectTechnician: (address: string) => void;
 	onHireTechnician: (address: string) => void;
 	onCloseTechnicianModal: () => void;
-	onConfirmTechnicianHire: () => void;
+	onServiceDescriptionChange: (value: string) => void;
+	onConfirmTechnicianHire: () => Promise<void>;
 	onClearFilters: () => void;
 };
 
 export function useTechnicianDiscoveryPanel({
 	initialTechnicians,
 }: UseTechnicianDiscoveryPanelProps): UseTechnicianDiscoveryPanelResult {
+	const { state } = useWalletStatus();
+	const ethereum = useMemo(() => obterEthereumProvider(), []);
 	const [query, setQuery] = useState("");
 	const [minReputation, setMinReputation] = useState(0);
 	const [selectedAddress, setSelectedAddress] = useState<string | null>(initialTechnicians.at(0)?.address ?? null);
 	const [contractedTechnicianAddress, setContractedTechnicianAddress] = useState<string | null>(null);
 	const [technicianModalMode, setTechnicianModalMode] = useState<"details" | "hire" | null>(null);
+	const [serviceDescription, setServiceDescription] = useState("");
+	const [submittingRequest, setSubmittingRequest] = useState(false);
+	const [requestError, setRequestError] = useState<string | null>(null);
 
 	const filtros = useMemo<UserSearchFilters>(
 		() => ({
@@ -81,19 +94,45 @@ export function useTechnicianDiscoveryPanel({
 	function onHireTechnician(address: string) {
 		setSelectedAddress(address);
 		setTechnicianModalMode("hire");
+		setRequestError(null);
 	}
 
 	function onCloseTechnicianModal() {
 		setTechnicianModalMode(null);
+		setServiceDescription("");
+		setRequestError(null);
 	}
 
-	function onConfirmTechnicianHire() {
+	async function onConfirmTechnicianHire() {
 		if (!selectedTechnician) {
 			return;
 		}
 
-		setContractedTechnicianAddress(selectedTechnician.address);
-		setTechnicianModalMode(null);
+		if (!state.connected || !state.address) {
+			setRequestError("Conecte a carteira para contratar o servico.");
+			return;
+		}
+
+		setSubmittingRequest(true);
+		setRequestError(null);
+
+		try {
+			await criarOrdemServicoNoContrato(ethereum, serviceDescription);
+			await createServiceRequest({
+				clientAddress: state.address,
+				clientName: state.address,
+				technicianAddress: selectedTechnician.address,
+				technicianName: selectedTechnician.name,
+				description: serviceDescription,
+			});
+			setContractedTechnicianAddress(selectedTechnician.address);
+			setTechnicianModalMode(null);
+			setServiceDescription("");
+		} catch (error) {
+			setRequestError(error instanceof Error ? error.message : "Nao foi possivel criar a ordem de servico.");
+		} finally {
+			setSubmittingRequest(false);
+		}
 	}
 
 	function onClearFilters() {
@@ -113,12 +152,16 @@ export function useTechnicianDiscoveryPanel({
 		technicianModalMode,
 		technicianModalOpened: technicianModalMode !== null && selectedTechnician !== null,
 		hasResults: filteredTechnicians.length > 0,
+		serviceDescription,
+		submittingRequest,
+		requestError,
 		onQueryChange,
 		onMinReputationChange,
 		onSelectTechnician,
 		onHireTechnician,
 		onCloseTechnicianModal,
 		onConfirmTechnicianHire,
+		onServiceDescriptionChange: setServiceDescription,
 		onClearFilters,
 	};
 }

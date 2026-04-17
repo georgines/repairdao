@@ -19,6 +19,13 @@ enum UserAuditEventType {
   ROLE_CHANGED
 }
 
+enum ServiceRequestStatus {
+  ABERTA
+  ACEITA
+  ORCADA
+  ACEITO_CLIENTE
+}
+
 model UserProfile {
   id           Int      @id @default(autoincrement())
   address      String   @unique
@@ -48,4 +55,23 @@ model UserAuditEvent {
   createdAt DateTime                 @default(now())
 
   @@index([address, eventType])
+}
+
+model ServiceRequest {
+  id                Int                  @id @default(autoincrement())
+  clientAddress     String
+  clientName        String
+  technicianAddress String
+  technicianName    String
+  description       String
+  status            ServiceRequestStatus @default(ABERTA)
+  budgetAmount      Int?
+  acceptedAt        DateTime?
+  budgetSentAt      DateTime?
+  clientAcceptedAt  DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  @@index([clientAddress, status])
+  @@index([technicianAddress, status])
 }

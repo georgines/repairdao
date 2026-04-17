@@ -12,8 +12,10 @@ import {
 	Table,
 	Text,
 	TextInput,
+	Textarea,
 	Title,
 } from "@mantine/core";
+import Link from "next/link";
 import type { UserSummary } from "@/services/users";
 
 export type TechnicianDiscoveryPanelViewProps = {
@@ -26,12 +28,16 @@ export type TechnicianDiscoveryPanelViewProps = {
 	technicianModalMode: "details" | "hire" | null;
 	technicianModalOpened: boolean;
 	hasResults: boolean;
+	serviceDescription: string;
+	submittingRequest: boolean;
+	requestError: string | null;
 	onQueryChange: (value: string) => void;
 	onMinReputationChange: (value: string | number) => void;
 	onSelectTechnician: (address: string) => void;
 	onHireTechnician: (address: string) => void;
 	onCloseTechnicianModal: () => void;
-	onConfirmTechnicianHire: () => void;
+	onServiceDescriptionChange: (value: string) => void;
+	onConfirmTechnicianHire: () => Promise<void>;
 	onClearFilters: () => void;
 };
 
@@ -69,11 +75,15 @@ export function TechnicianDiscoveryPanelView({
 	technicianModalMode,
 	technicianModalOpened,
 	hasResults,
+	serviceDescription,
+	submittingRequest,
+	requestError,
 	onQueryChange,
 	onMinReputationChange,
 	onSelectTechnician,
 	onHireTechnician,
 	onCloseTechnicianModal,
+	onServiceDescriptionChange,
 	onConfirmTechnicianHire,
 	onClearFilters,
 }: TechnicianDiscoveryPanelViewProps) {
@@ -105,6 +115,9 @@ export function TechnicianDiscoveryPanelView({
 								contratado: {contractedTechnician.name}
 							</Badge>
 						) : null}
+						<Button component={Link} href="/services" variant="light" size="xs">
+							Servicos
+						</Button>
 					</Group>
 				</Stack>
 			</Card>
@@ -231,13 +244,31 @@ export function TechnicianDiscoveryPanelView({
 							<Card withBorder radius="md" padding="md" shadow="none">
 								<Stack gap="sm">
 									<Text size="sm">
-										Confirme a contratacao para marcar este tecnico como selecionado para o servico.
+										Descreva o servico para abrir uma ordem de servico para este tecnico.
 									</Text>
+									<Textarea
+										label="Descricao do servico"
+										placeholder="Explique o problema, o local e o que precisa ser feito."
+										minRows={4}
+										value={serviceDescription}
+										onChange={(event) => onServiceDescriptionChange(event.currentTarget.value)}
+									/>
+									{requestError ? (
+										<Text size="sm" c="red" role="status" aria-live="assertive">
+											{requestError}
+										</Text>
+									) : null}
 									<Group justify="flex-end">
 										<Button variant="light" onClick={onCloseTechnicianModal}>
 											Cancelar
 										</Button>
-										<Button onClick={onConfirmTechnicianHire}>Contratar tecnico</Button>
+										<Button
+											onClick={() => void onConfirmTechnicianHire()}
+											loading={submittingRequest}
+											disabled={!serviceDescription.trim()}
+										>
+											Contratar tecnico
+										</Button>
 									</Group>
 								</Stack>
 							</Card>

@@ -30,6 +30,7 @@ describe("components/ui/NavBar/NavBar", () => {
 		expect(markup).toContain("Minha conta");
 		expect(markup).toContain("Loja");
 		expect(markup).toContain("Elegibilidade");
+		expect(markup).toContain("Servicos");
 		expect(markup).toContain("Tecnicos");
 	});
 

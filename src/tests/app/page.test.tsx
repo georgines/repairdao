@@ -14,6 +14,8 @@ describe("app/page", () => {
 
 		expect(markup).toContain("Economia inicial do RepairDAO");
 		expect(markup).toContain("Ir para a loja");
+		expect(markup).toContain("Ver servicos");
 		expect(markup).toContain('href="/store"');
+		expect(markup).toContain('href="/services"');
 	});
 });

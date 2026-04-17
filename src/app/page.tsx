@@ -19,6 +19,9 @@ export default function Home() {
           <Button component="a" href="/store" size="md" radius="sm">
             Ir para a loja
           </Button>
+          <Button component="a" href="/services" size="md" radius="sm" variant="light">
+            Ver servicos
+          </Button>
         </Group>
       </Stack>
     </Card>

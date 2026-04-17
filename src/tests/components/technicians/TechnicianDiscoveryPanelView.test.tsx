@@ -71,12 +71,16 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				technicianModalMode={null}
 				technicianModalOpened={false}
 				hasResults
+				serviceDescription=""
+				submittingRequest={false}
+				requestError={null}
 				onQueryChange={vi.fn()}
 				onMinReputationChange={vi.fn()}
 				onSelectTechnician={vi.fn()}
 				onHireTechnician={vi.fn()}
 				onCloseTechnicianModal={vi.fn()}
-				onConfirmTechnicianHire={vi.fn()}
+				onServiceDescriptionChange={vi.fn()}
+				onConfirmTechnicianHire={vi.fn().mockResolvedValue(undefined)}
 				onClearFilters={vi.fn()}
 			/>,
 		);
@@ -86,6 +90,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 		expect(screen.getByLabelText("Reputacao 5 de 5")).toBeDefined();
 		expect(screen.getByRole("button", { name: "Detalhes" })).toBeDefined();
 		expect(screen.getByRole("button", { name: "Contratar" })).toBeDefined();
+		expect(screen.getByRole("link", { name: "Servicos" })).toBeDefined();
 	});
 
 	it("abre o modal com os detalhes do tecnico selecionado", () => {
@@ -100,12 +105,16 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				technicianModalMode="details"
 				technicianModalOpened
 				hasResults
+				serviceDescription=""
+				submittingRequest={false}
+				requestError={null}
 				onQueryChange={vi.fn()}
 				onMinReputationChange={vi.fn()}
 				onSelectTechnician={vi.fn()}
 				onHireTechnician={vi.fn()}
 				onCloseTechnicianModal={vi.fn()}
-				onConfirmTechnicianHire={vi.fn()}
+				onServiceDescriptionChange={vi.fn()}
+				onConfirmTechnicianHire={vi.fn().mockResolvedValue(undefined)}
 				onClearFilters={vi.fn()}
 			/>,
 		);
@@ -129,17 +138,22 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				technicianModalMode="hire"
 				technicianModalOpened
 				hasResults
+				serviceDescription="Troca de cabo"
+				submittingRequest={false}
+				requestError={null}
 				onQueryChange={vi.fn()}
 				onMinReputationChange={vi.fn()}
 				onSelectTechnician={vi.fn()}
 				onHireTechnician={vi.fn()}
 				onCloseTechnicianModal={vi.fn()}
-				onConfirmTechnicianHire={vi.fn()}
+				onServiceDescriptionChange={vi.fn()}
+				onConfirmTechnicianHire={vi.fn().mockResolvedValue(undefined)}
 				onClearFilters={vi.fn()}
 			/>,
 		);
 
 		expect(screen.getByText("Confirmar contratacao")).toBeDefined();
+		expect(screen.getByText("Descricao do servico")).toBeDefined();
 		expect(screen.getByRole("button", { name: "Contratar tecnico" })).toBeDefined();
 		expect(screen.getAllByLabelText("Reputacao 5 de 5")).toHaveLength(2);
 	});
@@ -150,7 +164,6 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 		const onSelectTechnician = vi.fn();
 		const onHireTechnician = vi.fn();
 		const onCloseTechnicianModal = vi.fn();
-		const onConfirmTechnicianHire = vi.fn();
 
 		renderWithMantine(
 			<TechnicianDiscoveryPanelView
@@ -163,12 +176,16 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				technicianModalMode={null}
 				technicianModalOpened={false}
 				hasResults
+				serviceDescription=""
+				submittingRequest={false}
+				requestError={null}
 				onQueryChange={onQueryChange}
 				onMinReputationChange={onMinReputationChange}
 				onSelectTechnician={onSelectTechnician}
 				onHireTechnician={onHireTechnician}
 				onCloseTechnicianModal={onCloseTechnicianModal}
-				onConfirmTechnicianHire={onConfirmTechnicianHire}
+				onServiceDescriptionChange={vi.fn()}
+				onConfirmTechnicianHire={vi.fn().mockResolvedValue(undefined)}
 				onClearFilters={vi.fn()}
 			/>,
 		);
@@ -187,7 +204,6 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 		expect(onSelectTechnician).toHaveBeenCalledWith("0xbbb");
 		expect(onHireTechnician).toHaveBeenCalledWith("0xbbb");
 		expect(onCloseTechnicianModal).not.toHaveBeenCalled();
-		expect(onConfirmTechnicianHire).not.toHaveBeenCalled();
 	});
 
 	it("mostra o estado sem resultados", () => {
@@ -202,12 +218,16 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				technicianModalMode={null}
 				technicianModalOpened={false}
 				hasResults={false}
+				serviceDescription=""
+				submittingRequest={false}
+				requestError={null}
 				onQueryChange={vi.fn()}
 				onMinReputationChange={vi.fn()}
 				onSelectTechnician={vi.fn()}
 				onHireTechnician={vi.fn()}
 				onCloseTechnicianModal={vi.fn()}
-				onConfirmTechnicianHire={vi.fn()}
+				onServiceDescriptionChange={vi.fn()}
+				onConfirmTechnicianHire={vi.fn().mockResolvedValue(undefined)}
 				onClearFilters={vi.fn()}
 			/>,
 		);

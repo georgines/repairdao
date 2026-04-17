@@ -7,6 +7,49 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { UserSummary } from "@/services/users";
 import { useTechnicianDiscoveryPanel } from "@/hooks/useTechnicianDiscoveryPanel";
 
+const walletMocks = vi.hoisted(() => ({
+	state: {
+		connected: true,
+		address: "0xcliente",
+	},
+}));
+
+vi.mock("@/hooks/useWalletStatus", () => ({
+	useWalletStatus: () => ({
+		state: walletMocks.state,
+	}),
+}));
+
+vi.mock("@/services/wallet/provider", () => ({
+	obterEthereumProvider: () => ({}) ,
+}));
+
+const serviceMocks = vi.hoisted(() => ({
+	criarOrdemServicoNoContrato: vi.fn().mockResolvedValue("0xtx"),
+	createServiceRequest: vi.fn().mockResolvedValue({
+		id: 1,
+		clientAddress: "0xcliente",
+		clientName: "0xcliente",
+		technicianAddress: "0xaaa",
+		technicianName: "Ana Costa",
+		description: "Servico",
+		status: "aberta",
+		budgetAmount: null,
+		acceptedAt: null,
+		budgetSentAt: null,
+		createdAt: "2026-04-17T10:00:00.000Z",
+		updatedAt: "2026-04-17T10:00:00.000Z",
+	}),
+}));
+
+vi.mock("@/services/serviceRequests/serviceRequestBlockchain", () => ({
+	criarOrdemServicoNoContrato: serviceMocks.criarOrdemServicoNoContrato,
+}));
+
+vi.mock("@/services/serviceRequests/serviceRequestClient", () => ({
+	createServiceRequest: serviceMocks.createServiceRequest,
+}));
+
 const initialTechnicians: UserSummary[] = [
 	{
 		address: "0xbbb",
@@ -118,7 +161,7 @@ describe("useTechnicianDiscoveryPanel", () => {
 		expect(getLatest()?.technicianModalOpened).toBe(true);
 	});
 
-	it("abre o modal de contratacao e confirma a selecao", async () => {
+	it("abre o modal de contratacao e cria a ordem de servico", async () => {
 		await act(async () => {
 			root.render(<Probe />);
 			await flush();
@@ -126,6 +169,7 @@ describe("useTechnicianDiscoveryPanel", () => {
 
 		await act(async () => {
 			getLatest()?.onHireTechnician("0xaaa");
+			getLatest()?.onServiceDescriptionChange("Troca de fiação");
 			await flush();
 		});
 
@@ -133,13 +177,14 @@ describe("useTechnicianDiscoveryPanel", () => {
 		expect(getLatest()?.technicianModalOpened).toBe(true);
 
 		await act(async () => {
-			getLatest()?.onConfirmTechnicianHire();
+			await getLatest()?.onConfirmTechnicianHire();
 			await flush();
 		});
 
 		expect(getLatest()?.contractedTechnician?.address).toBe("0xaaa");
 		expect(getLatest()?.technicianModalMode).toBeNull();
 		expect(getLatest()?.technicianModalOpened).toBe(false);
+		expect(getLatest()?.serviceDescription).toBe("");
 	});
 
 	it("fecha o modal sem confirmar e limpa filtros", async () => {
