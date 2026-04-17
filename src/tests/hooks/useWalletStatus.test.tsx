@@ -44,11 +44,15 @@ async function flush() {
 describe("useWalletStatus", () => {
 	let container: HTMLDivElement;
 	let root: ReturnType<typeof createRoot>;
-	let latest: ReturnType<typeof useWalletStatus>;
+	const capture = vi.fn<(value: ReturnType<typeof useWalletStatus>) => void>();
 
 	function Probe() {
-		latest = useWalletStatus();
+		capture(useWalletStatus());
 		return null;
+	}
+
+	function getLatest() {
+		return capture.mock.calls.at(-1)?.[0];
 	}
 
 	beforeEach(() => {
@@ -56,7 +60,6 @@ describe("useWalletStatus", () => {
 		container = document.createElement("div");
 		document.body.appendChild(container);
 		root = createRoot(container);
-		latest = undefined as never;
 		vi.clearAllMocks();
 	});
 
@@ -76,17 +79,17 @@ describe("useWalletStatus", () => {
 			await flush();
 		});
 
-		expect(latest.state.connected).toBe(false);
-		expect(latest.actionLabel).toBe("Conectar carteira");
-		expect(latest.formatarNumero("1")).toBe("num:1");
+		expect(getLatest()?.state.connected).toBe(false);
+		expect(getLatest()?.actionLabel).toBe("Conectar carteira");
+		expect(getLatest()?.formatarNumero("1")).toBe("num:1");
 		expect(serviceMocks.carregarCarteira).not.toHaveBeenCalled();
 
 		await act(async () => {
-			await latest.actionHandler();
+			await getLatest()?.actionHandler();
 			await flush();
 		});
 
-		expect(latest.state.loading).toBe(false);
+		expect(getLatest()?.state.loading).toBe(false);
 	});
 
 	it("sincroniza como desconectado quando autoconexão está desabilitada", async () => {
@@ -105,8 +108,8 @@ describe("useWalletStatus", () => {
 			await flush();
 		});
 
-		expect(latest.state.chainLabel).toBe("Local");
-		expect(latest.state.connected).toBe(false);
+		expect(getLatest()?.state.chainLabel).toBe("Local");
+		expect(getLatest()?.state.connected).toBe(false);
 		expect(serviceMocks.carregarCarteira).not.toHaveBeenCalled();
 		expect(ethereum.on).toHaveBeenCalledTimes(2);
 
@@ -133,7 +136,7 @@ describe("useWalletStatus", () => {
 			await flush();
 		});
 
-		expect(latest.state.chainLabel).toBe("Sem conexao");
+		expect(getLatest()?.state.chainLabel).toBe("Sem conexao");
 	});
 
 	it("sincroniza carteira conectada e reage a eventos", async () => {
@@ -168,8 +171,8 @@ describe("useWalletStatus", () => {
 			await flush();
 		});
 
-		expect(latest.state.connected).toBe(true);
-		expect(latest.actionLabel).toBe("Desconectar carteira");
+		expect(getLatest()?.state.connected).toBe(true);
+		expect(getLatest()?.actionLabel).toBe("Desconectar carteira");
 
 		await act(async () => {
 			listeners.get("accountsChanged")?.();
@@ -178,7 +181,7 @@ describe("useWalletStatus", () => {
 
 		expect(serviceMocks.carregarCarteira).toHaveBeenNthCalledWith(1, ethereum, false);
 		expect(serviceMocks.carregarCarteira).toHaveBeenNthCalledWith(2, ethereum, false);
-		expect(latest.state.address).toBe("0xdef");
+		expect(getLatest()?.state.address).toBe("0xdef");
 
 		serviceMocks.carregarCarteira.mockResolvedValueOnce({
 			connected: true,
@@ -195,7 +198,7 @@ describe("useWalletStatus", () => {
 		});
 
 		expect(serviceMocks.carregarCarteira).toHaveBeenNthCalledWith(3, ethereum, false);
-		expect(latest.state.address).toBe("0x999");
+		expect(getLatest()?.state.address).toBe("0x999");
 	});
 
 	it("recupera de erro na sincronização inicial", async () => {
@@ -213,8 +216,8 @@ describe("useWalletStatus", () => {
 			await flush();
 		});
 
-		expect(latest.state.connected).toBe(false);
-		expect(latest.state.loading).toBe(false);
+		expect(getLatest()?.state.connected).toBe(false);
+		expect(getLatest()?.state.loading).toBe(false);
 	});
 
 	it("conecta manualmente e persiste a autoconexão", async () => {
@@ -241,14 +244,14 @@ describe("useWalletStatus", () => {
 		});
 
 		await act(async () => {
-			await latest.actionHandler();
+			await getLatest()?.actionHandler();
 			await flush();
 		});
 
 		expect(serviceMocks.carregarCarteira).toHaveBeenCalledWith(ethereum, true);
 		expect(serviceMocks.definirReconexaoAutomatica).toHaveBeenCalledWith(true);
-		expect(latest.state.connected).toBe(true);
-		expect(latest.actionLabel).toBe("Desconectar carteira");
+		expect(getLatest()?.state.connected).toBe(true);
+		expect(getLatest()?.actionLabel).toBe("Desconectar carteira");
 	});
 
 	it("mantém loading falso quando conectar falha", async () => {
@@ -268,12 +271,12 @@ describe("useWalletStatus", () => {
 		});
 
 		await act(async () => {
-			await latest.actionHandler();
+			await getLatest()?.actionHandler();
 			await flush();
 		});
 
-		expect(latest.state.loading).toBe(false);
-		expect(latest.state.connected).toBe(false);
+		expect(getLatest()?.state.loading).toBe(false);
+		expect(getLatest()?.state.connected).toBe(false);
 	});
 
 	it("desconecta e limpa o estado quando já está conectado", async () => {
@@ -299,13 +302,13 @@ describe("useWalletStatus", () => {
 		});
 
 		await act(async () => {
-			latest.actionHandler();
+			getLatest()?.actionHandler();
 			await flush();
 		});
 
 		expect(serviceMocks.definirReconexaoAutomatica).toHaveBeenCalledWith(false);
-		expect(latest.state.connected).toBe(false);
-		expect(latest.state.address).toBeNull();
+		expect(getLatest()?.state.connected).toBe(false);
+		expect(getLatest()?.state.address).toBeNull();
 	});
 
 	it("não atualiza estado após desmontar durante sincronização", async () => {
@@ -352,7 +355,7 @@ describe("useWalletStatus", () => {
 			await flush();
 		});
 
-		expect(latest.state.connected).toBe(false);
+		expect(getLatest()?.state.connected).toBe(false);
 	});
 
 	it("não atualiza estado após desmontar durante falha de sincronização", async () => {
@@ -385,7 +388,7 @@ describe("useWalletStatus", () => {
 			await flush();
 		});
 
-		expect(latest.state.connected).toBe(false);
+		expect(getLatest()?.state.connected).toBe(false);
 	});
 
 	it("não atualiza estado após desmontar com autoconexão desabilitada", async () => {
@@ -418,6 +421,6 @@ describe("useWalletStatus", () => {
 			await flush();
 		});
 
-		expect(latest.state.connected).toBe(false);
+		expect(getLatest()?.state.connected).toBe(false);
 	});
 });

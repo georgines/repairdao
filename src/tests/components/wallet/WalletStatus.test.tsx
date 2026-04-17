@@ -3,49 +3,10 @@ import { describe, expect, it } from "vitest";
 import { MantineProvider } from "@mantine/core";
 import { WalletStatus } from "@/components/wallet/WalletStatus";
 import {
-	definirReconexaoAutomatica,
-	formatarBlockchain,
 	formatarEnderecoCurto,
 	formatarNumero,
 	formatarUSD,
-	normalizarPrecoEthUsd,
-	reconexaoAutomaticaHabilitada,
 } from "@/services/walletService";
-
-describe("walletService", () => {
-	it("formata endereco, rede e valores", () => {
-		expect(formatarEnderecoCurto("0x1234567890abcdef1234567890abcdef12345678")).toBe("0x1234...5678");
-		expect(formatarEnderecoCurto(undefined)).toBe("Carteira desconectada");
-		expect(formatarBlockchain(11155111)).toBe("Sepolia");
-		expect(formatarBlockchain(31337)).toBe("Local");
-		expect(formatarNumero("12.3456")).toBe("12,35");
-		expect(formatarUSD("12.34")).toBe("US$" + String.fromCharCode(160) + "12,34");
-		expect(normalizarPrecoEthUsd(200000000000n)).toBe(2000);
-		expect(normalizarPrecoEthUsd(1999.5)).toBe(1999.5);
-	});
-
-	it("persiste a preferencia de reconexao automatica", () => {
-		const storage = new Map<string, string>();
-
-		Object.defineProperty(globalThis, "window", {
-			value: {
-				localStorage: {
-					getItem: (key: string) => storage.get(key) ?? null,
-					setItem: (key: string, value: string) => {
-						storage.set(key, value);
-					},
-				},
-			},
-			configurable: true,
-		});
-
-		expect(reconexaoAutomaticaHabilitada()).toBe(true);
-		definirReconexaoAutomatica(false);
-		expect(reconexaoAutomaticaHabilitada()).toBe(false);
-		definirReconexaoAutomatica(true);
-		expect(reconexaoAutomaticaHabilitada()).toBe(true);
-	});
-});
 
 describe("WalletStatus", () => {
 	it("renderiza estado desconectado com CTA de conexao", () => {

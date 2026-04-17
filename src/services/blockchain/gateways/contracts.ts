@@ -1,5 +1,4 @@
 import { contratos } from "@/contracts";
-import type { GatewayContratoConfig } from "@/services/blockchain/gateways/shared";
 import type { InterfaceAbi } from "ethers";
 
 export const REPAIR_TOKEN_ABI = [

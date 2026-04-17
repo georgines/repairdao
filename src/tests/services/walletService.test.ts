@@ -92,6 +92,8 @@ describe("walletService coverage", () => {
 		expect(reconexaoAutomaticaHabilitada()).toBe(true);
 		definirReconexaoAutomatica(false);
 		expect(reconexaoAutomaticaHabilitada()).toBe(false);
+		definirReconexaoAutomatica(true);
+		expect(reconexaoAutomaticaHabilitada()).toBe(true);
 	});
 
 	it("cobre o comportamento sem window", () => {

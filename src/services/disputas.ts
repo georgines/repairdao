@@ -2,7 +2,7 @@ import { REPAIRDAO_LIMITES } from "@/constants/constants";
 import { RepairDAODominioError } from "@/erros/errors";
 import { ESTADOS_DISPUTA_REPAIRDAO, type EstadoDisputaRepairDAO } from "@/types";
 import { garantirTransicaoEstado, garantirValorPermitido, clamp } from "@/services/shared";
-import { garantirNumeroMaiorQueZero, garantirTextoNaoVazio, garantirTokensPositivos, textoNaoVazio, tokensPositivos } from "@/services/validacoes";
+import { garantirNumeroMaiorQueZero, garantirTokensPositivos, textoNaoVazio, tokensPositivos } from "@/services/validacoes";
 
 const TRANSICOES_VALIDAS: Record<EstadoDisputaRepairDAO, readonly EstadoDisputaRepairDAO[]> = {
   aberta: ["janela_votacao"],
