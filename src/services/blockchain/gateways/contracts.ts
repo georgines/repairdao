@@ -3,7 +3,12 @@ import type { InterfaceAbi } from "ethers";
 
 export const REPAIR_TOKEN_ABI = [
   { type: "function", name: "buy", stateMutability: "payable", inputs: [], outputs: [] },
+  { type: "function", name: "approve", stateMutability: "nonpayable", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "success", type: "bool" }] },
   { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ name: "balance", type: "uint256" }] },
+  { type: "function", name: "transfer", stateMutability: "nonpayable", inputs: [{ name: "to", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "success", type: "bool" }] },
+  { type: "function", name: "transferFrom", stateMutability: "nonpayable", inputs: [{ name: "from", type: "address" }, { name: "to", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "success", type: "bool" }] },
+  { type: "function", name: "allowance", stateMutability: "view", inputs: [{ name: "owner", type: "address" }, { name: "spender", type: "address" }], outputs: [{ name: "remaining", type: "uint256" }] },
+  { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ name: "decimals", type: "uint8" }] },
   { type: "function", name: "tokensPerEth", stateMutability: "view", inputs: [], outputs: [{ name: "rate", type: "uint256" }] },
   {
     type: "function",
@@ -36,6 +41,10 @@ export const REPAIR_BADGE_ABI = [
   },
   { type: "function", name: "getLevelName", stateMutability: "view", inputs: [{ name: "user", type: "address" }], outputs: [{ name: "levelName", type: "string" }] },
   { type: "function", name: "getBadgeLevel", stateMutability: "view", inputs: [{ name: "user", type: "address" }], outputs: [{ name: "level", type: "uint8" }] },
+  { type: "function", name: "hasBadge", stateMutability: "view", inputs: [{ name: "user", type: "address" }], outputs: [{ name: "has", type: "bool" }] },
+  { type: "function", name: "ownerOf", stateMutability: "view", inputs: [{ name: "tokenId", type: "uint256" }], outputs: [{ name: "owner", type: "address" }] },
+  { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ name: "owner", type: "address" }], outputs: [{ name: "balance", type: "uint256" }] },
+  { type: "function", name: "tokenURI", stateMutability: "view", inputs: [{ name: "tokenId", type: "uint256" }], outputs: [{ name: "uri", type: "string" }] },
 ] as const satisfies InterfaceAbi;
 
 export const REPAIR_DEPOSIT_ABI = [
@@ -156,6 +165,18 @@ export const REPAIR_ESCROW_ABI = [
       },
     ],
   },
+  { type: "function", name: "acceptBudget", stateMutability: "nonpayable", inputs: [{ name: "orderId", type: "uint256" }], outputs: [] },
+  { type: "function", name: "completeOrder", stateMutability: "nonpayable", inputs: [{ name: "orderId", type: "uint256" }], outputs: [] },
+  { type: "function", name: "confirmCompletion", stateMutability: "nonpayable", inputs: [{ name: "orderId", type: "uint256" }], outputs: [] },
+  { type: "function", name: "rateUser", stateMutability: "nonpayable", inputs: [{ name: "orderId", type: "uint256" }, { name: "rating", type: "uint8" }], outputs: [] },
+  { type: "function", name: "submitEvidence", stateMutability: "nonpayable", inputs: [{ name: "orderId", type: "uint256" }, { name: "content", type: "string" }], outputs: [] },
+  { type: "function", name: "voteOnDispute", stateMutability: "nonpayable", inputs: [{ name: "orderId", type: "uint256" }, { name: "supportOpener", type: "bool" }], outputs: [] },
+  { type: "function", name: "resolveDispute", stateMutability: "nonpayable", inputs: [{ name: "orderId", type: "uint256" }], outputs: [] },
+  { type: "function", name: "getEvidences", stateMutability: "view", inputs: [{ name: "orderId", type: "uint256" }], outputs: [{ name: "evidences", type: "tuple[]", components: [{ name: "submittedBy", type: "address" }, { name: "content", type: "string" }, { name: "timestamp", type: "uint256" }] }] },
+  { type: "function", name: "getClientOrders", stateMutability: "view", inputs: [{ name: "client", type: "address" }], outputs: [{ name: "orderIds", type: "uint256[]" }] },
+  { type: "function", name: "getTechnicianOrders", stateMutability: "view", inputs: [{ name: "technician", type: "address" }], outputs: [{ name: "orderIds", type: "uint256[]" }] },
+  { type: "function", name: "setVotingPeriod", stateMutability: "nonpayable", inputs: [{ name: "period", type: "uint256" }], outputs: [] },
+  { type: "function", name: "setSlashPercent", stateMutability: "nonpayable", inputs: [{ name: "percent", type: "uint256" }], outputs: [] },
 ] as const satisfies InterfaceAbi;
 
 export const REPAIR_GOVERNANCE_ABI = [

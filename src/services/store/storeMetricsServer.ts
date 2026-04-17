@@ -1,23 +1,6 @@
 import { Contract, JsonRpcProvider, formatUnits } from "ethers";
 import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
 
-const REPAIR_TOKEN_READ_ABI = [
-	{
-		type: "function",
-		name: "balanceOf",
-		stateMutability: "view",
-		inputs: [{ name: "account", type: "address" }],
-		outputs: [{ name: "balance", type: "uint256" }],
-	},
-	{
-		type: "function",
-		name: "tokensPerEth",
-		stateMutability: "view",
-		inputs: [],
-		outputs: [{ name: "rate", type: "uint256" }],
-	},
-] as const;
-
 export type StoreMetrics = {
 	rptBalanceRaw: bigint;
 	rptBalance: string;
@@ -31,7 +14,7 @@ function obterRpcUrl() {
 
 export async function carregarMetricasDaLojaNoServidor(address?: string | null): Promise<StoreMetrics> {
 	const provider = new JsonRpcProvider(obterRpcUrl());
-	const tokenContract = new Contract(REPAIRDAO_CONTRACTOS.token.address, REPAIR_TOKEN_READ_ABI, provider);
+	const tokenContract = new Contract(REPAIRDAO_CONTRACTOS.token.address, REPAIRDAO_CONTRACTOS.token.abi, provider);
 
 	const tokensPerEthRaw = await tokenContract.tokensPerEth().catch(() => 0n);
 	const rptBalanceRaw = address ? await tokenContract.balanceOf(address).catch(() => 0n) : 0n;

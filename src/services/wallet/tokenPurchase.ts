@@ -3,16 +3,6 @@ import { RepairDAODominioError } from "@/erros/errors";
 import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
 import type { EthereumProvider } from "@/services/wallet/provider";
 
-const REPAIR_TOKEN_BUY_ABI = [
-	{
-		type: "function",
-		name: "buy",
-		stateMutability: "payable",
-		inputs: [],
-		outputs: [],
-	},
-] as const;
-
 function normalizarQuantidadeEth(valor: string | number): string {
 	const texto = String(valor).trim().replace(",", ".");
 
@@ -35,7 +25,7 @@ export async function comprarToken(ethereum: EthereumProvider, quantidadeEth: st
 	const provider = new BrowserProvider(ethereum as never);
 	const signer = await provider.getSigner();
 	const valorNormalizado = normalizarQuantidadeEth(quantidadeEth);
-	const contrato = new Contract(REPAIRDAO_CONTRACTOS.token.address, REPAIR_TOKEN_BUY_ABI, signer);
+	const contrato = new Contract(REPAIRDAO_CONTRACTOS.token.address, REPAIRDAO_CONTRACTOS.token.abi, signer);
 	const transacao = await contrato.buy({
 		value: parseEther(valorNormalizado),
 	});

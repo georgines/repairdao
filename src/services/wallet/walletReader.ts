@@ -4,10 +4,6 @@ import { formatarBlockchain, normalizarPrecoEthUsd } from "@/services/wallet/for
 import { ESTADO_INICIAL_CARTEIRA, type WalletSnapshot } from "@/services/wallet/walletSnapshot";
 import type { EthereumProvider } from "@/services/wallet/provider";
 
-const ETH_USD_ABI = [
-	{ type: "function", name: "getEthUsdPrice", stateMutability: "view", inputs: [], outputs: [{ name: "price", type: "int256" }] },
-] as const;
-
 export async function obterRedeAtual(ethereum: EthereumProvider) {
 	const provider = new BrowserProvider(ethereum as never);
 	const network = await provider.getNetwork();
@@ -29,7 +25,7 @@ export async function carregarCarteira(ethereum: EthereumProvider, solicitarPerm
 		};
 	}
 
-	const depositContract = new Contract(REPAIRDAO_CONTRACTOS.deposit.address, ETH_USD_ABI, provider);
+	const depositContract = new Contract(REPAIRDAO_CONTRACTOS.deposit.address, REPAIRDAO_CONTRACTOS.deposit.abi, provider);
 
 	const [balanceWei, ethUsdPriceRaw] = await Promise.all([
 		provider.getBalance(address),

@@ -3,63 +3,6 @@ import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
 
 const MIN_DEPOSIT_STORAGE_SLOT = 5n;
 
-const REPAIR_TOKEN_READ_ABI = [
-	{
-		type: "function",
-		name: "balanceOf",
-		stateMutability: "view",
-		inputs: [{ name: "account", type: "address" }],
-		outputs: [{ name: "balance", type: "uint256" }],
-	},
-	{
-		type: "function",
-		name: "tokensPerEth",
-		stateMutability: "view",
-		inputs: [],
-		outputs: [{ name: "rate", type: "uint256" }],
-	},
-] as const;
-
-const REPAIR_DEPOSIT_READ_ABI = [
-	{
-		type: "function",
-		name: "isActive",
-		stateMutability: "view",
-		inputs: [{ name: "user", type: "address" }],
-		outputs: [{ name: "active", type: "bool" }],
-	},
-	{
-		type: "function",
-		name: "getDeposit",
-		stateMutability: "view",
-		inputs: [{ name: "user", type: "address" }],
-		outputs: [
-			{
-				name: "deposit",
-				type: "tuple",
-				components: [
-					{ name: "amount", type: "uint256" },
-					{ name: "depositedAt", type: "uint256" },
-					{ name: "lastClaimedAt", type: "uint256" },
-					{ name: "customRate", type: "uint256" },
-					{ name: "active", type: "bool" },
-					{ name: "isTechnician", type: "bool" },
-				],
-			},
-		],
-	},
-] as const;
-
-const REPAIR_BADGE_READ_ABI = [
-	{
-		type: "function",
-		name: "getLevelName",
-		stateMutability: "view",
-		inputs: [{ name: "user", type: "address" }],
-		outputs: [{ name: "levelName", type: "string" }],
-	},
-] as const;
-
 export type EligibilityMetrics = {
 	rptBalanceRaw: bigint;
 	rptBalance: string;
@@ -78,9 +21,9 @@ function obterRpcUrl() {
 
 export async function carregarMetricasElegibilidadeNoServidor(address?: string | null): Promise<EligibilityMetrics> {
 	const provider = new JsonRpcProvider(obterRpcUrl());
-	const tokenContract = new Contract(REPAIRDAO_CONTRACTOS.token.address, REPAIR_TOKEN_READ_ABI, provider);
-	const depositContract = new Contract(REPAIRDAO_CONTRACTOS.deposit.address, REPAIR_DEPOSIT_READ_ABI, provider);
-	const badgeContract = new Contract(REPAIRDAO_CONTRACTOS.badge.address, REPAIR_BADGE_READ_ABI, provider);
+	const tokenContract = new Contract(REPAIRDAO_CONTRACTOS.token.address, REPAIRDAO_CONTRACTOS.token.abi, provider);
+	const depositContract = new Contract(REPAIRDAO_CONTRACTOS.deposit.address, REPAIRDAO_CONTRACTOS.deposit.abi, provider);
+	const badgeContract = new Contract(REPAIRDAO_CONTRACTOS.badge.address, REPAIRDAO_CONTRACTOS.badge.abi, provider);
 
 	const rptBalanceRaw = address ? await tokenContract.balanceOf(address).catch(() => 0n) : 0n;
 	const tokensPerEthRaw = await tokenContract.tokensPerEth().catch(() => 0n);
