@@ -8,7 +8,6 @@ export type WalletStatusProps = {
 	loading: boolean;
 	address: string | null;
 	chainLabel: string;
-	tokenBalance: string;
 	ethBalance: string;
 	usdBalance: string;
 	actionLabel: string;
@@ -20,7 +19,6 @@ export function WalletStatus({
 	loading,
 	address,
 	chainLabel,
-	tokenBalance,
 	ethBalance,
 	usdBalance,
 	actionLabel,
@@ -55,9 +53,6 @@ export function WalletStatus({
 			</Group>
 
 			<Group spacing={6} align="center" sx={{ marginLeft: "auto", whiteSpace: "nowrap", minWidth: 0 }}>
-				<Text size="xs" fw={700}>
-					RPT {formatarNumero(tokenBalance, 2)}
-				</Text>
 				<Text size="xs" fw={700}>
 					ETH {formatarNumero(ethBalance, 4)}
 				</Text>

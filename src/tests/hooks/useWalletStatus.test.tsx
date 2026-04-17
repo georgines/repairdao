@@ -31,13 +31,13 @@ vi.mock("@/services/wallet/walletSnapshot", () => ({
 		connected: false,
 		address: null,
 		chainLabel: "Sem conexao",
-		tokenBalance: "0",
 		ethBalance: "0",
 		usdBalance: "$0.00",
 	},
 }));
 
 import { useWalletStatus } from "@/hooks/useWalletStatus";
+import { redefinirEstadoCarteira } from "@/services/wallet/walletStatusStore";
 
 async function flush() {
 	await Promise.resolve();
@@ -60,6 +60,7 @@ describe("useWalletStatus", () => {
 
 	beforeEach(() => {
 		(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+		redefinirEstadoCarteira();
 		container = document.createElement("div");
 		document.body.appendChild(container);
 		root = createRoot(container);
@@ -155,7 +156,6 @@ describe("useWalletStatus", () => {
 				connected: true,
 				address: "0xabc",
 				chainLabel: "Base",
-				tokenBalance: "1",
 				ethBalance: "2",
 				usdBalance: "3",
 			})
@@ -163,7 +163,6 @@ describe("useWalletStatus", () => {
 				connected: true,
 				address: "0xdef",
 				chainLabel: "Base",
-				tokenBalance: "4",
 				ethBalance: "5",
 				usdBalance: "6",
 			});
@@ -189,7 +188,6 @@ describe("useWalletStatus", () => {
 			connected: true,
 			address: "0x999",
 			chainLabel: "Base",
-			tokenBalance: "7",
 			ethBalance: "8",
 			usdBalance: "9",
 		});
@@ -235,7 +233,6 @@ describe("useWalletStatus", () => {
 			connected: true,
 			address: "0x123",
 			chainLabel: "Local",
-			tokenBalance: "7",
 			ethBalance: "8",
 			usdBalance: "9",
 		});
@@ -293,7 +290,6 @@ describe("useWalletStatus", () => {
 			connected: true,
 			address: "0x123",
 			chainLabel: "Local",
-			tokenBalance: "7",
 			ethBalance: "8",
 			usdBalance: "9",
 		});
@@ -322,7 +318,6 @@ describe("useWalletStatus", () => {
 			connected: boolean;
 			address: string | null;
 			chainLabel: string;
-			tokenBalance: string;
 			ethBalance: string;
 			usdBalance: string;
 		}) => void;
@@ -350,7 +345,6 @@ describe("useWalletStatus", () => {
 				connected: true,
 				address: "0xlate",
 				chainLabel: "Late",
-				tokenBalance: "1",
 				ethBalance: "1",
 				usdBalance: "1",
 			});
@@ -424,5 +418,61 @@ describe("useWalletStatus", () => {
 		});
 
 		expect(getLatest()?.state.connected).toBe(false);
+	});
+	it("sincroniza o estado entre consumidores diferentes sem recarregar", async () => {
+		const ethereum = {
+			on: vi.fn(),
+			removeListener: vi.fn(),
+		};
+
+		serviceMocks.obterEthereumProvider.mockReturnValue(ethereum);
+		serviceMocks.reconexaoAutomaticaHabilitada.mockReturnValue(true);
+		serviceMocks.carregarCarteira.mockResolvedValue({
+			connected: true,
+			address: "0xabc",
+			chainLabel: "Local",
+			ethBalance: "5",
+			usdBalance: "10",
+		});
+
+		await act(async () => {
+			root.render(
+				<>
+					<Probe />
+					<Probe />
+				</>,
+			);
+			await flush();
+		});
+
+		expect(capture.mock.calls.at(-1)?.[0]?.state.connected).toBe(true);
+
+		const handlerDesconectar = getLatest()?.actionHandler;
+
+		await act(async () => {
+			handlerDesconectar?.();
+			await flush();
+		});
+
+		expect(capture.mock.calls.at(-1)?.[0]?.state.connected).toBe(false);
+		expect(capture.mock.calls.at(-1)?.[0]?.state.ethBalance).toBe("0");
+
+		serviceMocks.carregarCarteira.mockResolvedValueOnce({
+			connected: true,
+			address: "0xdef",
+			chainLabel: "Local",
+			ethBalance: "7",
+			usdBalance: "14",
+		});
+
+		const handlerConectar = getLatest()?.actionHandler;
+
+		await act(async () => {
+			handlerConectar?.();
+			await flush();
+		});
+
+		expect(capture.mock.calls.at(-1)?.[0]?.state.connected).toBe(true);
+		expect(capture.mock.calls.at(-1)?.[0]?.state.ethBalance).toBe("7");
 	});
 });

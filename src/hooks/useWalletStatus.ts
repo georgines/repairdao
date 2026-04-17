@@ -1,26 +1,27 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { carregarCarteira, obterRedeAtual } from "@/services/wallet/walletReader";
 import { definirReconexaoAutomatica, reconexaoAutomaticaHabilitada } from "@/services/wallet/preferences";
-import { ESTADO_INICIAL_CARTEIRA, type WalletSnapshot } from "@/services/wallet/walletSnapshot";
+import { ESTADO_INICIAL_CARTEIRA } from "@/services/wallet/walletSnapshot";
 import { obterEthereumProvider } from "@/services/wallet/provider";
+import {
+	assinarEstadoCarteira,
+	atualizarEstadoCarteira,
+	obterEstadoCarteira,
+	redefinirEstadoCarteira,
+	type WalletStoreState,
+} from "@/services/wallet/walletStatusStore";
 
-type WalletState = WalletSnapshot & {
-	loading: boolean;
-};
-
-const estadoInicial: WalletState = {
-	...ESTADO_INICIAL_CARTEIRA,
-	loading: false,
-};
+const selecionarEstado = () => obterEstadoCarteira();
 
 export function useWalletStatus() {
-	const [state, setState] = useState<WalletState>(estadoInicial);
+	const state = useSyncExternalStore<WalletStoreState>(assinarEstadoCarteira, selecionarEstado, selecionarEstado);
 	const ethereum = useMemo(() => obterEthereumProvider(), []);
 
 	useEffect(() => {
 		if (!ethereum) {
+			redefinirEstadoCarteira();
 			return;
 		}
 
@@ -32,9 +33,10 @@ export function useWalletStatus() {
 					const chainLabel = await obterRedeAtual(ethereum).catch(() => ESTADO_INICIAL_CARTEIRA.chainLabel);
 
 					if (ativo) {
-						setState({
-							...estadoInicial,
+						atualizarEstadoCarteira({
+							...ESTADO_INICIAL_CARTEIRA,
 							chainLabel,
+							loading: false,
 						});
 					}
 
@@ -44,18 +46,14 @@ export function useWalletStatus() {
 				const dados = await carregarCarteira(ethereum, false);
 
 				if (ativo) {
-					setState({
+					atualizarEstadoCarteira({
 						...dados,
 						loading: false,
 					});
 				}
 			} catch {
 				if (ativo) {
-					setState((current) => ({
-						...current,
-						connected: false,
-						loading: false,
-					}));
+					redefinirEstadoCarteira();
 				}
 			}
 		}
@@ -85,26 +83,27 @@ export function useWalletStatus() {
 			return;
 		}
 
-		setState((current) => ({ ...current, loading: true }));
+		const estadoAnterior = obterEstadoCarteira();
+		atualizarEstadoCarteira({ ...estadoAnterior, loading: true });
 
 		try {
 			const dados = await carregarCarteira(ethereum, true);
 			definirReconexaoAutomatica(true);
-			setState({
+			atualizarEstadoCarteira({
 				...dados,
 				loading: false,
 			});
 		} catch {
-			setState((current) => ({
-				...current,
+			atualizarEstadoCarteira({
+				...estadoAnterior,
 				loading: false,
-			}));
+			});
 		}
 	}
 
 	function desconectar() {
 		definirReconexaoAutomatica(false);
-		setState(estadoInicial);
+		redefinirEstadoCarteira();
 	}
 
 	return {

@@ -138,18 +138,13 @@ describe("walletService coverage", () => {
 		});
 	});
 
-	it("carrega saldo e usa fallbacks para decimals e preço", async () => {
+	it("carrega saldo em ETH e usa fallback para preço", async () => {
 		const ethereum = { request: vi.fn() };
-		const tokenContract = {
-			balanceOf: vi.fn().mockResolvedValue(9000n),
-			decimals: vi.fn().mockRejectedValue(new Error("sem decimals")),
-		};
 		const depositContract = {
 			getEthUsdPrice: vi.fn().mockRejectedValue(new Error("sem preço")),
 		};
 
-		ethersMocks.nextContracts.push(tokenContract, depositContract);
-		ethersMocks.formatUnitsMock.mockReturnValue("9000");
+		ethersMocks.nextContracts.push(depositContract);
 		ethersMocks.formatEtherMock.mockReturnValue("1.5");
 		ethersMocks.nextBrowserProviders.push({
 			send: vi.fn().mockResolvedValue(["0x1234567890abcdef1234567890abcdef12345678"]),
@@ -161,27 +156,21 @@ describe("walletService coverage", () => {
 			connected: true,
 			address: "0x1234567890abcdef1234567890abcdef12345678",
 			chainLabel: "Local",
-			tokenBalance: "9000",
 			ethBalance: "1.5",
 			usdBalance: "0.00",
 		});
 
 		expect(ethersMocks.browserProviderInstances.at(-1)?.send).toHaveBeenCalledWith("eth_requestAccounts", []);
-		expect(ethersMocks.formatUnitsMock).toHaveBeenCalledWith(9000n, 18);
+		expect(ethersMocks.formatEtherMock).toHaveBeenCalledWith(1500000000000000000n);
 	});
 
 	it("calcula USD com preço normalizado", async () => {
 		const ethereum = { request: vi.fn() };
-		const tokenContract = {
-			balanceOf: vi.fn().mockResolvedValue(1000n),
-			decimals: vi.fn().mockResolvedValue(6),
-		};
 		const depositContract = {
 			getEthUsdPrice: vi.fn().mockResolvedValue(200000000000n),
 		};
 
-		ethersMocks.nextContracts.push(tokenContract, depositContract);
-		ethersMocks.formatUnitsMock.mockReturnValue("1");
+		ethersMocks.nextContracts.push(depositContract);
 		ethersMocks.formatEtherMock.mockReturnValue("2");
 		ethersMocks.nextBrowserProviders.push({
 			send: vi.fn().mockResolvedValue(["0xabc"]),
@@ -191,25 +180,21 @@ describe("walletService coverage", () => {
 
 		await expect(carregarCarteira(ethereum, false)).resolves.toMatchObject({
 			chainLabel: "Base",
+			ethBalance: "2",
 			usdBalance: "4000.00",
 		});
 		expect(ethersMocks.browserProviderInstances.at(-1)?.send).toHaveBeenCalledWith("eth_accounts", []);
-		expect(ethersMocks.formatUnitsMock).toHaveBeenCalledWith(1000n, 6);
+		expect(ethersMocks.formatEtherMock).toHaveBeenCalledWith(2n);
 	});
 
-	it("cobre os ramos defensivos de decimals e USD não finitos", async () => {
+	it("cobre o ramo defensivo de USD não finito", async () => {
 		const ethereum = { request: vi.fn() };
-		const tokenContract = {
-			balanceOf: vi.fn().mockResolvedValue(1000n),
-			decimals: vi.fn().mockResolvedValue("invalido"),
-		};
 		const depositContract = {
-			getEthUsdPrice: vi.fn().mockResolvedValue(200000000000n),
+			getEthUsdPrice: vi.fn().mockResolvedValue("invalido"),
 		};
 		const originalIsFinite = Number.isFinite;
 
-		ethersMocks.nextContracts.push(tokenContract, depositContract);
-		ethersMocks.formatUnitsMock.mockReturnValue("1");
+		ethersMocks.nextContracts.push(depositContract);
 		ethersMocks.formatEtherMock.mockReturnValue("2");
 		ethersMocks.nextBrowserProviders.push({
 			send: vi.fn().mockResolvedValue(["0xabc"]),
@@ -226,10 +211,9 @@ describe("walletService coverage", () => {
 		}) as typeof Number.isFinite;
 
 		await expect(carregarCarteira(ethereum, false)).resolves.toMatchObject({
-			tokenBalance: "1",
+			ethBalance: "2",
 			usdBalance: "0.00",
 		});
-		expect(ethersMocks.formatUnitsMock).toHaveBeenCalledWith(1000n, 18);
 
 		Number.isFinite = originalIsFinite;
 	});

@@ -1,7 +1,21 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import type { ReactElement } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { MantineProvider } from "@mantine/core";
+
+const storeMocks = vi.hoisted(() => ({
+	obterEthereumProvider: vi.fn(),
+	useWalletStatus: vi.fn(),
+}));
+
+vi.mock("@/services/wallet/provider", () => ({
+	obterEthereumProvider: storeMocks.obterEthereumProvider,
+}));
+
+vi.mock("@/hooks/useWalletStatus", () => ({
+	useWalletStatus: storeMocks.useWalletStatus,
+}));
+
 import StorePage from "@/app/store/page";
 
 function renderWithMantine(node: ReactElement) {
@@ -9,10 +23,26 @@ function renderWithMantine(node: ReactElement) {
 }
 
 describe("app/store/page", () => {
-	it("renderiza a loja com o card de compra de tokens", () => {
+	it("renderiza a loja com o saldo destacado e a ação de troca", () => {
+		storeMocks.obterEthereumProvider.mockReturnValue(undefined);
+		storeMocks.useWalletStatus.mockReturnValue({
+			state: {
+				connected: false,
+				loading: false,
+				address: null,
+				chainLabel: "Sem conexao",
+				ethBalance: "0",
+				usdBalance: "0",
+			},
+		});
+
 		const markup = renderWithMantine(<StorePage />);
 
-		expect(markup).toContain("Comprar tokens");
-		expect(markup).toContain("100 tokens");
+		expect(markup).toContain("Trocar ETH por RPT");
+		expect(markup).toContain("Quantidade em ETH");
+		expect(markup).not.toContain("Conectar carteira");
+		expect(markup).toContain("ETH 0,0000");
+		expect(markup).toContain("USD US$");
+		expect(markup).toContain("Carteira desconectada");
 	});
 });

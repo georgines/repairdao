@@ -11,7 +11,7 @@ describe("contracts index", () => {
 
     const { contratos } = await import("@/contracts");
 
-    expect(contratos.RepairEscrow).toBe("0x0165878A594ca255338adfa4d48449f69242Eb8F");
+    expect(contratos.RepairEscrow).toBe("0xc6e7DF5E7b4f2A278906862b61205850344D4e7d");
   });
 
   it("usa os enderecos de sepolia quando configurado", async () => {

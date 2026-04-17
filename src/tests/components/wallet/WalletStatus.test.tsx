@@ -12,7 +12,6 @@ describe("WalletStatus", () => {
 					loading={false}
 					address={null}
 					chainLabel="Sem conexao"
-					tokenBalance="0"
 					ethBalance="0"
 					usdBalance="0"
 					actionLabel="Conectar carteira"
@@ -23,7 +22,6 @@ describe("WalletStatus", () => {
 
 		expect(markup).toContain("Conectar carteira");
 		expect(markup).toContain("Sem conexao");
-		expect(markup).toContain("RPT");
 		expect(markup).toContain("ETH");
 		expect(markup).toContain("USD");
 	});
@@ -34,7 +32,6 @@ describe("WalletStatus", () => {
 			loading: true,
 			address: "0x1234567890abcdef1234567890abcdef12345678",
 			chainLabel: "Local",
-			tokenBalance: "1200",
 			ethBalance: "0.5",
 			usdBalance: "1000",
 			actionLabel: "Desconectar carteira",

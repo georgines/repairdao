@@ -64,7 +64,6 @@ export default function AppShell({ children }: AppShellProps) {
                                 loading={state.loading}
                                 address={state.address}
                                 chainLabel={state.chainLabel}
-                                tokenBalance={state.tokenBalance}
                                 ethBalance={state.ethBalance}
                                 usdBalance={state.usdBalance}
                                 actionLabel={actionLabel}
