@@ -4,8 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { contratos } from "@/contracts";
 
 const ethersMocks = vi.hoisted(() => {
-	const waitMock = vi.fn().mockResolvedValue("confirmado");
-	const depositMock = vi.fn().mockResolvedValue({ wait: waitMock });
+	const approveWaitMock = vi.fn().mockResolvedValue("approve-confirmado");
+	const depositWaitMock = vi.fn().mockResolvedValue("confirmado");
+	const approveMock = vi.fn().mockResolvedValue({ wait: approveWaitMock });
+	const depositMock = vi.fn().mockResolvedValue({ wait: depositWaitMock });
 	const withdrawWaitMock = vi.fn().mockResolvedValue("saque-confirmado");
 	const withdrawDepositMock = vi.fn().mockResolvedValue({ wait: withdrawWaitMock });
 	const getSignerMock = vi.fn().mockResolvedValue({ id: "signer" });
@@ -21,6 +23,7 @@ const ethersMocks = vi.hoisted(() => {
 	}
 
 	class ContractMock {
+		approve = approveMock;
 		deposit = depositMock;
 		withdrawDeposit = withdrawDepositMock;
 
@@ -30,7 +33,9 @@ const ethersMocks = vi.hoisted(() => {
 	}
 
 	return {
-		waitMock,
+		approveWaitMock,
+		depositWaitMock,
+		approveMock,
 		withdrawWaitMock,
 		withdrawDepositMock,
 		depositMock,
@@ -62,13 +67,22 @@ describe("depositarTokens", () => {
 
 		expect(ethersMocks.providerCtor).toHaveBeenCalledWith(ethereum);
 		expect(ethersMocks.getSignerMock).toHaveBeenCalledTimes(1);
-		expect(ethersMocks.contractCtor).toHaveBeenCalledWith(
+		expect(ethersMocks.contractCtor).toHaveBeenNthCalledWith(
+			1,
+			contratos.RepairToken,
+			expect.any(Array),
+			expect.any(Object),
+		);
+		expect(ethersMocks.contractCtor).toHaveBeenNthCalledWith(
+			2,
 			contratos.RepairDeposit,
 			expect.any(Array),
 			expect.any(Object),
 		);
+		expect(ethersMocks.approveMock).toHaveBeenCalledWith(contratos.RepairDeposit, 1500000000000000000n);
 		expect(ethersMocks.depositMock).toHaveBeenCalledWith(1500000000000000000n, false);
-		expect(ethersMocks.waitMock).toHaveBeenCalledTimes(1);
+		expect(ethersMocks.approveWaitMock).toHaveBeenCalledTimes(1);
+		expect(ethersMocks.depositWaitMock).toHaveBeenCalledTimes(1);
 	});
 
 	it("retorna a transacao diretamente quando nao ha wait", async () => {
@@ -77,6 +91,7 @@ describe("depositarTokens", () => {
 		const ethereum = { request: vi.fn() };
 
 		await expect(depositarTokens(ethereum, 1n, true)).resolves.toBe("tx-enviada");
+		expect(ethersMocks.approveMock).toHaveBeenCalledWith(contratos.RepairDeposit, 1n);
 		expect(ethersMocks.depositMock).toHaveBeenCalledWith(1n, true);
 	});
 
