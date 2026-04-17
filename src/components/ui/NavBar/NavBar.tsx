@@ -6,6 +6,7 @@ import { AppShell, NavLink, ScrollArea, Stack } from "@mantine/core";
 
 const menuItems = [
   { label: "Home", href: "/" },
+  { label: "Minha conta", href: "/account" },
   { label: "Loja", href: "/store" },
   { label: "Elegibilidade", href: "/eligibility" },
 ];

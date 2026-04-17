@@ -2,14 +2,7 @@ import { BrowserProvider, Contract } from "ethers";
 import { RepairDAODominioError } from "@/erros/errors";
 import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
 import type { EthereumProvider } from "@/services/wallet/provider";
-
-async function aguardarTransacao(transacao: unknown): Promise<unknown> {
-	if (typeof (transacao as { wait?: unknown } | null)?.wait === "function") {
-		return (transacao as { wait: () => Promise<unknown> }).wait();
-	}
-
-	return transacao;
-}
+import { aguardarTransacao } from "@/services/wallet/transaction";
 
 export async function depositarTokens(
 	ethereum: EthereumProvider,

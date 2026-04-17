@@ -16,7 +16,7 @@ function renderWithMantine(node: ReactElement) {
 
 describe("components/ui/NavBar/NavBar", () => {
 	it("destaca a rota ativa na navbar", () => {
-		pathnameState.value = "/store";
+		pathnameState.value = "/account";
 
 		const markup = renderWithMantine(
 			<MantineAppShell header={{ height: 4 }} navbar={{ width: 280, breakpoint: 0 }}>
@@ -27,6 +27,7 @@ describe("components/ui/NavBar/NavBar", () => {
 		);
 
 		expect(markup).toContain('data-active="true"');
+		expect(markup).toContain("Minha conta");
 		expect(markup).toContain("Loja");
 		expect(markup).toContain("Elegibilidade");
 	});

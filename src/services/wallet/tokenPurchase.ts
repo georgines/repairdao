@@ -2,6 +2,7 @@ import { BrowserProvider, Contract, parseEther } from "ethers";
 import { RepairDAODominioError } from "@/erros/errors";
 import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
 import type { EthereumProvider } from "@/services/wallet/provider";
+import { aguardarTransacao } from "@/services/wallet/transaction";
 
 function normalizarQuantidadeEth(valor: string | number): string {
 	const texto = String(valor).trim().replace(",", ".");
@@ -30,9 +31,5 @@ export async function comprarToken(ethereum: EthereumProvider, quantidadeEth: st
 		value: parseEther(valorNormalizado),
 	});
 
-	if (typeof transacao?.wait === "function") {
-		return transacao.wait();
-	}
-
-	return transacao;
+	return aguardarTransacao(transacao);
 }
