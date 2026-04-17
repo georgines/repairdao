@@ -11,9 +11,12 @@ import {
     Container,
     Group,
     MantineProvider,
+    Stack,
     Text,
     createTheme,
 } from "@mantine/core";
+import { WalletStatus } from "@/components/wallet/WalletStatus";
+import { useWalletStatus } from "@/hooks/useWalletStatus";
 import { NavBar } from "@/components/ui/NavBar/NavBar";
 
 const theme = createTheme({
@@ -31,11 +34,12 @@ type AppShellProps = {
 
 export default function AppShell({ children }: AppShellProps) {
     const [mobileOpened, { toggle: toggleMobile, close: closeMobile }] = useDisclosure(false);
+    const { state, actionLabel, actionHandler, formatarEnderecoCurto, formatarNumero, formatarUSD } = useWalletStatus();
 
     return (
         <MantineProvider theme={theme} defaultColorScheme="light">
             <MantineAppShell
-                header={{ height: { base: 60, sm: 80 } }}
+                header={{ height: { base: 164, sm: 132 } }}
                 navbar={{ width: 280, breakpoint: "sm", collapsed: { mobile: !mobileOpened } }}
                 padding={{ base: "sm", sm: "md" }}
                 layout="default"
@@ -43,15 +47,34 @@ export default function AppShell({ children }: AppShellProps) {
             >
                 <MantineAppShell.Header style={{ background: "#ffffff" }}>
                     <Box h={4} style={{ background: "linear-gradient(90deg, #0f172a 0%, #0ea5e9 45%, #14b8a6 100%)" }} />
-                    <Group h="calc(100% - 4px)" px="md" justify="space-between" wrap="nowrap">
-                        <Anchor component={Link} href="/" underline="never">
-                            <Text fw={800} size="lg" c="dark">
-                                RepairDAO
-                            </Text>
-                        </Anchor>
+                    <Stack h="calc(100% - 4px)" px="md" py={6} gap={6} justify="center">
+                        <Group justify="space-between" wrap="nowrap">
+                            <Anchor component={Link} href="/" underline="never">
+                                <Text fw={800} size="lg" c="dark">
+                                    RepairDAO
+                                </Text>
+                            </Anchor>
 
-                        <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" aria-label="Toggle navigation" />
-                    </Group>
+                            <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" aria-label="Toggle navigation" />
+                        </Group>
+
+                        <Group justify="flex-end" wrap="nowrap">
+                            <WalletStatus
+                                connected={state.connected}
+                                loading={state.loading}
+                                address={state.address}
+                                chainLabel={state.chainLabel}
+                                tokenBalance={state.tokenBalance}
+                                ethBalance={state.ethBalance}
+                                usdBalance={state.usdBalance}
+                                actionLabel={actionLabel}
+                                onAction={actionHandler}
+                                formatarEnderecoCurto={formatarEnderecoCurto}
+                                formatarNumero={formatarNumero}
+                                formatarUSD={formatarUSD}
+                            />
+                        </Group>
+                    </Stack>
                 </MantineAppShell.Header>
                 <MantineAppShell.Navbar p={0} style={{ background: "#dbe4ee" }}>
                     <NavBar onNavigate={closeMobile} />

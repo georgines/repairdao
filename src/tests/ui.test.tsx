@@ -48,6 +48,21 @@ describe("fase 1 da interface", () => {
     expect(markup).toContain("Loja");
   });
 
+  it("mantem a rota pai ativa em subrotas", () => {
+    pathnameState.value = "/store/orders";
+
+    const markup = renderWithMantine(
+      <MantineAppShell header={{ height: 4 }} navbar={{ width: 280, breakpoint: 0 }}>
+        <MantineAppShell.Navbar>
+          <NavBar onNavigate={() => {}} />
+        </MantineAppShell.Navbar>
+      </MantineAppShell>,
+    );
+
+    expect(markup).toContain('href="/store"');
+    expect(markup).toContain('data-active="true"');
+  });
+
   it("envolve o conteúdo no shell global", () => {
     const markup = renderToStaticMarkup(
       <AppShell>
