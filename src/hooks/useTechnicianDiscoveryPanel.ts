@@ -19,10 +19,16 @@ type UseTechnicianDiscoveryPanelResult = {
 	totalTechnicians: number;
 	filteredTechnicians: UserSummary[];
 	selectedTechnician: UserSummary | null;
+	contractedTechnician: UserSummary | null;
+	technicianModalMode: "details" | "hire" | null;
+	technicianModalOpened: boolean;
 	hasResults: boolean;
 	onQueryChange: (value: string) => void;
 	onMinReputationChange: (value: string | number) => void;
 	onSelectTechnician: (address: string) => void;
+	onHireTechnician: (address: string) => void;
+	onCloseTechnicianModal: () => void;
+	onConfirmTechnicianHire: () => void;
 	onClearFilters: () => void;
 };
 
@@ -32,6 +38,8 @@ export function useTechnicianDiscoveryPanel({
 	const [query, setQuery] = useState("");
 	const [minReputation, setMinReputation] = useState(0);
 	const [selectedAddress, setSelectedAddress] = useState<string | null>(initialTechnicians.at(0)?.address ?? null);
+	const [contractedTechnicianAddress, setContractedTechnicianAddress] = useState<string | null>(null);
+	const [technicianModalMode, setTechnicianModalMode] = useState<"details" | "hire" | null>(null);
 
 	const filtros = useMemo<UserSearchFilters>(
 		() => ({
@@ -67,6 +75,25 @@ export function useTechnicianDiscoveryPanel({
 
 	function onSelectTechnician(address: string) {
 		setSelectedAddress(address);
+		setTechnicianModalMode("details");
+	}
+
+	function onHireTechnician(address: string) {
+		setSelectedAddress(address);
+		setTechnicianModalMode("hire");
+	}
+
+	function onCloseTechnicianModal() {
+		setTechnicianModalMode(null);
+	}
+
+	function onConfirmTechnicianHire() {
+		if (!selectedTechnician) {
+			return;
+		}
+
+		setContractedTechnicianAddress(selectedTechnician.address);
+		setTechnicianModalMode(null);
 	}
 
 	function onClearFilters() {
@@ -80,10 +107,18 @@ export function useTechnicianDiscoveryPanel({
 		totalTechnicians: initialTechnicians.length,
 		filteredTechnicians,
 		selectedTechnician,
+		contractedTechnician: contractedTechnicianAddress
+			? findUserDetails(initialTechnicians, contractedTechnicianAddress) ?? findUserDetails(filteredTechnicians, contractedTechnicianAddress)
+			: null,
+		technicianModalMode,
+		technicianModalOpened: technicianModalMode !== null && selectedTechnician !== null,
 		hasResults: filteredTechnicians.length > 0,
 		onQueryChange,
 		onMinReputationChange,
 		onSelectTechnician,
+		onHireTechnician,
+		onCloseTechnicianModal,
+		onConfirmTechnicianHire,
 		onClearFilters,
 	};
 }

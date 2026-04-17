@@ -1,12 +1,10 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import type { UserAuditInput, UserDetails, UserRole, UserSummary, UserSyncInput } from "@/services/users/userTypes";
+import { validateUserProfileInput, validateUserWithdrawalInput } from "@/services/users/userValidation";
 
 type PrismaRole = "CLIENTE" | "TECNICO";
 type PrismaEventType = "REGISTERED" | "UPDATED" | "WITHDRAWN" | "ROLE_CHANGED";
-
-function normalizeAddress(address: string) {
-	return address.trim().toLowerCase();
-}
 
 function toPrismaRole(role: UserRole): PrismaRole {
 	return role === "tecnico" ? "TECNICO" : "CLIENTE";
@@ -27,6 +25,7 @@ function toPrismaEventType(eventType: UserAuditInput["eventType"]): PrismaEventT
 function toUserDetails(user: {
 	address: string;
 	name: string;
+	expertiseArea: string | null;
 	role: PrismaRole;
 	badgeLevel: string;
 	reputation: number;
@@ -39,6 +38,7 @@ function toUserDetails(user: {
 	return {
 		address: user.address,
 		name: user.name,
+		expertiseArea: user.expertiseArea,
 		role: toDomainRole(user.role),
 		badgeLevel: user.badgeLevel,
 		reputation: user.reputation,
@@ -54,6 +54,7 @@ function toUserSummary(user: UserDetails): UserSummary {
 	return {
 		address: user.address,
 		name: user.name,
+		expertiseArea: user.expertiseArea,
 		role: user.role,
 		badgeLevel: user.badgeLevel,
 		reputation: user.reputation,
@@ -64,10 +65,10 @@ function toUserSummary(user: UserDetails): UserSummary {
 	};
 }
 
-async function recordAuditEvent(audit: UserAuditInput) {
-	await prisma.userAuditEvent.create({
+async function recordAuditEvent(tx: Prisma.TransactionClient, audit: UserAuditInput) {
+	await tx.userAuditEvent.create({
 		data: {
-			address: normalizeAddress(audit.address),
+			address: validateUserWithdrawalInput(audit.address),
 			eventType: toPrismaEventType(audit.eventType),
 			details: audit.details,
 		},
@@ -75,30 +76,33 @@ async function recordAuditEvent(audit: UserAuditInput) {
 }
 
 export async function saveOrUpdateUser(user: UserSyncInput): Promise<UserDetails> {
-	const address = normalizeAddress(user.address);
+	const dados = validateUserProfileInput(user);
+
 	const record = await prisma.userProfile.upsert({
-		where: { address },
+		where: { address: dados.address },
 		create: {
-			address,
-			searchName: normalizeAddress(user.name),
-			name: user.name.trim(),
-			role: toPrismaRole(user.role),
-			badgeLevel: user.badgeLevel.trim(),
-			reputation: Math.trunc(user.reputation),
-			depositLevel: Math.trunc(user.depositLevel),
-			isActive: user.isActive,
-			isEligible: user.isEligible,
+			address: dados.address,
+			searchName: dados.name.toLowerCase(),
+			name: dados.name,
+			expertiseArea: dados.expertiseArea,
+			role: toPrismaRole(dados.role),
+			badgeLevel: dados.badgeLevel,
+			reputation: dados.reputation,
+			depositLevel: dados.depositLevel,
+			isActive: dados.isActive,
+			isEligible: dados.isEligible,
 			syncedAt: new Date(),
 		},
 		update: {
-			searchName: normalizeAddress(user.name),
-			name: user.name.trim(),
-			role: toPrismaRole(user.role),
-			badgeLevel: user.badgeLevel.trim(),
-			reputation: Math.trunc(user.reputation),
-			depositLevel: Math.trunc(user.depositLevel),
-			isActive: user.isActive,
-			isEligible: user.isEligible,
+			searchName: dados.name.toLowerCase(),
+			name: dados.name,
+			expertiseArea: dados.expertiseArea,
+			role: toPrismaRole(dados.role),
+			badgeLevel: dados.badgeLevel,
+			reputation: dados.reputation,
+			depositLevel: dados.depositLevel,
+			isActive: dados.isActive,
+			isEligible: dados.isEligible,
 			syncedAt: new Date(),
 		},
 	});
@@ -106,20 +110,63 @@ export async function saveOrUpdateUser(user: UserSyncInput): Promise<UserDetails
 	return toUserDetails(record);
 }
 
-export async function registerUser(user: UserSyncInput): Promise<UserDetails> {
-	const record = await saveOrUpdateUser(user);
+async function upsertUserProfileWithAudit(
+	user: UserSyncInput,
+	eventType: UserAuditInput["eventType"],
+	details: string,
+): Promise<UserDetails> {
+	return prisma.$transaction(async (tx) => {
+		const dados = validateUserProfileInput(user);
 
-	await recordAuditEvent({
-		address: user.address,
-		eventType: "registered",
-		details: "User registered in the local projection.",
+		const record = await tx.userProfile.upsert({
+			where: { address: dados.address },
+			create: {
+				address: dados.address,
+				searchName: dados.name.toLowerCase(),
+				name: dados.name,
+				expertiseArea: dados.expertiseArea,
+				role: toPrismaRole(dados.role),
+				badgeLevel: dados.badgeLevel,
+				reputation: dados.reputation,
+				depositLevel: dados.depositLevel,
+				isActive: dados.isActive,
+				isEligible: dados.isEligible,
+				syncedAt: new Date(),
+			},
+			update: {
+				searchName: dados.name.toLowerCase(),
+				name: dados.name,
+				expertiseArea: dados.expertiseArea,
+				role: toPrismaRole(dados.role),
+				badgeLevel: dados.badgeLevel,
+				reputation: dados.reputation,
+				depositLevel: dados.depositLevel,
+				isActive: dados.isActive,
+				isEligible: dados.isEligible,
+				syncedAt: new Date(),
+			},
+		});
+
+		await recordAuditEvent(tx, {
+			address: dados.address,
+			eventType,
+			details,
+		});
+
+		return toUserDetails(record);
 	});
+}
 
-	return record;
+export async function registerUser(user: UserSyncInput): Promise<UserDetails> {
+	return upsertUserProfileWithAudit(user, "registered", "User registered in the local projection.");
+}
+
+export async function updateUserProfile(user: UserSyncInput): Promise<UserDetails> {
+	return upsertUserProfileWithAudit(user, "updated", "User profile updated in the local projection.");
 }
 
 export async function updateUserRole(address: string, role: UserRole): Promise<UserDetails | null> {
-	const normalizedAddress = normalizeAddress(address);
+	const normalizedAddress = validateUserWithdrawalInput(address);
 	const user = await prisma.userProfile.findUnique({ where: { address: normalizedAddress } });
 
 	if (!user) {
@@ -131,33 +178,35 @@ export async function updateUserRole(address: string, role: UserRole): Promise<U
 		data: {
 			role: toPrismaRole(role),
 			isEligible: role === "tecnico",
+			expertiseArea: role === "tecnico" ? user.expertiseArea : null,
 		},
 	});
 
-	await recordAuditEvent({
-		address: normalizedAddress,
-		eventType: "role_changed",
-		details: `Role changed to ${role}.`,
+	await prisma.userAuditEvent.create({
+		data: {
+			address: normalizedAddress,
+			eventType: "ROLE_CHANGED",
+			details: `Role changed to ${role}.`,
+		},
 	});
 
 	return toUserDetails(updated);
 }
 
 export async function withdrawUser(address: string): Promise<boolean> {
-	const normalizedAddress = normalizeAddress(address);
+	const normalizedAddress = validateUserWithdrawalInput(address);
 	const user = await prisma.userProfile.findUnique({ where: { address: normalizedAddress } });
 
 	if (!user) {
 		return false;
 	}
 
-	await prisma.userProfile.delete({ where: { address: normalizedAddress } });
-
-	await recordAuditEvent({
-		address: normalizedAddress,
-		eventType: "withdrawn",
-		details: "User removed from the local projection after withdrawal.",
-	});
+	await prisma.$transaction([
+		prisma.userAuditEvent.deleteMany({
+			where: { address: normalizedAddress },
+		}),
+		prisma.userProfile.delete({ where: { address: normalizedAddress } }),
+	]);
 
 	return true;
 }
@@ -175,10 +224,18 @@ export async function listEligibleTechnicians(): Promise<UserSummary[]> {
 	return users.map((user) => toUserSummary(toUserDetails(user)));
 }
 
+export async function listUsers(): Promise<UserSummary[]> {
+	const users = await prisma.userProfile.findMany({
+		orderBy: [{ name: "asc" }, { updatedAt: "desc" }],
+	});
+
+	return users.map((user) => toUserSummary(toUserDetails(user)));
+}
+
 export async function getUserDetails(address: string): Promise<UserDetails | null> {
 	const user = await prisma.userProfile.findUnique({
 		where: {
-			address: normalizeAddress(address),
+			address: validateUserWithdrawalInput(address),
 		},
 	});
 

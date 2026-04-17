@@ -5,6 +5,7 @@ export type UserEventType = "registered" | "updated" | "withdrawn" | "role_chang
 export type UserSummary = {
 	address: string;
 	name: string;
+	expertiseArea: string | null;
 	role: UserRole;
 	badgeLevel: string;
 	reputation: number;
@@ -21,6 +22,7 @@ export type UserDetails = UserSummary & {
 export type UserSyncInput = {
 	address: string;
 	name: string;
+	expertiseArea?: string | null;
 	role: UserRole;
 	badgeLevel: string;
 	reputation: number;
@@ -33,4 +35,16 @@ export type UserAuditInput = {
 	address: string;
 	eventType: UserEventType;
 	details: string;
+};
+
+export type UserActivationPayload = {
+	address: string;
+	name: string;
+	expertiseArea?: string | null;
+	role: UserRole;
+	badgeLevel: string;
+	reputation: number;
+	depositLevel: number;
+	isActive: boolean;
+	isEligible: boolean;
 };

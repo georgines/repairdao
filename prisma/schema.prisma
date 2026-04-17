@@ -24,6 +24,7 @@ model UserProfile {
   address      String   @unique
   searchName   String
   name         String
+  expertiseArea String?
   role         UserRole
   badgeLevel   String
   reputation   Int      @default(0)

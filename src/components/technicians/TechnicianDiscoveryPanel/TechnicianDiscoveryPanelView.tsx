@@ -1,4 +1,18 @@
-import { Badge, Box, Button, Card, Group, NumberInput, SimpleGrid, Stack, Table, Text, TextInput, Title } from "@mantine/core";
+import {
+	Badge,
+	Box,
+	Button,
+	Card,
+	Group,
+	Modal,
+	NumberInput,
+	SimpleGrid,
+	Stack,
+	Table,
+	Text,
+	TextInput,
+	Title,
+} from "@mantine/core";
 import type { UserSummary } from "@/services/users";
 
 export type TechnicianDiscoveryPanelViewProps = {
@@ -7,19 +21,37 @@ export type TechnicianDiscoveryPanelViewProps = {
 	totalTechnicians: number;
 	filteredTechnicians: UserSummary[];
 	selectedTechnician: UserSummary | null;
+	contractedTechnician: UserSummary | null;
+	technicianModalMode: "details" | "hire" | null;
+	technicianModalOpened: boolean;
 	hasResults: boolean;
 	onQueryChange: (value: string) => void;
 	onMinReputationChange: (value: string | number) => void;
 	onSelectTechnician: (address: string) => void;
+	onHireTechnician: (address: string) => void;
+	onCloseTechnicianModal: () => void;
+	onConfirmTechnicianHire: () => void;
 	onClearFilters: () => void;
 };
 
-function formatarSituacao(tecnico: UserSummary) {
-	if (!tecnico.isActive) {
+function formatSituation(technician: UserSummary) {
+	if (!technician.isActive) {
 		return "inativo";
 	}
 
-	return tecnico.isEligible ? "elegivel" : "fora da busca";
+	return technician.isEligible ? "elegivel" : "fora da busca";
+}
+
+function formatRole(role: UserSummary["role"]) {
+	return role === "tecnico" ? "Tecnico" : "Cliente";
+}
+
+function formatDetail(value: string | number | boolean | null) {
+	if (typeof value === "boolean") {
+		return value ? "sim" : "nao";
+	}
+
+	return value ?? "-";
 }
 
 export function TechnicianDiscoveryPanelView({
@@ -28,12 +60,21 @@ export function TechnicianDiscoveryPanelView({
 	totalTechnicians,
 	filteredTechnicians,
 	selectedTechnician,
+	contractedTechnician,
+	technicianModalMode,
+	technicianModalOpened,
 	hasResults,
 	onQueryChange,
 	onMinReputationChange,
 	onSelectTechnician,
+	onHireTechnician,
+	onCloseTechnicianModal,
+	onConfirmTechnicianHire,
 	onClearFilters,
 }: TechnicianDiscoveryPanelViewProps) {
+	const modalTitle =
+		technicianModalMode === "hire" ? "Confirmar contratacao" : "Detalhes do tecnico";
+
 	return (
 		<Stack gap="lg">
 			<Card withBorder radius="sm" shadow="none" padding="lg">
@@ -44,25 +85,32 @@ export function TechnicianDiscoveryPanelView({
 						</Text>
 						<Title order={1}>Encontre tecnicos elegiveis</Title>
 						<Text size="sm" c="dimmed">
-							O indice local mostra apenas tecnicos ativos. Saque remove a projeção, e mudanca de papel atualiza a visibilidade.
+							O indice local mostra apenas tecnicos ativos. Saque remove a projecao, e mudanca de papel atualiza a visibilidade.
 						</Text>
 					</Stack>
 
 					<Group gap="sm">
 						<Badge variant="light">{totalTechnicians} cadastrados</Badge>
 						<Badge variant="light">{filteredTechnicians.length} visiveis</Badge>
-						<Badge variant="light">{selectedTechnician ? `selecionado: ${selectedTechnician.name}` : "nenhum selecionado"}</Badge>
+						<Badge variant="light">
+							{selectedTechnician ? `selecionado: ${selectedTechnician.name}` : "nenhum selecionado"}
+						</Badge>
+						{contractedTechnician ? (
+							<Badge variant="light" color="teal">
+								contratado: {contractedTechnician.name}
+							</Badge>
+						) : null}
 					</Group>
 				</Stack>
 			</Card>
 
-			<SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
-				<Card withBorder radius="sm" shadow="none" padding="lg">
-					<Stack gap="md">
+			<Card withBorder radius="sm" shadow="none" padding="lg">
+				<Stack gap="md">
+					<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
 						<TextInput
 							label="Buscar tecnico"
-							description="Pesquise por nome, endereco ou badge."
-							placeholder="Ex.: ana, 0xabc ou bronze"
+							description="Pesquise por nome, endereco, badge ou area de atuacao."
+							placeholder="Ex.: ana, 0xabc, bronze ou eletrica"
 							value={query}
 							onChange={(event) => onQueryChange(event.currentTarget.value)}
 						/>
@@ -71,96 +119,128 @@ export function TechnicianDiscoveryPanelView({
 							label="Reputacao minima"
 							description="Filtra tecnicos com reputacao igual ou maior."
 							value={minReputation}
-							onChange={onMinReputationChange}
 							min={0}
-							step={1}
-							hideControls
+							clampBehavior="strict"
+							onChange={onMinReputationChange}
 						/>
+					</SimpleGrid>
 
-						<Group justify="space-between" wrap="nowrap">
-							<Text size="sm" c="dimmed">
-								{hasResults ? "Use a lista para comparar tecnicos." : "Nenhum tecnico encontrou este criterio."}
-							</Text>
-
-							<Button variant="light" onClick={onClearFilters}>
-								Limpar
-							</Button>
-						</Group>
-
-						<Box style={{ overflowX: "auto" }}>
-							<Table withTableBorder withColumnBorders highlightOnHover tabularNums>
-								<Table.Thead>
-									<Table.Tr>
-										<Table.Th>Nome</Table.Th>
-										<Table.Th>Papel</Table.Th>
-										<Table.Th>Nivel</Table.Th>
-										<Table.Th>Reputacao</Table.Th>
-										<Table.Th>Status</Table.Th>
-										<Table.Th>Acoes</Table.Th>
-									</Table.Tr>
-								</Table.Thead>
-								<Table.Tbody>
-									{filteredTechnicians.map((tecnico) => (
-										<Table.Tr key={tecnico.address} data-selected={selectedTechnician?.address === tecnico.address}>
-											<Table.Td>
-												<Stack gap={0}>
-													<Text fw={600}>{tecnico.name}</Text>
-													<Text size="xs" c="dimmed">
-														{tecnico.address}
-													</Text>
-												</Stack>
-											</Table.Td>
-											<Table.Td>{tecnico.role}</Table.Td>
-											<Table.Td>{tecnico.badgeLevel}</Table.Td>
-											<Table.Td>{tecnico.reputation}</Table.Td>
-											<Table.Td>{formatarSituacao(tecnico)}</Table.Td>
-											<Table.Td>
-												<Button size="xs" variant="light" onClick={() => onSelectTechnician(tecnico.address)}>
-													Ver detalhes
-												</Button>
-											</Table.Td>
-										</Table.Tr>
-									))}
-								</Table.Tbody>
-							</Table>
-						</Box>
-					</Stack>
-				</Card>
-
-				<Card withBorder radius="sm" shadow="none" padding="lg">
-					<Stack gap="sm">
-						<Text size="xs" tt="uppercase" fw={700} c="dimmed">
-							Detalhes
+					<Group justify="space-between" wrap="nowrap">
+						<Text size="sm" c="dimmed">
+							{hasResults ? "Use a lista para comparar tecnicos." : "Nenhum tecnico encontrou este criterio."}
 						</Text>
 
-						{selectedTechnician ? (
-							<>
-								<Title order={3}>{selectedTechnician.name}</Title>
-								<Text size="sm" c="dimmed">
-									{selectedTechnician.address}
-								</Text>
+						<Button variant="light" onClick={onClearFilters}>
+							Limpar
+						</Button>
+					</Group>
 
-								<Group gap="xs">
-									<Badge variant="light">{selectedTechnician.role}</Badge>
-									<Badge variant="light">{selectedTechnician.badgeLevel}</Badge>
-									<Badge variant="light">reputacao {selectedTechnician.reputation}</Badge>
-								</Group>
+					<Box style={{ overflowX: "auto" }}>
+						<Table withTableBorder withColumnBorders highlightOnHover tabularNums miw={960}>
+							<Table.Thead>
+								<Table.Tr>
+									<Table.Th>Nome</Table.Th>
+									<Table.Th>Area</Table.Th>
+									<Table.Th>Papel</Table.Th>
+									<Table.Th>Nivel</Table.Th>
+									<Table.Th>Reputacao</Table.Th>
+									<Table.Th>Status</Table.Th>
+									<Table.Th>Acoes</Table.Th>
+								</Table.Tr>
+							</Table.Thead>
+							<Table.Tbody>
+								{filteredTechnicians.map((technician) => (
+									<Table.Tr
+										key={technician.address}
+										data-selected={selectedTechnician?.address === technician.address}
+									>
+										<Table.Td>
+											<Stack gap={0}>
+												<Text fw={600}>{technician.name}</Text>
+												<Text size="xs" c="dimmed">
+													{technician.address}
+												</Text>
+											</Stack>
+										</Table.Td>
+										<Table.Td>{technician.expertiseArea ?? "-"}</Table.Td>
+										<Table.Td>{formatRole(technician.role)}</Table.Td>
+										<Table.Td>{technician.badgeLevel}</Table.Td>
+										<Table.Td>{technician.reputation}</Table.Td>
+										<Table.Td>{formatSituation(technician)}</Table.Td>
+										<Table.Td>
+											<Group gap="xs" wrap="nowrap">
+												<Button size="xs" variant="light" onClick={() => onSelectTechnician(technician.address)}>
+													Detalhes
+												</Button>
+												<Button size="xs" onClick={() => onHireTechnician(technician.address)}>
+													Contratar
+												</Button>
+											</Group>
+										</Table.Td>
+									</Table.Tr>
+								))}
+							</Table.Tbody>
+						</Table>
+					</Box>
+				</Stack>
+			</Card>
 
-								<Stack gap={4}>
-									<Text size="sm">Nivel de deposito: {selectedTechnician.depositLevel}</Text>
-									<Text size="sm">Ativo: {selectedTechnician.isActive ? "sim" : "nao"}</Text>
-									<Text size="sm">Elegivel: {selectedTechnician.isEligible ? "sim" : "nao"}</Text>
-									<Text size="sm">Atualizado em: {selectedTechnician.updatedAt}</Text>
-								</Stack>
-							</>
-						) : (
+			<Modal
+				opened={technicianModalOpened}
+				onClose={onCloseTechnicianModal}
+				title={modalTitle}
+				size="lg"
+				centered
+				overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
+				withinPortal
+			>
+				{selectedTechnician ? (
+					<Stack gap="md">
+						<Stack gap={4}>
+							<Title order={3}>{selectedTechnician.name}</Title>
 							<Text size="sm" c="dimmed">
-								Selecione um tecnico na tabela para ver os dados completos.
+								{selectedTechnician.address}
 							</Text>
+						</Stack>
+
+						<Group gap="xs">
+							<Badge variant="light">{formatRole(selectedTechnician.role)}</Badge>
+							<Badge variant="light">{selectedTechnician.badgeLevel}</Badge>
+							<Badge variant="light">reputacao {selectedTechnician.reputation}</Badge>
+						</Group>
+
+						<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
+							<Text size="sm">Area: {formatDetail(selectedTechnician.expertiseArea)}</Text>
+							<Text size="sm">Nivel de deposito: {selectedTechnician.depositLevel}</Text>
+							<Text size="sm">Ativo: {formatDetail(selectedTechnician.isActive)}</Text>
+							<Text size="sm">Elegivel: {formatDetail(selectedTechnician.isEligible)}</Text>
+							<Text size="sm">Atualizado em: {selectedTechnician.updatedAt}</Text>
+						</SimpleGrid>
+
+						{technicianModalMode === "hire" ? (
+							<Card withBorder radius="md" padding="md" shadow="none">
+								<Stack gap="sm">
+									<Text size="sm">
+										Confirme a contratacao para marcar este tecnico como selecionado para o servico.
+									</Text>
+									<Group justify="flex-end">
+										<Button variant="light" onClick={onCloseTechnicianModal}>
+											Cancelar
+										</Button>
+										<Button onClick={onConfirmTechnicianHire}>Contratar tecnico</Button>
+									</Group>
+								</Stack>
+							</Card>
+						) : (
+							<Group justify="flex-end">
+								<Button variant="light" onClick={onCloseTechnicianModal}>
+									Fechar
+								</Button>
+							</Group>
 						)}
 					</Stack>
-				</Card>
-			</SimpleGrid>
+				) : null}
+			</Modal>
 		</Stack>
 	);
 }

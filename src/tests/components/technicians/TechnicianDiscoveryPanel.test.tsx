@@ -27,6 +27,7 @@ describe("components/technicians/TechnicianDiscoveryPanel", () => {
 				{
 					address: "0xabc",
 					name: "Ana Costa",
+					expertiseArea: "Eletrica",
 					role: "tecnico",
 					badgeLevel: "bronze",
 					reputation: 10,
@@ -39,6 +40,7 @@ describe("components/technicians/TechnicianDiscoveryPanel", () => {
 			selectedTechnician: {
 				address: "0xabc",
 				name: "Ana Costa",
+				expertiseArea: "Eletrica",
 				role: "tecnico",
 				badgeLevel: "bronze",
 				reputation: 10,
@@ -47,10 +49,16 @@ describe("components/technicians/TechnicianDiscoveryPanel", () => {
 				isEligible: true,
 				updatedAt: "2026-04-17T10:00:00.000Z",
 			},
+			contractedTechnician: null,
+			technicianModalMode: null,
+			technicianModalOpened: false,
 			hasResults: true,
 			onQueryChange: vi.fn(),
 			onMinReputationChange: vi.fn(),
 			onSelectTechnician: vi.fn(),
+			onHireTechnician: vi.fn(),
+			onCloseTechnicianModal: vi.fn(),
+			onConfirmTechnicianHire: vi.fn(),
 			onClearFilters: vi.fn(),
 		});
 
@@ -60,6 +68,7 @@ describe("components/technicians/TechnicianDiscoveryPanel", () => {
 					{
 						address: "0xabc",
 						name: "Ana Costa",
+						expertiseArea: "Eletrica",
 						role: "tecnico",
 						badgeLevel: "bronze",
 						reputation: 10,

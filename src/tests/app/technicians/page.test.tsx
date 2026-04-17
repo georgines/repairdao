@@ -29,6 +29,7 @@ describe("app/technicians/page", () => {
 			{
 				address: "0xabc",
 				name: "Ana Costa",
+				expertiseArea: "Eletrica",
 				role: "tecnico",
 				badgeLevel: "bronze",
 				reputation: 10,

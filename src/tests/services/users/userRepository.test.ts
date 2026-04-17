@@ -1,6 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const prismaMocks = vi.hoisted(() => ({
+	$transaction: vi.fn(async (arg: unknown) => {
+		if (typeof arg === "function") {
+			return await (arg as (tx: typeof prismaMocks) => Promise<unknown>)(prismaMocks);
+		}
+
+		return Promise.all(arg as Promise<unknown>[]);
+	}),
 	userProfile: {
 		upsert: vi.fn(),
 		findMany: vi.fn(),
@@ -10,6 +17,7 @@ const prismaMocks = vi.hoisted(() => ({
 	},
 	userAuditEvent: {
 		create: vi.fn(),
+		deleteMany: vi.fn(),
 	},
 }));
 
@@ -20,8 +28,10 @@ vi.mock("@/lib/prisma", () => ({
 import {
 	getUserDetails,
 	listEligibleTechnicians,
+	listUsers,
 	registerUser,
 	saveOrUpdateUser,
+	updateUserProfile,
 	updateUserRole,
 	withdrawUser,
 } from "@/services/users";
@@ -35,6 +45,7 @@ describe("userRepository", () => {
 		prismaMocks.userProfile.upsert.mockResolvedValue({
 			address: "0xabc",
 			name: "Ana",
+			expertiseArea: "Eletrica",
 			role: "TECNICO",
 			badgeLevel: "bronze",
 			reputation: 12,
@@ -49,6 +60,7 @@ describe("userRepository", () => {
 			saveOrUpdateUser({
 				address: " 0xABC ",
 				name: " Ana ",
+				expertiseArea: " Eletrica ",
 				role: "tecnico",
 				badgeLevel: " bronze ",
 				reputation: 12.4,
@@ -59,6 +71,7 @@ describe("userRepository", () => {
 		).resolves.toEqual({
 			address: "0xabc",
 			name: "Ana",
+			expertiseArea: "Eletrica",
 			role: "tecnico",
 			badgeLevel: "bronze",
 			reputation: 12,
@@ -75,11 +88,13 @@ describe("userRepository", () => {
 				create: expect.objectContaining({
 					address: "0xabc",
 					searchName: "ana",
+					expertiseArea: "Eletrica",
 					role: "TECNICO",
 					syncedAt: expect.any(Date),
 				}),
 				update: expect.objectContaining({
 					searchName: "ana",
+					expertiseArea: "Eletrica",
 					role: "TECNICO",
 					syncedAt: expect.any(Date),
 				}),
@@ -92,6 +107,7 @@ describe("userRepository", () => {
 		prismaMocks.userProfile.upsert.mockResolvedValue({
 			address: "0xabc",
 			name: "Ana",
+			expertiseArea: "Eletrica",
 			role: "TECNICO",
 			badgeLevel: "bronze",
 			reputation: 12,
@@ -105,6 +121,43 @@ describe("userRepository", () => {
 		await registerUser({
 			address: "0xABC",
 			name: "Ana",
+			expertiseArea: "Eletrica",
+			role: "tecnico",
+			badgeLevel: "bronze",
+			reputation: 12,
+			depositLevel: 1,
+			isActive: true,
+			isEligible: true,
+		});
+
+		expect(prismaMocks.$transaction).toHaveBeenCalledTimes(1);
+		expect(prismaMocks.userAuditEvent.create).toHaveBeenCalledWith({
+			data: expect.objectContaining({
+				address: "0xabc",
+				eventType: "REGISTERED",
+			}),
+		});
+	});
+
+	it("updates a user and registers audit", async () => {
+		prismaMocks.userProfile.upsert.mockResolvedValue({
+			address: "0xabc",
+			name: "Ana",
+			expertiseArea: "Redes",
+			role: "TECNICO",
+			badgeLevel: "bronze",
+			reputation: 12,
+			depositLevel: 1,
+			isActive: true,
+			isEligible: true,
+			updatedAt: new Date("2026-04-17T10:00:00.000Z"),
+			syncedAt: new Date("2026-04-17T10:01:00.000Z"),
+		});
+
+		await updateUserProfile({
+			address: "0xABC",
+			name: "Ana",
+			expertiseArea: "Redes",
 			role: "tecnico",
 			badgeLevel: "bronze",
 			reputation: 12,
@@ -116,7 +169,7 @@ describe("userRepository", () => {
 		expect(prismaMocks.userAuditEvent.create).toHaveBeenCalledWith({
 			data: expect.objectContaining({
 				address: "0xabc",
-				eventType: "REGISTERED",
+				eventType: "UPDATED",
 			}),
 		});
 	});
@@ -125,6 +178,7 @@ describe("userRepository", () => {
 		prismaMocks.userProfile.findUnique.mockResolvedValue({
 			address: "0xabc",
 			name: "Ana",
+			expertiseArea: "Eletrica",
 			role: "TECNICO",
 			badgeLevel: "bronze",
 			reputation: 12,
@@ -137,6 +191,7 @@ describe("userRepository", () => {
 		prismaMocks.userProfile.update.mockResolvedValue({
 			address: "0xabc",
 			name: "Ana",
+			expertiseArea: null,
 			role: "CLIENTE",
 			badgeLevel: "bronze",
 			reputation: 12,
@@ -150,6 +205,7 @@ describe("userRepository", () => {
 		await expect(updateUserRole(" 0xABC ", "cliente")).resolves.toEqual({
 			address: "0xabc",
 			name: "Ana",
+			expertiseArea: null,
 			role: "cliente",
 			badgeLevel: "bronze",
 			reputation: 12,
@@ -162,7 +218,7 @@ describe("userRepository", () => {
 
 		expect(prismaMocks.userProfile.update).toHaveBeenCalledWith({
 			where: { address: "0xabc" },
-			data: { role: "CLIENTE", isEligible: false },
+			data: { role: "CLIENTE", isEligible: false, expertiseArea: null },
 		});
 		expect(prismaMocks.userAuditEvent.create).toHaveBeenCalledWith({
 			data: expect.objectContaining({
@@ -179,10 +235,11 @@ describe("userRepository", () => {
 		expect(prismaMocks.userProfile.update).not.toHaveBeenCalled();
 	});
 
-	it("removes the user projection on withdrawal and registers audit", async () => {
+	it("removes the user projection on withdrawal", async () => {
 		prismaMocks.userProfile.findUnique.mockResolvedValue({
 			address: "0xabc",
 			name: "Ana",
+			expertiseArea: "Eletrica",
 			role: "TECNICO",
 			badgeLevel: "bronze",
 			reputation: 12,
@@ -195,14 +252,12 @@ describe("userRepository", () => {
 
 		await expect(withdrawUser("0xABC")).resolves.toBe(true);
 
-		expect(prismaMocks.userProfile.delete).toHaveBeenCalledWith({
+		expect(prismaMocks.$transaction).toHaveBeenCalledTimes(1);
+		expect(prismaMocks.userAuditEvent.deleteMany).toHaveBeenCalledWith({
 			where: { address: "0xabc" },
 		});
-		expect(prismaMocks.userAuditEvent.create).toHaveBeenCalledWith({
-			data: expect.objectContaining({
-				address: "0xabc",
-				eventType: "WITHDRAWN",
-			}),
+		expect(prismaMocks.userProfile.delete).toHaveBeenCalledWith({
+			where: { address: "0xabc" },
 		});
 	});
 
@@ -218,6 +273,7 @@ describe("userRepository", () => {
 			{
 				address: "0xbbb",
 				name: "Bruno",
+				expertiseArea: "Redes",
 				role: "TECNICO",
 				badgeLevel: "bronze",
 				reputation: 12,
@@ -233,6 +289,7 @@ describe("userRepository", () => {
 			{
 				address: "0xbbb",
 				name: "Bruno",
+				expertiseArea: "Redes",
 				role: "tecnico",
 				badgeLevel: "bronze",
 				reputation: 12,
@@ -253,10 +310,44 @@ describe("userRepository", () => {
 		});
 	});
 
+	it("lists all users ordered by name", async () => {
+		prismaMocks.userProfile.findMany.mockResolvedValue([
+			{
+				address: "0xbbb",
+				name: "Bruno",
+				expertiseArea: "Redes",
+				role: "TECNICO",
+				badgeLevel: "bronze",
+				reputation: 12,
+				depositLevel: 1,
+				isActive: true,
+				isEligible: true,
+				updatedAt: new Date("2026-04-17T10:00:00.000Z"),
+				syncedAt: new Date("2026-04-17T10:01:00.000Z"),
+			},
+		]);
+
+		await expect(listUsers()).resolves.toEqual([
+			{
+				address: "0xbbb",
+				name: "Bruno",
+				expertiseArea: "Redes",
+				role: "tecnico",
+				badgeLevel: "bronze",
+				reputation: 12,
+				depositLevel: 1,
+				isActive: true,
+				isEligible: true,
+				updatedAt: "2026-04-17T10:00:00.000Z",
+			},
+		]);
+	});
+
 	it("returns normalized details for a user", async () => {
 		prismaMocks.userProfile.findUnique.mockResolvedValue({
 			address: "0xabc",
 			name: "Ana",
+			expertiseArea: "Eletrica",
 			role: "TECNICO",
 			badgeLevel: "bronze",
 			reputation: 12,
@@ -270,6 +361,7 @@ describe("userRepository", () => {
 		await expect(getUserDetails(" 0xABC ")).resolves.toEqual({
 			address: "0xabc",
 			name: "Ana",
+			expertiseArea: "Eletrica",
 			role: "tecnico",
 			badgeLevel: "bronze",
 			reputation: 12,

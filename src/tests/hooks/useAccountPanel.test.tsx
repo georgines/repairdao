@@ -10,6 +10,7 @@ const serviceMocks = vi.hoisted(() => ({
 	sacarRendimento: vi.fn(),
 	obterEthereumProvider: vi.fn(),
 	useWalletStatus: vi.fn(),
+	deleteUserProfile: vi.fn(),
 }));
 
 vi.mock("@/services/account/accountMetrics", () => ({
@@ -27,6 +28,10 @@ vi.mock("@/services/wallet/provider", () => ({
 
 vi.mock("@/hooks/useWalletStatus", () => ({
 	useWalletStatus: serviceMocks.useWalletStatus,
+}));
+
+vi.mock("@/services/users/userClient", () => ({
+	deleteUserProfile: serviceMocks.deleteUserProfile,
 }));
 
 import { useAccountPanel } from "@/hooks/useAccountPanel";
@@ -116,6 +121,7 @@ describe("useAccountPanel", () => {
 
 		serviceMocks.sacarDeposito.mockResolvedValue("ok");
 		serviceMocks.sacarRendimento.mockResolvedValue("ok");
+		serviceMocks.deleteUserProfile.mockResolvedValue(undefined);
 
 		await act(async () => {
 			await getLatest()?.handleWithdrawDeposit();
@@ -129,6 +135,7 @@ describe("useAccountPanel", () => {
 
 		expect(serviceMocks.sacarDeposito).toHaveBeenCalledWith(expect.any(Object));
 		expect(serviceMocks.sacarRendimento).toHaveBeenCalledWith(expect.any(Object));
+		expect(serviceMocks.deleteUserProfile).toHaveBeenCalledWith("0x1234567890abcdef1234567890abcdef12345678");
 		expect(serviceMocks.carregarMetricasDaConta).toHaveBeenCalledWith("0x1234567890abcdef1234567890abcdef12345678");
 	});
 

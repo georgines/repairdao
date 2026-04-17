@@ -12,6 +12,37 @@ function renderWithMantine(node: ReactElement) {
 	return renderToStaticMarkup(<MantineProvider>{node}</MantineProvider>);
 }
 
+const baseProps = {
+	ethBalance: "0.5",
+	usdBalance: "1000",
+	ethUsdPrice: "2000",
+	tokensPerEth: "250",
+	rptBalance: "10",
+	badgeLevel: "bronze",
+	isActive: false,
+	perfilAtivo: null,
+	mostrarSeletoresPapel: true,
+	perfilSelecionado: "cliente" as const,
+	perfilConfirmacao: "cliente" as const,
+	nome: "Ana",
+	areaAtuacao: "",
+	identificadorCarteira: "0x1234567890abcdef1234567890abcdef12345678",
+	quantidadeRpt: null as string | number | null,
+	quantidadeErro: null as string | null,
+	quantidadeMinima: 100,
+	acaoLabel: "Ativar como cliente",
+	mensagemAcao: "Ao ativar como cliente, o valor digitado sera confirmado antes de salvar o cadastro.",
+	walletNotice: null as string | null,
+	depositing: false,
+	error: null as string | null,
+	onPerfilChange: vi.fn(),
+	onNomeChange: vi.fn(),
+	onAreaAtuacaoChange: vi.fn(),
+	onQuantidadeChange: vi.fn(),
+	onDeposit: vi.fn(),
+	connected: true,
+};
+
 describe("EligibilityPanelView", () => {
 	let container: HTMLDivElement;
 	let root: ReturnType<typeof createRoot>;
@@ -46,114 +77,35 @@ describe("EligibilityPanelView", () => {
 		container.remove();
 	});
 
-	it("renderiza o seletor de papel, o campo de valor e o card de nivel", async () => {
-		const markup = renderWithMantine(
-			<EligibilityPanelView
-				ethBalance="0.5"
-				usdBalance="1000"
-				ethUsdPrice="2000"
-				tokensPerEth="250"
-				rptBalance="10"
-				badgeLevel="bronze"
-				isActive={false}
-				perfilAtivo={null}
-				mostrarSeletoresPapel={true}
-				perfilSelecionado="cliente"
-				quantidadeRpt={null}
-				quantidadeErro={null}
-				quantidadeMinima={100}
-				acaoLabel="Ativar como cliente"
-				mensagemAcao="Ao ativar como cliente, o valor digitado sera o inicio do novo nivel."
-				walletNotice={null}
-				depositing={false}
-				error={null}
-				onPerfilChange={() => {}}
-				onQuantidadeChange={() => {}}
-				onDeposit={() => {}}
-				connected={true}
-			/>,
-		);
+	it("renderiza o cadastro, o seletor de papel e o card de nivel", async () => {
+		const markup = renderWithMantine(<EligibilityPanelView {...baseProps} />);
 
 		expect(markup).toContain("Depositar RPT e ativar conta");
 		expect(markup).toContain("Definir papel");
-		expect(markup).toContain("Cliente");
-		expect(markup).toContain("Tecnico");
+		expect(markup).toContain("Nome do usuario");
+		expect(markup).toContain("Identificador da carteira");
 		expect(markup).toContain("Nivel do cliente");
-		expect(markup).toContain("Aguardando deposito");
 		expect(markup).toContain("Quanto RPT deseja depositar");
 		expect(markup).toContain("Ativar como cliente");
 		expect(markup).toContain("RPT 10,00");
 		expect(markup).toContain("ETH comprado 0,0400");
 		expect(markup).toContain("USD comprado US$");
 		expect(markup).toContain("80,00");
-		expect(markup).toContain("Na carteira");
-		expect(markup).toContain("ETH 0,5000");
-		expect(markup).toContain("USD US$");
-		expect(markup).toContain("1.000,00");
-		expect(markup).toContain("Valor minimo: 100 RPT.");
-
-		await act(async () => {
-			root.render(
-				<MantineProvider>
-					<EligibilityPanelView
-						ethBalance="0.5"
-						usdBalance="1000"
-						ethUsdPrice="2000"
-						tokensPerEth="250"
-						rptBalance="10"
-						badgeLevel="bronze"
-						isActive={false}
-						perfilAtivo={null}
-						mostrarSeletoresPapel={true}
-						perfilSelecionado="cliente"
-						quantidadeRpt={null}
-						quantidadeErro={null}
-						quantidadeMinima={100}
-						acaoLabel="Ativar como cliente"
-						mensagemAcao="Ao ativar como cliente, o valor digitado sera o inicio do novo nivel."
-						walletNotice={null}
-						depositing={false}
-						error={null}
-						onPerfilChange={() => {}}
-						onQuantidadeChange={() => {}}
-						onDeposit={() => {}}
-						connected={true}
-					/>
-				</MantineProvider>,
-			);
-			await Promise.resolve();
-		});
-
-		const buttons = Array.from(container.querySelectorAll("button"));
-		expect(buttons.some((button) => button.textContent?.includes("Cliente"))).toBe(true);
-		expect(buttons.some((button) => button.textContent?.includes("Tecnico"))).toBe(true);
+		expect(markup).toContain("0x1234567890abcdef1234567890abcdef12345678");
 	});
 
 	it("mostra estado desconectado e bloqueia o deposito", () => {
 		const markup = renderWithMantine(
 			<EligibilityPanelView
+				{...baseProps}
+				connected={false}
 				ethBalance="0"
 				usdBalance="0"
-				ethUsdPrice="0"
-				tokensPerEth="0"
 				rptBalance="0"
 				badgeLevel="Sem carteira"
-				isActive={false}
-				perfilAtivo={null}
-				mostrarSeletoresPapel={true}
-				perfilSelecionado="cliente"
-				quantidadeRpt={0}
-				quantidadeErro="O valor para deposito deve ser maior ou igual a 100 RPT."
-				quantidadeMinima={100}
-				acaoLabel="Ativar como cliente"
-				mensagemAcao="Ao ativar como cliente, o valor digitado sera o inicio do novo nivel."
 				walletNotice="Carteira desconectada"
-				depositing={false}
-				error={null}
-				onPerfilChange={() => {}}
-				onQuantidadeChange={() => {}}
-				onDeposit={() => {}}
-				connected={false}
+				quantidadeErro="O valor para deposito deve ser maior ou igual a 100 RPT."
+				identificadorCarteira=""
 			/>,
 		);
 
@@ -164,35 +116,24 @@ describe("EligibilityPanelView", () => {
 		expect(markup).toContain("0,00");
 	});
 
-	it("exibe saldo de RPT grande sem abreviação", () => {
+	it("exibe saldo de RPT grande sem abreviacao", () => {
 		const markup = renderWithMantine(
 			<EligibilityPanelView
-				ethBalance="0"
-				usdBalance="0"
-				ethUsdPrice="2000"
-				tokensPerEth="1000000"
-				rptBalance="1000000"
-				badgeLevel="bronze"
+				{...baseProps}
 				isActive={true}
 				perfilAtivo="cliente"
 				mostrarSeletoresPapel={false}
-				perfilSelecionado="cliente"
-				quantidadeRpt={null}
-				quantidadeErro={null}
-				quantidadeMinima={100}
+				perfilConfirmacao="tecnico"
+				areaAtuacao="Eletrica"
+				rptBalance="1000000"
+				tokensPerEth="1000000"
 				acaoLabel="Trocar para tecnico"
-				mensagemAcao="Ao trocar para tecnico, o saldo atual sera sacado, a confirmacao sera aguardada e o novo nivel comecara do zero."
-				walletNotice={null}
-				depositing={false}
-				error={null}
-				onPerfilChange={() => {}}
-				onQuantidadeChange={() => {}}
-				onDeposit={() => {}}
-				connected={true}
+				mensagemAcao="Ao trocar para tecnico, o saldo atual sera sacado, a confirmacao sera aguardada e o cadastro sera salvo depois da confirmacao."
 			/>,
 		);
 
 		expect(markup).toContain("RPT 1.000.000,00");
+		expect(markup).toContain("Area de atuacao");
 	});
 
 	it("oculta os seletores quando a conta esta ativa e troca com um unico botao", async () => {
@@ -203,28 +144,19 @@ describe("EligibilityPanelView", () => {
 			root.render(
 				<MantineProvider>
 					<EligibilityPanelView
-						ethBalance="0"
-						usdBalance="0"
-						ethUsdPrice="0"
-						tokensPerEth="250"
-						rptBalance="5"
-						badgeLevel="bronze"
+						{...baseProps}
 						isActive={true}
 						perfilAtivo="cliente"
 						mostrarSeletoresPapel={false}
-						perfilSelecionado="cliente"
+						perfilConfirmacao="tecnico"
+						areaAtuacao="Eletrica"
 						quantidadeRpt={2}
 						quantidadeErro={null}
-						quantidadeMinima={100}
 						acaoLabel="Trocar para tecnico"
-						mensagemAcao="Ao trocar para tecnico, o saldo atual sera sacado, a confirmacao sera aguardada e o novo nivel comecara do zero."
-						walletNotice={null}
-						depositing={false}
+						mensagemAcao="Ao trocar para tecnico, o saldo atual sera sacado, a confirmacao sera aguardada e o cadastro sera salvo depois da confirmacao."
 						error="falha no deposito"
 						onPerfilChange={onPerfilChange}
-						onQuantidadeChange={() => {}}
 						onDeposit={onDeposit}
-						connected={true}
 					/>
 				</MantineProvider>,
 			);
@@ -254,33 +186,18 @@ describe("EligibilityPanelView", () => {
 	it("destaca o papel tecnico antes da ativacao", () => {
 		const markup = renderWithMantine(
 			<EligibilityPanelView
-				ethBalance="0"
-				usdBalance="0"
-				ethUsdPrice="0"
-				tokensPerEth="250"
-				rptBalance="5"
-				badgeLevel="bronze"
-				isActive={false}
-				perfilAtivo={null}
-				mostrarSeletoresPapel={true}
+				{...baseProps}
 				perfilSelecionado="tecnico"
-				quantidadeRpt={2}
-				quantidadeErro={null}
-				quantidadeMinima={100}
+				perfilConfirmacao="tecnico"
+				areaAtuacao="Eletrica"
 				acaoLabel="Ativar como tecnico"
-				mensagemAcao="Ao ativar como tecnico, o valor digitado sera o inicio do novo nivel."
-				walletNotice={null}
-				depositing={false}
-				error={null}
-				onPerfilChange={() => {}}
-				onQuantidadeChange={() => {}}
-				onDeposit={() => {}}
-				connected={true}
+				mensagemAcao="Ao ativar como tecnico, o valor digitado sera confirmado antes de salvar o cadastro."
 			/>,
 		);
 
 		expect(markup).toContain("Definir papel");
 		expect(markup).toContain("Ativar como tecnico");
 		expect(markup).toContain("Tecnico");
+		expect(markup).toContain("Area de atuacao");
 	});
 });

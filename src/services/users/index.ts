@@ -2,8 +2,10 @@ export { applyUserFilters, loadTechniciansForDiscovery, loadUserDetails } from "
 export {
 	getUserDetails,
 	listEligibleTechnicians,
+	listUsers,
 	registerUser,
 	saveOrUpdateUser,
+	updateUserProfile,
 	updateUserRole,
 	withdrawUser,
 } from "@/services/users/userRepository";

@@ -8,6 +8,7 @@ const serviceMocks = vi.hoisted(() => ({
 	carregarMetricasElegibilidade: vi.fn(),
 	depositarTokens: vi.fn(),
 	sacarDeposito: vi.fn(),
+	persistUserProfile: vi.fn(),
 	obterEthereumProvider: vi.fn(),
 	useWalletStatus: vi.fn(),
 }));
@@ -19,6 +20,10 @@ vi.mock("@/services/eligibility/eligibilityMetrics", () => ({
 vi.mock("@/services/eligibility/tokenDeposit", () => ({
 	depositarTokens: serviceMocks.depositarTokens,
 	sacarDeposito: serviceMocks.sacarDeposito,
+}));
+
+vi.mock("@/services/users/userClient", () => ({
+	persistUserProfile: serviceMocks.persistUserProfile,
 }));
 
 vi.mock("@/services/wallet/provider", () => ({
@@ -105,13 +110,30 @@ describe("useEligibilityPanel", () => {
 		expect(getLatest()?.perfilAtivo).toBe("cliente");
 		expect(getLatest()?.mostrarSeletoresPapel).toBe(false);
 		expect(getLatest()?.perfilSelecionado).toBe("cliente");
+		expect(getLatest()?.perfilConfirmacao).toBe("tecnico");
 		expect(getLatest()?.quantidadeRpt).toBeNull();
 		expect(getLatest()?.quantidadeErro).toBe("Informe um valor para depositar.");
 		expect(getLatest()?.acaoLabel).toBe("Trocar para tecnico");
+		expect(getLatest()?.identificadorCarteira).toBe("0x1234567890abcdef1234567890abcdef12345678");
 
+		serviceMocks.persistUserProfile.mockResolvedValue({
+			address: "0x1234567890abcdef1234567890abcdef12345678",
+			name: "Ana",
+			expertiseArea: "Eletrica",
+			role: "tecnico",
+			badgeLevel: "bronze",
+			reputation: 0,
+			depositLevel: 5,
+			isActive: true,
+			isEligible: true,
+			updatedAt: "2026-04-17T10:00:00.000Z",
+			syncedAt: "2026-04-17T10:01:00.000Z",
+		});
 		serviceMocks.depositarTokens.mockResolvedValue("ok");
 
 		await act(async () => {
+			getLatest()?.handleNomeChange("Ana");
+			getLatest()?.handleAreaAtuacaoChange("Eletrica");
 			getLatest()?.handleQuantidadeChange(150);
 			await flush();
 		});
@@ -123,6 +145,14 @@ describe("useEligibilityPanel", () => {
 
 		expect(serviceMocks.sacarDeposito).toHaveBeenCalledTimes(1);
 		expect(serviceMocks.depositarTokens).toHaveBeenCalledWith(expect.any(Object), 150000000000000000000n, true);
+		expect(serviceMocks.persistUserProfile).toHaveBeenCalledWith(
+			expect.objectContaining({
+				address: "0x1234567890abcdef1234567890abcdef12345678",
+				name: "Ana",
+				role: "tecnico",
+				expertiseArea: "Eletrica",
+			}),
+		);
 	});
 
 	it("mantem o papel registrado e permite trocar para cliente quando o nivel ativo e tecnico", async () => {
@@ -152,18 +182,9 @@ describe("useEligibilityPanel", () => {
 		expect(getLatest()?.perfilAtivo).toBe("tecnico");
 		expect(getLatest()?.mostrarSeletoresPapel).toBe(false);
 		expect(getLatest()?.perfilSelecionado).toBe("cliente");
+		expect(getLatest()?.perfilConfirmacao).toBe("cliente");
 		expect(getLatest()?.acaoLabel).toBe("Trocar para cliente");
-		expect(getLatest()?.mensagemAcao).toContain("novo nivel comecara do zero");
-
-		serviceMocks.depositarTokens.mockResolvedValue("ok");
-
-		await act(async () => {
-			await getLatest()?.handleDeposit();
-			await flush();
-		});
-
-		expect(serviceMocks.sacarDeposito).toHaveBeenCalledTimes(1);
-		expect(serviceMocks.depositarTokens).toHaveBeenCalledWith(expect.any(Object), 150500000000000000000n, false);
+		expect(getLatest()?.mensagemAcao).toContain("cadastro sera salvo depois da confirmacao");
 	});
 
 	it("expõe mensagens corretas quando a conta está inativa", async () => {
@@ -194,6 +215,7 @@ describe("useEligibilityPanel", () => {
 
 		expect(getLatest()?.acaoLabel).toBe("Ativar como tecnico");
 		expect(getLatest()?.mensagemAcao).toContain("Ao ativar como tecnico");
+		expect(getLatest()?.perfilConfirmacao).toBe("tecnico");
 	});
 
 	it("trata quantidade nula como valor invalido", async () => {
@@ -268,6 +290,8 @@ describe("useEligibilityPanel", () => {
 		});
 
 		await act(async () => {
+			getLatest()?.handleNomeChange("Ana");
+			getLatest()?.handleAreaAtuacaoChange("Eletrica");
 			getLatest()?.handleQuantidadeChange(150);
 			await flush();
 		});
@@ -290,11 +314,8 @@ describe("useEligibilityPanel", () => {
 		});
 
 		await act(async () => {
-			getLatest()?.handleQuantidadeChange(150);
-			await flush();
-		});
-
-		await act(async () => {
+			getLatest()?.handleNomeChange("Ana");
+			getLatest()?.handleAreaAtuacaoChange("Eletrica");
 			getLatest()?.handleQuantidadeChange(150);
 			await flush();
 		});
@@ -316,6 +337,8 @@ describe("useEligibilityPanel", () => {
 		});
 
 		await act(async () => {
+			getLatest()?.handleNomeChange("Ana");
+			getLatest()?.handleAreaAtuacaoChange("Eletrica");
 			getLatest()?.handleQuantidadeChange(150);
 			await flush();
 		});

@@ -24,8 +24,9 @@ export function searchUsers(users: UserSummary[], query: string) {
 		const name = normalizeText(user.name);
 		const address = normalizeText(user.address);
 		const badge = normalizeText(user.badgeLevel);
+		const expertiseArea = normalizeText(user.expertiseArea ?? "");
 
-		return name.includes(term) || address.includes(term) || badge.includes(term);
+		return name.includes(term) || address.includes(term) || badge.includes(term) || expertiseArea.includes(term);
 	});
 }
 

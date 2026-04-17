@@ -21,6 +21,7 @@ const users: UserSummary[] = [
 	{
 		address: "0xbbb",
 		name: "Bruno Silva",
+		expertiseArea: "Redes",
 		role: "tecnico",
 		badgeLevel: "bronze",
 		reputation: 12,
@@ -32,6 +33,7 @@ const users: UserSummary[] = [
 	{
 		address: "0xaaa",
 		name: "Ana Costa",
+		expertiseArea: "Eletrica",
 		role: "tecnico",
 		badgeLevel: "silver",
 		reputation: 18,

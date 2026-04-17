@@ -6,10 +6,13 @@ import { useWalletStatus } from "@/hooks/useWalletStatus";
 import { obterEthereumProvider } from "@/services/wallet/provider";
 import { depositarTokens, sacarDeposito } from "@/services/eligibility/tokenDeposit";
 import { carregarMetricasElegibilidade, type EligibilityMetrics } from "@/services/eligibility/eligibilityMetrics";
+import { persistUserProfile } from "@/services/users/userClient";
+import { validateUserActivationForm } from "@/services/users/userValidation";
 
 const VALOR_MINIMO_DEPOSITO_PADRAO = 100;
 
 type QuantidadeRpt = string | number | null;
+type PerfilUsuario = "cliente" | "tecnico";
 
 type UseEligibilityPanelResult = {
 	connected: boolean;
@@ -20,9 +23,13 @@ type UseEligibilityPanelResult = {
 	rptBalance: string;
 	badgeLevel: string;
 	isActive: boolean;
-	perfilAtivo: "cliente" | "tecnico" | null;
+	perfilAtivo: PerfilUsuario | null;
 	mostrarSeletoresPapel: boolean;
-	perfilSelecionado: "cliente" | "tecnico";
+	perfilSelecionado: PerfilUsuario;
+	perfilConfirmacao: PerfilUsuario;
+	nome: string;
+	areaAtuacao: string;
+	identificadorCarteira: string;
 	quantidadeRpt: QuantidadeRpt;
 	quantidadeErro: string | null;
 	quantidadeMinima: number;
@@ -31,7 +38,9 @@ type UseEligibilityPanelResult = {
 	walletNotice: string | null;
 	depositing: boolean;
 	error: string | null;
-	handlePerfilChange: (value: "cliente" | "tecnico") => void;
+	handlePerfilChange: (value: PerfilUsuario) => void;
+	handleNomeChange: (value: string) => void;
+	handleAreaAtuacaoChange: (value: string) => void;
 	handleQuantidadeChange: (value: QuantidadeRpt) => void;
 	handleDeposit: () => Promise<void>;
 };
@@ -50,10 +59,20 @@ function obterPerfilOposto(perfil: "cliente" | "tecnico"): "cliente" | "tecnico"
 	return perfil === "cliente" ? "tecnico" : "cliente";
 }
 
+async function carregarMetricasAtualizadas(address?: string | null) {
+	try {
+		return await carregarMetricasElegibilidade(address ?? null);
+	} catch {
+		return METRICAS_PADRAO;
+	}
+}
+
 export function useEligibilityPanel(): UseEligibilityPanelResult {
 	const { state } = useWalletStatus();
 	const ethereum = useMemo(() => obterEthereumProvider(), []);
-	const [perfilSelecionado, setPerfilSelecionado] = useState<"cliente" | "tecnico">("cliente");
+	const [perfilSelecionado, setPerfilSelecionado] = useState<PerfilUsuario>("cliente");
+	const [nome, setNome] = useState("");
+	const [areaAtuacao, setAreaAtuacao] = useState("");
 	const [quantidadeRpt, setQuantidadeRpt] = useState<QuantidadeRpt>(null);
 	const [depositing, setDepositing] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -65,7 +84,8 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 	const walletNotice = connected ? null : "Carteira desconectada";
 	const perfilRegistrado = metricas.perfilAtivo ?? perfilSelecionado;
 	const mostrarSeletoresPapel = !metricas.isActive;
-	const perfilParaTroca = metricas.isActive ? obterPerfilOposto(perfilRegistrado) : perfilSelecionado;
+	const perfilConfirmacao = metricas.isActive ? obterPerfilOposto(perfilRegistrado) : perfilSelecionado;
+	const perfilConfirmacaoEhTecnico = perfilConfirmacao === "tecnico";
 	const quantidadeMinima = Number(metricas.minDeposit) > 0 ? Number(metricas.minDeposit) : VALOR_MINIMO_DEPOSITO_PADRAO;
 	const quantidadeTexto = typeof quantidadeRpt === "number"
 		? String(quantidadeRpt)
@@ -78,34 +98,37 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 		: quantidadeNumerica < quantidadeMinima
 			? `O valor para deposito deve ser maior ou igual a ${quantidadeMinima} RPT.`
 			: null;
+
+	const nomeTexto = nome.trim();
+	const areaAtuacaoTexto = areaAtuacao.trim();
 	const acaoLabel = metricas.isActive
-		? `Trocar para ${perfilParaTroca}`
+		? `Trocar para ${perfilConfirmacao}`
 		: `Ativar como ${perfilSelecionado}`;
 	const mensagemAcao = metricas.isActive
-		? `Ao trocar para ${perfilParaTroca}, o saldo atual sera sacado, a confirmacao sera aguardada e o novo nivel comecara do zero.`
-		: `Ao ativar como ${perfilSelecionado}, o valor digitado sera o inicio do novo nivel.`;
+		? `Ao trocar para ${perfilConfirmacao}, o saldo atual sera sacado, a confirmacao sera aguardada e o cadastro sera salvo depois da confirmacao.`
+		: `Ao ativar como ${perfilSelecionado}, o valor digitado sera confirmado antes de salvar o cadastro.`;
 
 	useEffect(() => {
 		let ativo = true;
 
-		async function sincronizarMetricas() {
-			try {
-				const dados = await carregarMetricasElegibilidade(connected ? state.address : null);
+		async function carregarMetricas() {
+			const dados = await carregarMetricasAtualizadas(connected ? state.address : null);
 
+			if (!ativo) {
+				return;
+			}
+
+			setMetricas(dados);
+		}
+
+		void carregarMetricas();
+
+		const intervalo = window.setInterval(() => {
+			void carregarMetricasAtualizadas(connected ? state.address : null).then((dados) => {
 				if (ativo) {
 					setMetricas(dados);
 				}
-			} catch {
-				if (ativo) {
-					setMetricas(METRICAS_PADRAO);
-				}
-			}
-		}
-
-		void sincronizarMetricas();
-
-		const intervalo = window.setInterval(() => {
-			void sincronizarMetricas();
+			});
 		}, 15000);
 
 		return () => {
@@ -116,6 +139,16 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 
 	function handleQuantidadeChange(value: QuantidadeRpt) {
 		setQuantidadeRpt(value);
+		setError(null);
+	}
+
+	function handleNomeChange(value: string) {
+		setNome(value);
+		setError(null);
+	}
+
+	function handleAreaAtuacaoChange(value: string) {
+		setAreaAtuacao(value);
 		setError(null);
 	}
 
@@ -130,7 +163,16 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 			return;
 		}
 
+		try {
+			validateUserActivationForm(nomeTexto, areaAtuacaoTexto, perfilConfirmacao);
+		} catch (validationError) {
+			setError(validationError instanceof Error ? validationError.message : "Dados invalidos para ativacao.");
+			return;
+		}
+
 		const quantidade = parseUnits(String(quantidadeNumerica), 18);
+		const address = state.address?.trim();
+		let depositou = false;
 
 		setDepositing(true);
 		setError(null);
@@ -140,8 +182,33 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 				await sacarDeposito(ethereum);
 			}
 
-			await depositarTokens(ethereum, quantidade, perfilParaTroca === "tecnico");
+			await depositarTokens(ethereum, quantidade, perfilConfirmacaoEhTecnico);
+			depositou = true;
+
+			const metricasAtualizadas = await carregarMetricasAtualizadas(address);
+
+			if (!address) {
+				throw new Error("Endereco da carteira indisponivel.");
+			}
+
+			await persistUserProfile({
+				address,
+				name: nomeTexto,
+				expertiseArea: perfilConfirmacaoEhTecnico ? areaAtuacaoTexto : null,
+				role: perfilConfirmacao,
+				badgeLevel: metricasAtualizadas.badgeLevel,
+				reputation: 0,
+				depositLevel: Number(metricasAtualizadas.rptBalanceRaw / 10n ** 18n),
+				isActive: true,
+				isEligible: true,
+			});
+
+			setMetricas(metricasAtualizadas);
 		} catch (depositError) {
+			if (depositou) {
+				await sacarDeposito(ethereum).catch(() => undefined);
+			}
+
 			setError(depositError instanceof Error ? depositError.message : "Nao foi possivel concluir o deposito dos RPT.");
 		} finally {
 			setDepositing(false);
@@ -169,6 +236,10 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 		perfilAtivo: connected ? metricas.perfilAtivo : null,
 		mostrarSeletoresPapel: connected ? mostrarSeletoresPapel : false,
 		perfilSelecionado,
+		perfilConfirmacao,
+		nome,
+		areaAtuacao,
+		identificadorCarteira: state.address ?? "",
 		quantidadeRpt,
 		quantidadeErro,
 		quantidadeMinima,
@@ -178,6 +249,8 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 		depositing,
 		error,
 		handlePerfilChange,
+		handleNomeChange,
+		handleAreaAtuacaoChange,
 		handleQuantidadeChange,
 		handleDeposit,
 	};

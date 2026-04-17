@@ -12,6 +12,7 @@ const users: UserSummary[] = [
 	{
 		address: "0xbbb",
 		name: "Bruno Silva",
+		expertiseArea: "Redes",
 		role: "tecnico",
 		badgeLevel: "bronze",
 		reputation: 12,
@@ -23,6 +24,7 @@ const users: UserSummary[] = [
 	{
 		address: "0xaaa",
 		name: "Ana Costa",
+		expertiseArea: "Eletrica",
 		role: "tecnico",
 		badgeLevel: "silver",
 		reputation: 18,
@@ -34,6 +36,7 @@ const users: UserSummary[] = [
 	{
 		address: "0xccc",
 		name: "Carlos Lima",
+		expertiseArea: null,
 		role: "cliente",
 		badgeLevel: "bronze",
 		reputation: 4,
@@ -72,12 +75,14 @@ describe("userSearch", () => {
 				...users[0],
 				address: "0x111",
 				name: "Ze",
+				expertiseArea: "Dados",
 				reputation: 10,
 			},
 			{
 				...users[1],
 				address: "0x222",
 				name: "Ana",
+				expertiseArea: "Sistemas",
 				reputation: 10,
 			},
 		];

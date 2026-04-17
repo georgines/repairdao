@@ -18,6 +18,10 @@ export function EligibilityPanel() {
 			perfilAtivo={panel.perfilAtivo}
 			mostrarSeletoresPapel={panel.mostrarSeletoresPapel}
 			perfilSelecionado={panel.perfilSelecionado}
+			perfilConfirmacao={panel.perfilConfirmacao}
+			nome={panel.nome}
+			areaAtuacao={panel.areaAtuacao}
+			identificadorCarteira={panel.identificadorCarteira}
 			quantidadeRpt={panel.quantidadeRpt}
 			quantidadeErro={panel.quantidadeErro}
 			quantidadeMinima={panel.quantidadeMinima}
@@ -27,6 +31,8 @@ export function EligibilityPanel() {
 			depositing={panel.depositing}
 			error={panel.error}
 			onPerfilChange={panel.handlePerfilChange}
+			onNomeChange={panel.handleNomeChange}
+			onAreaAtuacaoChange={panel.handleAreaAtuacaoChange}
 			onQuantidadeChange={panel.handleQuantidadeChange}
 			onDeposit={panel.handleDeposit}
 			connected={panel.connected}

@@ -1,4 +1,4 @@
-import { Button, Card, Divider, Group, NumberInput, Stack, Text, Title } from "@mantine/core";
+import { Button, Card, Divider, Group, NumberInput, Stack, Text, TextInput, Title } from "@mantine/core";
 import { BalanceSummary } from "@/components/balance/BalanceSummary";
 
 export type EligibilityPanelViewProps = {
@@ -12,6 +12,10 @@ export type EligibilityPanelViewProps = {
 	perfilAtivo: "cliente" | "tecnico" | null;
 	mostrarSeletoresPapel: boolean;
 	perfilSelecionado: "cliente" | "tecnico";
+	perfilConfirmacao: "cliente" | "tecnico";
+	nome: string;
+	areaAtuacao: string;
+	identificadorCarteira: string;
 	quantidadeRpt: string | number;
 	quantidadeErro: string | null;
 	quantidadeMinima: number;
@@ -21,6 +25,8 @@ export type EligibilityPanelViewProps = {
 	depositing: boolean;
 	error: string | null;
 	onPerfilChange: (value: "cliente" | "tecnico") => void;
+	onNomeChange: (value: string) => void;
+	onAreaAtuacaoChange: (value: string) => void;
 	onQuantidadeChange: (value: string | number) => void;
 	onDeposit: () => void;
 	connected: boolean;
@@ -37,6 +43,10 @@ export function EligibilityPanelView({
 	perfilAtivo,
 	mostrarSeletoresPapel,
 	perfilSelecionado,
+	perfilConfirmacao,
+	nome,
+	areaAtuacao,
+	identificadorCarteira,
 	quantidadeRpt,
 	quantidadeErro,
 	quantidadeMinima,
@@ -46,12 +56,20 @@ export function EligibilityPanelView({
 	depositing,
 	error,
 	onPerfilChange,
+	onNomeChange,
+	onAreaAtuacaoChange,
 	onQuantidadeChange,
 	onDeposit,
 	connected,
 }: EligibilityPanelViewProps) {
-	const podeDepositar = connected && !depositing && quantidadeErro === null;
+	const podeDepositar =
+		connected &&
+		!depositing &&
+		quantidadeErro === null &&
+		nome.trim().length > 0 &&
+		(perfilConfirmacao !== "tecnico" || areaAtuacao.trim().length > 0);
 	const perfilExibido = perfilAtivo ?? perfilSelecionado;
+	const exibirAreaAtuacao = perfilConfirmacao === "tecnico";
 
 	return (
 		<Card
@@ -107,6 +125,38 @@ export function EligibilityPanelView({
 						</Text>
 					</Stack>
 				)}
+
+				<Stack gap="sm">
+					<TextInput
+						label="Nome do usuario"
+						description="Esse nome sera salvo no cadastro e usado na descoberta."
+						placeholder="Digite seu nome"
+						value={nome}
+						onChange={(event) => onNomeChange(event.currentTarget.value)}
+						required
+						disabled={depositing}
+					/>
+
+					{exibirAreaAtuacao ? (
+						<TextInput
+							label="Area de atuacao"
+							description="Obrigatoria para tecnicos."
+							placeholder="Ex.: eletrica residencial"
+							value={areaAtuacao}
+							onChange={(event) => onAreaAtuacaoChange(event.currentTarget.value)}
+							required
+							disabled={depositing}
+						/>
+					) : null}
+
+					<TextInput
+						label="Identificador da carteira"
+						description="Endereco usado nas transacoes entre cliente e tecnico."
+						value={identificadorCarteira || "Carteira desconectada"}
+						readOnly
+						disabled
+					/>
+				</Stack>
 
 				<Group align="stretch" grow wrap="wrap">
 					<BalanceSummary

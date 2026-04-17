@@ -11,6 +11,7 @@ const initialTechnicians: UserSummary[] = [
 	{
 		address: "0xbbb",
 		name: "Bruno Silva",
+		expertiseArea: "Redes",
 		role: "tecnico",
 		badgeLevel: "bronze",
 		reputation: 12,
@@ -22,6 +23,7 @@ const initialTechnicians: UserSummary[] = [
 	{
 		address: "0xaaa",
 		name: "Ana Costa",
+		expertiseArea: "Eletrica",
 		role: "tecnico",
 		badgeLevel: "silver",
 		reputation: 18,
@@ -47,6 +49,11 @@ describe("useTechnicianDiscoveryPanel", () => {
 		return null;
 	}
 
+	function EmptyProbe() {
+		capture(useTechnicianDiscoveryPanel({ initialTechnicians: [] }));
+		return null;
+	}
+
 	function getLatest() {
 		return capture.mock.calls.at(-1)?.[0];
 	}
@@ -67,7 +74,7 @@ describe("useTechnicianDiscoveryPanel", () => {
 		container.remove();
 	});
 
-	it("expõe os tecnicos iniciais e seleciona o primeiro", async () => {
+	it("exibe os tecnicos iniciais e seleciona o primeiro", async () => {
 		await act(async () => {
 			root.render(<Probe />);
 			await flush();
@@ -76,6 +83,7 @@ describe("useTechnicianDiscoveryPanel", () => {
 		expect(getLatest()?.totalTechnicians).toBe(2);
 		expect(getLatest()?.filteredTechnicians).toHaveLength(2);
 		expect(getLatest()?.selectedTechnician?.name).toBe("Bruno Silva");
+		expect(getLatest()?.technicianModalOpened).toBe(false);
 	});
 
 	it("filtra por texto e reputacao", async () => {
@@ -94,7 +102,47 @@ describe("useTechnicianDiscoveryPanel", () => {
 		expect(getLatest()?.filteredTechnicians[0].name).toBe("Ana Costa");
 	});
 
-	it("limpa os filtros e mantem a selecao quando ja existe", async () => {
+	it("abre o modal de detalhes ao selecionar um tecnico", async () => {
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.onSelectTechnician("0xaaa");
+			await flush();
+		});
+
+		expect(getLatest()?.selectedTechnician?.address).toBe("0xaaa");
+		expect(getLatest()?.technicianModalMode).toBe("details");
+		expect(getLatest()?.technicianModalOpened).toBe(true);
+	});
+
+	it("abre o modal de contratacao e confirma a selecao", async () => {
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.onHireTechnician("0xaaa");
+			await flush();
+		});
+
+		expect(getLatest()?.technicianModalMode).toBe("hire");
+		expect(getLatest()?.technicianModalOpened).toBe(true);
+
+		await act(async () => {
+			getLatest()?.onConfirmTechnicianHire();
+			await flush();
+		});
+
+		expect(getLatest()?.contractedTechnician?.address).toBe("0xaaa");
+		expect(getLatest()?.technicianModalMode).toBeNull();
+		expect(getLatest()?.technicianModalOpened).toBe(false);
+	});
+
+	it("fecha o modal sem confirmar e limpa filtros", async () => {
 		await act(async () => {
 			root.render(<Probe />);
 			await flush();
@@ -102,34 +150,26 @@ describe("useTechnicianDiscoveryPanel", () => {
 
 		await act(async () => {
 			getLatest()?.onQueryChange("ana");
-			getLatest()?.onSelectTechnician("0xaaa");
+			getLatest()?.onMinReputationChange("abc");
+			getLatest()?.onHireTechnician("0xaaa");
 			await flush();
 		});
 
 		await act(async () => {
+			getLatest()?.onCloseTechnicianModal();
 			getLatest()?.onClearFilters();
 			await flush();
 		});
 
 		expect(getLatest()?.query).toBe("");
 		expect(getLatest()?.minReputation).toBe(0);
-		expect(getLatest()?.selectedTechnician?.address).toBe("0xaaa");
+		expect(getLatest()?.technicianModalMode).toBeNull();
+		expect(getLatest()?.technicianModalOpened).toBe(false);
 	});
 
-	it("mantem estado vazio quando nao ha tecnicos iniciais e ignora reputacao invalida", async () => {
-		function EmptyProbe() {
-			capture(useTechnicianDiscoveryPanel({ initialTechnicians: [] }));
-			return null;
-		}
-
+	it("mantem estado vazio quando nao ha tecnicos iniciais", async () => {
 		await act(async () => {
 			root.render(<EmptyProbe />);
-			await flush();
-		});
-
-		await act(async () => {
-			getLatest()?.onMinReputationChange("abc");
-			getLatest()?.onClearFilters();
 			await flush();
 		});
 

@@ -5,6 +5,7 @@ import { useWalletStatus } from "@/hooks/useWalletStatus";
 import { obterEthereumProvider } from "@/services/wallet/provider";
 import { carregarMetricasDaConta, type AccountMetrics } from "@/services/account/accountMetrics";
 import { sacarDeposito, sacarRendimento } from "@/services/account/accountActions";
+import { deleteUserProfile } from "@/services/users/userClient";
 
 type UseAccountPanelResult = {
 	connected: boolean;
@@ -131,7 +132,12 @@ export function useAccountPanel(): UseAccountPanelResult {
 		}
 
 		await executarSaque(
-			() => sacarDeposito(ethereum),
+			async () => {
+				await sacarDeposito(ethereum);
+				if (state.address) {
+					await deleteUserProfile(state.address);
+				}
+			},
 			setWithdrawingDeposit,
 			"Conecte a carteira para sacar o deposito.",
 			"Nao foi possivel concluir o saque do deposito.",
