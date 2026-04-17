@@ -42,6 +42,7 @@ export function criarResumoSaldo({
 		primaryText: `RPT ${formatarNumeroCompleto(rptBalance, 2)}`,
 		sections: [
 			{
+				separatorText: "No sistema",
 				lines: [
 					`ETH comprado ${formatarNumeroCompleto(String(valorEthSistema), 4)}`,
 					`USD comprado ${formatarUSD(String(valorUsdSistema))}`,

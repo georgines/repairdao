@@ -16,6 +16,7 @@ describe("BalanceSummaryView", () => {
 				primaryText="RPT 1.000.000,00"
 				sections={[
 					{
+						separatorText: "No sistema",
 						lines: ["ETH comprado 4000,0000", "USD comprado US$ 20.000,00"],
 					},
 					{
@@ -29,6 +30,7 @@ describe("BalanceSummaryView", () => {
 
 		expect(markup).toContain("Saldo atual");
 		expect(markup).toContain("RPT 1.000.000,00");
+		expect(markup).toContain("No sistema");
 		expect(markup).toContain("ETH comprado 4000,0000");
 		expect(markup).toContain("USD comprado US$");
 		expect(markup).toContain("Na carteira");
