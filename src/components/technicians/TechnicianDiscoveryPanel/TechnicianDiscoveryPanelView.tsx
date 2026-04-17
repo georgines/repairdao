@@ -222,7 +222,6 @@ export function TechnicianDiscoveryPanelView({
 
 						<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
 							<Text size="sm">Area: {formatDetail(selectedTechnician.expertiseArea)}</Text>
-							<Text size="sm">Nivel de deposito: {selectedTechnician.depositLevel}</Text>
 							<Text size="sm">Ativo: {formatDetail(selectedTechnician.isActive)}</Text>
 							<Text size="sm">Elegivel: {formatDetail(selectedTechnician.isEligible)}</Text>
 							<Text size="sm">Atualizado em: {selectedTechnician.updatedAt}</Text>
