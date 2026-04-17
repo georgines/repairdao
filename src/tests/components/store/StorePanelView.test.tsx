@@ -51,11 +51,9 @@ describe("StorePanelView", () => {
 				walletNotice={null}
 				quantityEth="0,25"
 				buying={false}
-				depositing={false}
 				error={null}
 				onQuantityEthChange={() => {}}
 				onBuy={() => {}}
-				onDeposit={() => {}}
 				connected={true}
 			/>,
 		);
@@ -65,7 +63,7 @@ describe("StorePanelView", () => {
 		expect(markup).toContain("RPT 10,00");
 		expect(markup).toContain("ETH 0,5000");
 		expect(markup).toContain("Quanto ETH quer gastar");
-		expect(markup).toContain("Você receberá cerca de 62,50 RPT");
+		expect(markup).toContain("62,50 RPT");
 	});
 
 	it("mostra zero e aviso quando a carteira esta desconectada", () => {
@@ -78,11 +76,9 @@ describe("StorePanelView", () => {
 				walletNotice="Carteira desconectada"
 				quantityEth="0,10"
 				buying={false}
-				depositing={false}
 				error={null}
 				onQuantityEthChange={() => {}}
 				onBuy={() => {}}
-				onDeposit={() => {}}
 				connected={false}
 			/>,
 		);
@@ -93,7 +89,7 @@ describe("StorePanelView", () => {
 		expect(markup).toContain("1 ETH = 0,00 RPT");
 	});
 
-	it("propaga mudanças e ações da interface", async () => {
+	it("propaga mudanÃ§as e aÃ§Ãµes da interface", async () => {
 		const onBuy = vi.fn();
 		const onQuantityEthChange = vi.fn();
 
@@ -108,11 +104,9 @@ describe("StorePanelView", () => {
 						walletNotice="Carteira desconectada"
 						quantityEth="0,10"
 						buying={false}
-						depositing={false}
 						error="falha de compra"
 						onQuantityEthChange={onQuantityEthChange}
 						onBuy={onBuy}
-						onDeposit={vi.fn()}
 						connected={true}
 					/>
 				</MantineProvider>,

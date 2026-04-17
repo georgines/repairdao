@@ -6,18 +6,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MantineProvider } from "@mantine/core";
 
 const serviceMocks = vi.hoisted(() => ({
-	carregarMetricasDaLoja: vi.fn(),
-	comprarToken: vi.fn(),
+	carregarMetricasElegibilidade: vi.fn(),
+	depositarTokens: vi.fn(),
+	sacarDeposito: vi.fn(),
 	obterEthereumProvider: vi.fn(),
 	useWalletStatus: vi.fn(),
 }));
 
-vi.mock("@/services/store/storeMetrics", () => ({
-	carregarMetricasDaLoja: serviceMocks.carregarMetricasDaLoja,
+vi.mock("@/services/eligibility/eligibilityMetrics", () => ({
+	carregarMetricasElegibilidade: serviceMocks.carregarMetricasElegibilidade,
 }));
 
-vi.mock("@/services/wallet/tokenPurchase", () => ({
-	comprarToken: serviceMocks.comprarToken,
+vi.mock("@/services/eligibility/tokenDeposit", () => ({
+	depositarTokens: serviceMocks.depositarTokens,
+	sacarDeposito: serviceMocks.sacarDeposito,
 }));
 
 vi.mock("@/services/wallet/provider", () => ({
@@ -28,19 +30,24 @@ vi.mock("@/hooks/useWalletStatus", () => ({
 	useWalletStatus: serviceMocks.useWalletStatus,
 }));
 
-import { StorePanel } from "@/components/store/StorePanel/StorePanel";
+import { EligibilityPanel } from "@/components/eligibility/EligibilityPanel/EligibilityPanel";
 
 async function flush() {
 	await Promise.resolve();
 	await Promise.resolve();
 }
 
-describe("StorePanel", () => {
+describe("EligibilityPanel", () => {
 	let container: HTMLDivElement;
 	let root: ReturnType<typeof createRoot>;
 
 	beforeEach(() => {
 		(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+		(globalThis as typeof globalThis & { ResizeObserver?: typeof ResizeObserver }).ResizeObserver = class {
+			observe() {}
+			unobserve() {}
+			disconnect() {}
+		};
 		window.matchMedia = vi.fn().mockReturnValue({
 			matches: false,
 			media: "",
@@ -67,11 +74,13 @@ describe("StorePanel", () => {
 				usdBalance: "1000",
 			},
 		});
-		serviceMocks.carregarMetricasDaLoja.mockResolvedValue({
+		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
 			rptBalanceRaw: 5500000000000000000n,
 			rptBalance: "5.5",
-			tokensPerEthRaw: 250n,
-			tokensPerEth: "250",
+			badgeLevel: "bronze",
+			isActive: true,
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
 		});
 	});
 
@@ -83,33 +92,20 @@ describe("StorePanel", () => {
 		container.remove();
 	});
 
-	it("recarrega o painel apos uma compra concluida", async () => {
-		serviceMocks.comprarToken.mockResolvedValue("ok");
-
+	it("renderiza os controles principais da elegibilidade", async () => {
 		await act(async () => {
 			root.render(
 				<MantineProvider>
-					<StorePanel />
+					<EligibilityPanel />
 				</MantineProvider>,
 			);
 			await flush();
 		});
 
-		const buttons = Array.from(container.querySelectorAll("button"));
-		const buyButton = buttons.find((button) => button.textContent?.includes("Comprar RPT"));
-		if (!buyButton) {
-			throw new Error("Botao de compra nao encontrado.");
-		}
-
-		await act(async () => {
-			buyButton.click();
-			await flush();
-		});
-
-		expect(serviceMocks.comprarToken).toHaveBeenCalledWith(expect.any(Object), "0,10");
-		expect(serviceMocks.carregarMetricasDaLoja).toHaveBeenCalledWith("0x1234567890abcdef1234567890abcdef12345678");
-		expect(container.textContent).toContain("1 ETH = 250,00 RPT");
-		expect(container.textContent).toContain("Você receberá cerca de 25,00 RPT");
+		expect(container.textContent).toContain("Nivel do cliente");
+		expect(container.textContent).toContain("Conta ativa");
+		expect(container.textContent).toContain("Quanto RPT deseja depositar");
+		expect(container.textContent).toContain("Valor minimo: 100 RPT.");
 	});
 
 	it("mostra zero quando a carteira esta desconectada", async () => {
@@ -127,7 +123,7 @@ describe("StorePanel", () => {
 		await act(async () => {
 			root.render(
 				<MantineProvider>
-					<StorePanel />
+					<EligibilityPanel />
 				</MantineProvider>,
 			);
 			await flush();
@@ -136,6 +132,6 @@ describe("StorePanel", () => {
 		expect(container.textContent).toContain("ETH 0,0000");
 		expect(container.textContent).toContain("Carteira desconectada");
 		expect(container.textContent).toContain("RPT 0,00");
-		expect(serviceMocks.comprarToken).not.toHaveBeenCalled();
+		expect(serviceMocks.depositarTokens).not.toHaveBeenCalled();
 	});
 });

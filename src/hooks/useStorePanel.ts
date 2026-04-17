@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useWalletStatus } from "@/hooks/useWalletStatus";
 import { obterEthereumProvider } from "@/services/wallet/provider";
 import { comprarToken } from "@/services/wallet/tokenPurchase";
-import { depositarTokens } from "@/services/store/tokenDeposit";
 import { carregarMetricasDaLoja, type StoreMetrics } from "@/services/store/storeMetrics";
 
 type UseStorePanelResult = {
@@ -17,11 +16,9 @@ type UseStorePanelResult = {
 	walletNotice: string | null;
 	quantityEth: string;
 	buying: boolean;
-	depositing: boolean;
 	error: string | null;
 	handleQuantityEthChange: (value: string) => void;
 	handleBuy: () => Promise<void>;
-	handleDeposit: () => Promise<void>;
 };
 
 const METRICAS_PADRAO: StoreMetrics = {
@@ -47,7 +44,6 @@ export function useStorePanel(onPurchased: () => void): UseStorePanelResult {
 	const ethereum = useMemo(() => obterEthereumProvider(), []);
 	const [quantityEth, setQuantityEth] = useState("0,10");
 	const [buying, setBuying] = useState(false);
-	const [depositing, setDepositing] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [metricas, setMetricas] = useState<StoreMetrics>(METRICAS_PADRAO);
 	const connected = state.connected;
@@ -110,30 +106,6 @@ export function useStorePanel(onPurchased: () => void): UseStorePanelResult {
 		}
 	}
 
-	async function handleDeposit() {
-		if (!ethereum || !connected) {
-			setError("Conecte a carteira para depositar os RPT.");
-			return;
-		}
-
-		if (metricas.rptBalanceRaw <= 0n) {
-			setError("Nao ha RPT disponivel para depositar.");
-			return;
-		}
-
-		setDepositing(true);
-		setError(null);
-
-		try {
-			await depositarTokens(ethereum, metricas.rptBalanceRaw);
-			onPurchased();
-		} catch (depositError) {
-			setError(depositError instanceof Error ? depositError.message : "Nao foi possivel concluir o deposito dos RPT.");
-		} finally {
-			setDepositing(false);
-		}
-	}
-
 	return {
 		connected,
 		ethBalance,
@@ -144,10 +116,8 @@ export function useStorePanel(onPurchased: () => void): UseStorePanelResult {
 		walletNotice,
 		quantityEth,
 		buying,
-		depositing,
 		error,
 		handleQuantityEthChange,
 		handleBuy,
-		handleDeposit,
 	};
 }

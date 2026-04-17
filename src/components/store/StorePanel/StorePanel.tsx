@@ -20,11 +20,9 @@ function StorePanelContainer({ onPurchased }: StorePanelContainerProps) {
 			walletNotice={panel.walletNotice}
 			quantityEth={panel.quantityEth}
 			buying={panel.buying}
-			depositing={panel.depositing}
 			error={panel.error}
 			onQuantityEthChange={panel.handleQuantityEthChange}
 			onBuy={panel.handleBuy}
-			onDeposit={panel.handleDeposit}
 			connected={panel.connected}
 		/>
 	);

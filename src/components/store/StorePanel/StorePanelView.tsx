@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Divider, Group, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Badge, Button, Card, Divider, Stack, Text, TextInput, Title } from "@mantine/core";
 import { formatarNumero } from "@/services/wallet/formatters";
 
 export type StorePanelViewProps = {
@@ -9,11 +9,9 @@ export type StorePanelViewProps = {
 	walletNotice: string | null;
 	quantityEth: string;
 	buying: boolean;
-	depositing: boolean;
 	error: string | null;
 	onQuantityEthChange: (value: string) => void;
 	onBuy: () => void;
-	onDeposit: () => void;
 	connected: boolean;
 };
 
@@ -25,15 +23,12 @@ export function StorePanelView({
 	walletNotice,
 	quantityEth,
 	buying,
-	depositing,
 	error,
 	onQuantityEthChange,
 	onBuy,
-	onDeposit,
 	connected,
 }: StorePanelViewProps) {
 	const podeComprar = connected && !buying;
-	const podeDepositar = connected && !depositing && Number(rptBalance) > 0;
 
 	return (
 		<Card
@@ -94,14 +89,9 @@ export function StorePanelView({
 						Você receberá cerca de {formatarNumero(rptPreview, 2)} RPT
 					</Text>
 
-					<Group grow align="stretch">
-						<Button onClick={onBuy} disabled={!podeComprar} loading={buying}>
-							Comprar RPT
-						</Button>
-						<Button variant="light" onClick={onDeposit} disabled={!podeDepositar} loading={depositing}>
-							Depositar RPT e ativar conta
-						</Button>
-					</Group>
+					<Button onClick={onBuy} disabled={!podeComprar} loading={buying}>
+						Comprar RPT
+					</Button>
 				</Stack>
 
 				{error ? (

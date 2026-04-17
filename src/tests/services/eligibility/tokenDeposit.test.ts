@@ -6,6 +6,8 @@ import { contratos } from "@/contracts";
 const ethersMocks = vi.hoisted(() => {
 	const waitMock = vi.fn().mockResolvedValue("confirmado");
 	const depositMock = vi.fn().mockResolvedValue({ wait: waitMock });
+	const withdrawWaitMock = vi.fn().mockResolvedValue("saque-confirmado");
+	const withdrawDepositMock = vi.fn().mockResolvedValue({ wait: withdrawWaitMock });
 	const getSignerMock = vi.fn().mockResolvedValue({ id: "signer" });
 	const contractCtor = vi.fn();
 	const providerCtor = vi.fn();
@@ -20,6 +22,7 @@ const ethersMocks = vi.hoisted(() => {
 
 	class ContractMock {
 		deposit = depositMock;
+		withdrawDeposit = withdrawDepositMock;
 
 		constructor(...args: unknown[]) {
 			contractCtor(...args);
@@ -28,6 +31,8 @@ const ethersMocks = vi.hoisted(() => {
 
 	return {
 		waitMock,
+		withdrawWaitMock,
+		withdrawDepositMock,
 		depositMock,
 		getSignerMock,
 		contractCtor,
@@ -43,7 +48,7 @@ vi.mock("ethers", () => ({
 }));
 
 import { RepairDAODominioError } from "@/erros/errors";
-import { depositarTokens } from "@/services/store/tokenDeposit";
+import { depositarTokens, sacarDeposito } from "@/services/eligibility/tokenDeposit";
 
 describe("depositarTokens", () => {
 	beforeEach(() => {
@@ -80,5 +85,30 @@ describe("depositarTokens", () => {
 
 		await expect(depositarTokens(ethereum, 0n)).rejects.toBeInstanceOf(RepairDAODominioError);
 		await expect(depositarTokens(ethereum, -1n)).rejects.toBeInstanceOf(RepairDAODominioError);
+	});
+
+	it("saca o deposito atual e aguarda confirmacao", async () => {
+		const ethereum = { request: vi.fn() };
+
+		await expect(sacarDeposito(ethereum)).resolves.toBe("saque-confirmado");
+
+		expect(ethersMocks.providerCtor).toHaveBeenCalledWith(ethereum);
+		expect(ethersMocks.getSignerMock).toHaveBeenCalledTimes(1);
+		expect(ethersMocks.contractCtor).toHaveBeenCalledWith(
+			contratos.RepairDeposit,
+			expect.any(Array),
+			expect.any(Object),
+		);
+		expect(ethersMocks.withdrawDepositMock).toHaveBeenCalledTimes(1);
+		expect(ethersMocks.withdrawWaitMock).toHaveBeenCalledTimes(1);
+	});
+
+	it("retorna a transacao de saque diretamente quando nao ha wait", async () => {
+		ethersMocks.withdrawDepositMock.mockResolvedValueOnce("saque-direto");
+
+		const ethereum = { request: vi.fn() };
+
+		await expect(sacarDeposito(ethereum)).resolves.toBe("saque-direto");
+		expect(ethersMocks.withdrawDepositMock).toHaveBeenCalledTimes(1);
 	});
 });

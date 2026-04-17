@@ -6,7 +6,6 @@ import { MantineProvider } from "@mantine/core";
 const storeMocks = vi.hoisted(() => ({
 	carregarMetricasDaLoja: vi.fn(),
 	obterEthereumProvider: vi.fn(),
-	depositarTokens: vi.fn(),
 	useWalletStatus: vi.fn(),
 }));
 
@@ -16,10 +15,6 @@ vi.mock("@/services/store/storeMetrics", () => ({
 
 vi.mock("@/services/wallet/provider", () => ({
 	obterEthereumProvider: storeMocks.obterEthereumProvider,
-}));
-
-vi.mock("@/services/store/tokenDeposit", () => ({
-	depositarTokens: storeMocks.depositarTokens,
 }));
 
 vi.mock("@/hooks/useWalletStatus", () => ({
@@ -60,5 +55,6 @@ describe("app/store/page", () => {
 		expect(markup).toContain("ETH 0,0000");
 		expect(markup).toContain("RPT 0,00");
 		expect(markup).toContain("Carteira desconectada");
+		expect(markup).not.toContain("Depositar RPT e ativar conta");
 	});
 });

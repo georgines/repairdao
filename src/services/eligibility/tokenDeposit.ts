@@ -14,6 +14,13 @@ const REPAIR_DEPOSIT_ABI = [
 		],
 		outputs: [],
 	},
+	{
+		type: "function",
+		name: "withdrawDeposit",
+		stateMutability: "nonpayable",
+		inputs: [],
+		outputs: [],
+	},
 ] as const;
 
 export async function depositarTokens(
@@ -29,6 +36,19 @@ export async function depositarTokens(
 	const signer = await provider.getSigner();
 	const contrato = new Contract(REPAIRDAO_CONTRACTOS.deposit.address, REPAIR_DEPOSIT_ABI, signer);
 	const transacao = await contrato.deposit(quantidade, isTechnician);
+
+	if (typeof transacao?.wait === "function") {
+		return transacao.wait();
+	}
+
+	return transacao;
+}
+
+export async function sacarDeposito(ethereum: EthereumProvider): Promise<unknown> {
+	const provider = new BrowserProvider(ethereum as never);
+	const signer = await provider.getSigner();
+	const contrato = new Contract(REPAIRDAO_CONTRACTOS.deposit.address, REPAIR_DEPOSIT_ABI, signer);
+	const transacao = await contrato.withdrawDeposit();
 
 	if (typeof transacao?.wait === "function") {
 		return transacao.wait();

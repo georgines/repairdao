@@ -28,6 +28,7 @@ describe("components/ui/NavBar/NavBar", () => {
 
 		expect(markup).toContain('data-active="true"');
 		expect(markup).toContain("Loja");
+		expect(markup).toContain("Elegibilidade");
 	});
 
 	it("mantem a rota pai ativa em subrotas", () => {

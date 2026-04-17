@@ -7,7 +7,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const serviceMocks = vi.hoisted(() => ({
 	carregarMetricasDaLoja: vi.fn(),
 	comprarToken: vi.fn(),
-	depositarTokens: vi.fn(),
 	obterEthereumProvider: vi.fn(),
 	useWalletStatus: vi.fn(),
 }));
@@ -18,10 +17,6 @@ vi.mock("@/services/store/storeMetrics", () => ({
 
 vi.mock("@/services/wallet/tokenPurchase", () => ({
 	comprarToken: serviceMocks.comprarToken,
-}));
-
-vi.mock("@/services/store/tokenDeposit", () => ({
-	depositarTokens: serviceMocks.depositarTokens,
 }));
 
 vi.mock("@/services/wallet/provider", () => ({
@@ -114,8 +109,8 @@ describe("useStorePanel", () => {
 			await flush();
 		});
 
-	expect(serviceMocks.comprarToken).toHaveBeenCalledWith(expect.any(Object), "0,25");
-	expect(serviceMocks.carregarMetricasDaLoja).toHaveBeenCalledWith("0x1234567890abcdef1234567890abcdef12345678");
+		expect(serviceMocks.comprarToken).toHaveBeenCalledWith(expect.any(Object), "0,25");
+		expect(serviceMocks.carregarMetricasDaLoja).toHaveBeenCalledWith("0x1234567890abcdef1234567890abcdef12345678");
 	});
 
 	it("zera o simulador quando a quantidade eh invalida", async () => {
@@ -216,14 +211,6 @@ describe("useStorePanel", () => {
 		expect(getLatest()?.tokensPerEth).toBe("250");
 		expect(getLatest()?.rptPreview).toBe("25");
 		expect(getLatest()?.walletNotice).toBe("Carteira desconectada");
-
-		await act(async () => {
-			await getLatest()?.handleDeposit();
-			await flush();
-		});
-
-		expect(getLatest()?.error).toBe("Conecte a carteira para depositar os RPT.");
-		expect(serviceMocks.depositarTokens).not.toHaveBeenCalled();
 	});
 
 	it("zera as metricas quando o carregamento da loja falha", async () => {
@@ -333,75 +320,5 @@ describe("useStorePanel", () => {
 		});
 
 		expect(serviceMocks.carregarMetricasDaLoja).toHaveBeenCalledTimes(1);
-	});
-
-	it("oferece deposito com o saldo de RPT disponivel", async () => {
-		serviceMocks.depositarTokens.mockResolvedValue("ok");
-
-		await act(async () => {
-			root.render(<Probe />);
-			await flush();
-		});
-
-		await act(async () => {
-			await getLatest()?.handleDeposit();
-			await flush();
-		});
-
-		expect(serviceMocks.depositarTokens).toHaveBeenCalledWith(expect.any(Object), 5500000000000000000n);
-	});
-
-	it("bloqueia o deposito quando nao ha RPT disponivel", async () => {
-		serviceMocks.carregarMetricasDaLoja.mockResolvedValue({
-			rptBalanceRaw: 0n,
-			rptBalance: "0",
-			tokensPerEthRaw: 250n,
-			tokensPerEth: "250",
-		});
-
-		await act(async () => {
-			root.render(<Probe />);
-			await flush();
-		});
-
-		await act(async () => {
-			await getLatest()?.handleDeposit();
-			await flush();
-		});
-
-		expect(serviceMocks.depositarTokens).not.toHaveBeenCalled();
-		expect(getLatest()?.error).toBe("Nao ha RPT disponivel para depositar.");
-	});
-
-	it("usa mensagem padrao quando o deposito falha", async () => {
-		serviceMocks.depositarTokens.mockRejectedValue("falha bruta");
-
-		await act(async () => {
-			root.render(<Probe />);
-			await flush();
-		});
-
-		await act(async () => {
-			await getLatest()?.handleDeposit();
-			await flush();
-		});
-
-		expect(getLatest()?.error).toBe("Nao foi possivel concluir o deposito dos RPT.");
-	});
-
-	it("usa a mensagem do erro quando o deposito falha com Error", async () => {
-		serviceMocks.depositarTokens.mockRejectedValue(new Error("falha de deposito"));
-
-		await act(async () => {
-			root.render(<Probe />);
-			await flush();
-		});
-
-		await act(async () => {
-			await getLatest()?.handleDeposit();
-			await flush();
-		});
-
-		expect(getLatest()?.error).toBe("falha de deposito");
 	});
 });
