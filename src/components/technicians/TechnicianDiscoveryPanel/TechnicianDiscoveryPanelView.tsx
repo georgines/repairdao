@@ -6,6 +6,7 @@ import {
 	Group,
 	Modal,
 	NumberInput,
+	Rating,
 	SimpleGrid,
 	Stack,
 	Table,
@@ -52,6 +53,10 @@ function formatDetail(value: string | number | boolean | null) {
 	}
 
 	return value ?? "-";
+}
+
+function formatReputationStars(reputation: number) {
+	return Math.min(5, Math.max(0, Math.trunc(reputation)));
 }
 
 export function TechnicianDiscoveryPanelView({
@@ -165,7 +170,11 @@ export function TechnicianDiscoveryPanelView({
 										<Table.Td>{technician.expertiseArea ?? "-"}</Table.Td>
 										<Table.Td>{formatRole(technician.role)}</Table.Td>
 										<Table.Td>{technician.badgeLevel}</Table.Td>
-										<Table.Td>{technician.reputation}</Table.Td>
+										<Table.Td>
+											<Group gap={4} aria-label={`Reputacao ${formatReputationStars(technician.reputation)} de 5`}>
+												<Rating value={formatReputationStars(technician.reputation)} readOnly size="sm" />
+											</Group>
+										</Table.Td>
 										<Table.Td>{formatSituation(technician)}</Table.Td>
 										<Table.Td>
 											<Group gap="xs" wrap="nowrap">
@@ -206,7 +215,9 @@ export function TechnicianDiscoveryPanelView({
 						<Group gap="xs">
 							<Badge variant="light">{formatRole(selectedTechnician.role)}</Badge>
 							<Badge variant="light">{selectedTechnician.badgeLevel}</Badge>
-							<Badge variant="light">reputacao {selectedTechnician.reputation}</Badge>
+							<Group gap={4} aria-label={`Reputacao ${formatReputationStars(selectedTechnician.reputation)} de 5`}>
+								<Rating value={formatReputationStars(selectedTechnician.reputation)} readOnly size="sm" />
+							</Group>
 						</Group>
 
 						<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">

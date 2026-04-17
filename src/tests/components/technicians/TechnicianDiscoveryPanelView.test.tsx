@@ -83,6 +83,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 
 		expect(screen.getByText("Encontre tecnicos elegiveis")).toBeDefined();
 		expect(screen.getByText("Bruno Silva")).toBeDefined();
+		expect(screen.getByLabelText("Reputacao 5 de 5")).toBeDefined();
 		expect(screen.getByRole("button", { name: "Detalhes" })).toBeDefined();
 		expect(screen.getByRole("button", { name: "Contratar" })).toBeDefined();
 	});
@@ -113,6 +114,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 		expect(screen.getByText("Area: Redes")).toBeDefined();
 		expect(screen.getByText("Ativo: sim")).toBeDefined();
 		expect(screen.getByText("Elegivel: sim")).toBeDefined();
+		expect(screen.getAllByLabelText("Reputacao 5 de 5")).toHaveLength(2);
 	});
 
 	it("mostra a confirmacao de contratacao no modal", () => {
@@ -139,6 +141,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 
 		expect(screen.getByText("Confirmar contratacao")).toBeDefined();
 		expect(screen.getByRole("button", { name: "Contratar tecnico" })).toBeDefined();
+		expect(screen.getAllByLabelText("Reputacao 5 de 5")).toHaveLength(2);
 	});
 
 	it("propaga as interacoes da tabela e do modal", () => {
