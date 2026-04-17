@@ -2,29 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AppShell, Divider, NavLink, Stack, Text } from "@mantine/core";
+import { AppShell, NavLink, ScrollArea, Stack } from "@mantine/core";
 
 const menuItems = [
   { label: "Home", href: "/" },
   { label: "Loja", href: "/store" },
 ];
 
-export function NavBar() {
+type NavBarProps = {
+	onNavigate?: () => void;
+};
+
+export function NavBar({ onNavigate }: NavBarProps) {
 	const pathname = usePathname();
 
 	return (
 		<Stack h="100%" gap="sm" p="md">
-			<AppShell.Section>
-				<Stack gap={2}>
-					<Text fw={800} size="lg" c="dark">
-						RepairDAO
-					</Text>
-				</Stack>
-			</AppShell.Section>
-
-			<Divider />
-
-			<AppShell.Section grow>
+			<AppShell.Section grow component={ScrollArea}>
 				<Stack gap={4}>
 					{menuItems.map((item) => {
 						const active = item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -37,6 +31,7 @@ export function NavBar() {
 								label={item.label}
 								active={active}
 								variant="subtle"
+								onClick={onNavigate}
 							/>
 						);
 					})}

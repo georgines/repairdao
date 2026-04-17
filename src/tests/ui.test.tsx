@@ -57,5 +57,6 @@ describe("fase 1 da interface", () => {
 
     expect(markup).toContain("conteudo");
     expect(markup).toContain("RepairDAO");
+    expect(markup).toContain("Toggle navigation");
   });
 });
