@@ -76,6 +76,7 @@ describe("useEligibilityPanel", () => {
 			tokensPerEth: "250",
 			badgeLevel: "bronze",
 			isActive: true,
+			perfilAtivo: "cliente",
 			minDepositRaw: 100000000000000000000n,
 			minDeposit: "100",
 		});
@@ -101,10 +102,12 @@ describe("useEligibilityPanel", () => {
 		expect(getLatest()?.rptBalance).toBe("5.5");
 		expect(getLatest()?.badgeLevel).toBe("bronze");
 		expect(getLatest()?.isActive).toBe(true);
+		expect(getLatest()?.perfilAtivo).toBe("cliente");
+		expect(getLatest()?.mostrarSeletoresPapel).toBe(false);
 		expect(getLatest()?.perfilSelecionado).toBe("cliente");
 		expect(getLatest()?.quantidadeRpt).toBeNull();
 		expect(getLatest()?.quantidadeErro).toBe("Informe um valor para depositar.");
-		expect(getLatest()?.acaoLabel).toBe("Mudar para cliente");
+		expect(getLatest()?.acaoLabel).toBe("Trocar para tecnico");
 
 		serviceMocks.depositarTokens.mockResolvedValue("ok");
 
@@ -119,10 +122,22 @@ describe("useEligibilityPanel", () => {
 		});
 
 		expect(serviceMocks.sacarDeposito).toHaveBeenCalledTimes(1);
-		expect(serviceMocks.depositarTokens).toHaveBeenCalledWith(expect.any(Object), 150000000000000000000n, false);
+		expect(serviceMocks.depositarTokens).toHaveBeenCalledWith(expect.any(Object), 150000000000000000000n, true);
 	});
 
-	it("permite trocar para tecnico e depositar mais sem saque", async () => {
+	it("mantem o papel registrado e permite trocar para cliente quando o nivel ativo e tecnico", async () => {
+		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
+			rptBalanceRaw: 5500000000000000000n,
+			rptBalance: "5.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
+			badgeLevel: "bronze",
+			isActive: true,
+			perfilAtivo: "tecnico",
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
+		});
+
 		await act(async () => {
 			root.render(<Probe />);
 			await flush();
@@ -134,9 +149,11 @@ describe("useEligibilityPanel", () => {
 			await flush();
 		});
 
-		expect(getLatest()?.perfilSelecionado).toBe("tecnico");
-		expect(getLatest()?.acaoLabel).toBe("Depositar mais como tecnico");
-		expect(getLatest()?.mensagemAcao).toContain("depositar mais RPT");
+		expect(getLatest()?.perfilAtivo).toBe("tecnico");
+		expect(getLatest()?.mostrarSeletoresPapel).toBe(false);
+		expect(getLatest()?.perfilSelecionado).toBe("cliente");
+		expect(getLatest()?.acaoLabel).toBe("Trocar para cliente");
+		expect(getLatest()?.mensagemAcao).toContain("novo nivel comecara do zero");
 
 		serviceMocks.depositarTokens.mockResolvedValue("ok");
 
@@ -145,8 +162,8 @@ describe("useEligibilityPanel", () => {
 			await flush();
 		});
 
-		expect(serviceMocks.sacarDeposito).not.toHaveBeenCalled();
-		expect(serviceMocks.depositarTokens).toHaveBeenCalledWith(expect.any(Object), 150500000000000000000n, true);
+		expect(serviceMocks.sacarDeposito).toHaveBeenCalledTimes(1);
+		expect(serviceMocks.depositarTokens).toHaveBeenCalledWith(expect.any(Object), 150500000000000000000n, false);
 	});
 
 	it("expõe mensagens corretas quando a conta está inativa", async () => {
@@ -157,6 +174,7 @@ describe("useEligibilityPanel", () => {
 			tokensPerEth: "250",
 			badgeLevel: "Sem carteira",
 			isActive: false,
+			perfilAtivo: null,
 			minDepositRaw: 100000000000000000000n,
 			minDeposit: "100",
 		});
@@ -359,6 +377,7 @@ describe("useEligibilityPanel", () => {
 			tokensPerEth: "250",
 			badgeLevel: "bronze",
 			isActive: true,
+			perfilAtivo: "cliente",
 			minDepositRaw: 100000000000000000000n,
 			minDeposit: "100",
 			})
@@ -369,6 +388,7 @@ describe("useEligibilityPanel", () => {
 			tokensPerEth: "300",
 			badgeLevel: "silver",
 			isActive: true,
+			perfilAtivo: "cliente",
 			minDepositRaw: 100000000000000000000n,
 			minDeposit: "100",
 			});
@@ -398,6 +418,7 @@ describe("useEligibilityPanel", () => {
 			tokensPerEth: string;
 			badgeLevel: string;
 			isActive: boolean;
+			perfilAtivo: "cliente" | "tecnico" | null;
 			minDepositRaw: bigint;
 			minDeposit: string;
 		}) => void;
@@ -426,6 +447,7 @@ describe("useEligibilityPanel", () => {
 				tokensPerEth: "250",
 				badgeLevel: "silver",
 				isActive: true,
+				perfilAtivo: "cliente",
 				minDepositRaw: 100000000000000000000n,
 				minDeposit: "100",
 			});

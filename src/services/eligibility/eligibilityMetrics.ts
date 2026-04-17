@@ -22,6 +22,7 @@ export async function carregarMetricasElegibilidade(address?: string | null) {
 		tokensPerEth: string;
 		badgeLevel: string;
 		isActive: boolean;
+		perfilAtivo: "cliente" | "tecnico" | null;
 		minDepositRaw: string;
 		minDeposit: string;
 	};
@@ -33,6 +34,7 @@ export async function carregarMetricasElegibilidade(address?: string | null) {
 		tokensPerEth: dados.tokensPerEth,
 		badgeLevel: dados.badgeLevel,
 		isActive: dados.isActive,
+		perfilAtivo: dados.perfilAtivo,
 		minDepositRaw: BigInt(dados.minDepositRaw),
 		minDeposit: dados.minDeposit,
 	};

@@ -53,6 +53,7 @@ describe("app/eligibility/page", () => {
 			tokensPerEth: "0",
 			badgeLevel: "Sem carteira",
 			isActive: false,
+			perfilAtivo: null,
 			minDepositRaw: 100000000000000000000n,
 			minDeposit: "100",
 		});
@@ -60,7 +61,7 @@ describe("app/eligibility/page", () => {
 		const markup = renderWithMantine(<EligibilityPage />);
 
 		expect(markup).toContain("Depositar RPT e ativar conta");
-		expect(markup).toContain("Definir papel");
+		expect(markup).toContain("Papel registrado");
 		expect(markup).toContain("Nivel do cliente");
 		expect(markup).toContain("Quanto RPT deseja depositar");
 		expect(markup).toContain("Ativar como cliente");

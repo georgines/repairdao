@@ -55,13 +55,15 @@ describe("EligibilityPanelView", () => {
 				tokensPerEth="250"
 				rptBalance="10"
 				badgeLevel="bronze"
-				isActive={true}
+				isActive={false}
+				perfilAtivo={null}
+				mostrarSeletoresPapel={true}
 				perfilSelecionado="cliente"
 				quantidadeRpt={null}
 				quantidadeErro={null}
 				quantidadeMinima={100}
-				acaoLabel="Mudar para cliente"
-				mensagemAcao="Ao mudar para cliente, todo o valor atual sera sacado e o valor digitado sera o inicio do novo nivel."
+				acaoLabel="Ativar como cliente"
+				mensagemAcao="Ao ativar como cliente, o valor digitado sera o inicio do novo nivel."
 				walletNotice={null}
 				depositing={false}
 				error={null}
@@ -77,9 +79,9 @@ describe("EligibilityPanelView", () => {
 		expect(markup).toContain("Cliente");
 		expect(markup).toContain("Tecnico");
 		expect(markup).toContain("Nivel do cliente");
-		expect(markup).toContain("Conta ativa");
+		expect(markup).toContain("Aguardando deposito");
 		expect(markup).toContain("Quanto RPT deseja depositar");
-		expect(markup).toContain("Mudar para cliente");
+		expect(markup).toContain("Ativar como cliente");
 		expect(markup).toContain("RPT 10,00");
 		expect(markup).toContain("ETH comprado 0,0400");
 		expect(markup).toContain("USD comprado US$");
@@ -100,13 +102,15 @@ describe("EligibilityPanelView", () => {
 						tokensPerEth="250"
 						rptBalance="10"
 						badgeLevel="bronze"
-						isActive={true}
+						isActive={false}
+						perfilAtivo={null}
+						mostrarSeletoresPapel={true}
 						perfilSelecionado="cliente"
 						quantidadeRpt={null}
 						quantidadeErro={null}
 						quantidadeMinima={100}
-						acaoLabel="Mudar para cliente"
-						mensagemAcao="Ao mudar para cliente, todo o valor atual sera sacado e o valor digitado sera o inicio do novo nivel."
+						acaoLabel="Ativar como cliente"
+						mensagemAcao="Ao ativar como cliente, o valor digitado sera o inicio do novo nivel."
 						walletNotice={null}
 						depositing={false}
 						error={null}
@@ -135,12 +139,14 @@ describe("EligibilityPanelView", () => {
 				rptBalance="0"
 				badgeLevel="Sem carteira"
 				isActive={false}
+				perfilAtivo={null}
+				mostrarSeletoresPapel={true}
 				perfilSelecionado="cliente"
 				quantidadeRpt={0}
 				quantidadeErro="O valor para deposito deve ser maior ou igual a 100 RPT."
 				quantidadeMinima={100}
-				acaoLabel="Mudar para cliente"
-				mensagemAcao="Ao mudar para cliente, todo o valor atual sera sacado e o valor digitado sera o inicio do novo nivel."
+				acaoLabel="Ativar como cliente"
+				mensagemAcao="Ao ativar como cliente, o valor digitado sera o inicio do novo nivel."
 				walletNotice="Carteira desconectada"
 				depositing={false}
 				error={null}
@@ -168,12 +174,14 @@ describe("EligibilityPanelView", () => {
 				rptBalance="1000000"
 				badgeLevel="bronze"
 				isActive={true}
+				perfilAtivo="cliente"
+				mostrarSeletoresPapel={false}
 				perfilSelecionado="cliente"
 				quantidadeRpt={null}
 				quantidadeErro={null}
 				quantidadeMinima={100}
-				acaoLabel="Mudar para cliente"
-				mensagemAcao="Mensagem"
+				acaoLabel="Trocar para tecnico"
+				mensagemAcao="Ao trocar para tecnico, o saldo atual sera sacado, a confirmacao sera aguardada e o novo nivel comecara do zero."
 				walletNotice={null}
 				depositing={false}
 				error={null}
@@ -187,7 +195,7 @@ describe("EligibilityPanelView", () => {
 		expect(markup).toContain("RPT 1.000.000,00");
 	});
 
-	it("propaga a troca de perfil e o clique de deposito", async () => {
+	it("oculta os seletores quando a conta esta ativa e troca com um unico botao", async () => {
 		const onPerfilChange = vi.fn();
 		const onDeposit = vi.fn();
 
@@ -201,13 +209,15 @@ describe("EligibilityPanelView", () => {
 						tokensPerEth="250"
 						rptBalance="5"
 						badgeLevel="bronze"
-						isActive={false}
-						perfilSelecionado="tecnico"
+						isActive={true}
+						perfilAtivo="cliente"
+						mostrarSeletoresPapel={false}
+						perfilSelecionado="cliente"
 						quantidadeRpt={2}
 						quantidadeErro={null}
 						quantidadeMinima={100}
-						acaoLabel="Depositar mais como tecnico"
-						mensagemAcao="Ao manter tecnico, voce pode depositar mais RPT sem sacar o saldo atual."
+						acaoLabel="Trocar para tecnico"
+						mensagemAcao="Ao trocar para tecnico, o saldo atual sera sacado, a confirmacao sera aguardada e o novo nivel comecara do zero."
 						walletNotice={null}
 						depositing={false}
 						error="falha no deposito"
@@ -224,23 +234,20 @@ describe("EligibilityPanelView", () => {
 		const buttons = Array.from(container.querySelectorAll("button"));
 		const clienteButton = buttons.find((button) => button.textContent?.includes("Cliente"));
 		const tecnicoButton = buttons.find((button) => button.textContent?.includes("Tecnico"));
-		const depositButton = buttons.find((button) => button.textContent?.includes("Depositar mais"));
+		const depositButton = buttons.find((button) => button.textContent?.includes("Trocar para tecnico"));
 
-		if (!clienteButton || !tecnicoButton || !depositButton) {
+		if (clienteButton || tecnicoButton || !depositButton) {
 			throw new Error("Botoes esperados nao encontrados.");
 		}
 
 		await act(async () => {
-			clienteButton.click();
-			tecnicoButton.click();
 			depositButton.click();
 			await Promise.resolve();
 		});
 
-		expect(onPerfilChange).toHaveBeenCalledWith("cliente");
-		expect(onPerfilChange).toHaveBeenCalledWith("tecnico");
+		expect(onPerfilChange).not.toHaveBeenCalled();
 		expect(onDeposit).toHaveBeenCalledTimes(1);
 		expect(container.textContent).toContain("falha no deposito");
-		expect(container.textContent).toContain("Nivel do tecnico");
+		expect(container.textContent).toContain("Papel registrado");
 	});
 });

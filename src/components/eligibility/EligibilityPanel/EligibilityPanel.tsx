@@ -15,6 +15,8 @@ export function EligibilityPanel() {
 			rptBalance={panel.rptBalance}
 			badgeLevel={panel.badgeLevel}
 			isActive={panel.isActive}
+			perfilAtivo={panel.perfilAtivo}
+			mostrarSeletoresPapel={panel.mostrarSeletoresPapel}
 			perfilSelecionado={panel.perfilSelecionado}
 			quantidadeRpt={panel.quantidadeRpt}
 			quantidadeErro={panel.quantidadeErro}

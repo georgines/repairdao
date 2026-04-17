@@ -9,6 +9,8 @@ export type EligibilityPanelViewProps = {
 	rptBalance: string;
 	badgeLevel: string;
 	isActive: boolean;
+	perfilAtivo: "cliente" | "tecnico" | null;
+	mostrarSeletoresPapel: boolean;
 	perfilSelecionado: "cliente" | "tecnico";
 	quantidadeRpt: string | number;
 	quantidadeErro: string | null;
@@ -32,6 +34,8 @@ export function EligibilityPanelView({
 	rptBalance,
 	badgeLevel,
 	isActive,
+	perfilAtivo,
+	mostrarSeletoresPapel,
 	perfilSelecionado,
 	quantidadeRpt,
 	quantidadeErro,
@@ -47,6 +51,7 @@ export function EligibilityPanelView({
 	connected,
 }: EligibilityPanelViewProps) {
 	const podeDepositar = connected && !depositing && quantidadeErro === null;
+	const perfilExibido = perfilAtivo ?? perfilSelecionado;
 
 	return (
 		<Card
@@ -67,30 +72,41 @@ export function EligibilityPanelView({
 					<Title order={1}>Depositar RPT e ativar conta</Title>
 				</Stack>
 
-				<Stack gap={4}>
-					<Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-						Definir papel
-					</Text>
-					<Text size="sm" c="dimmed">
-						Escolha se este deposito vai ativar a conta como cliente ou tecnico.
-					</Text>
-					<Group grow wrap="nowrap">
-						<Button
-							variant={perfilSelecionado === "cliente" ? "filled" : "light"}
-							onClick={() => onPerfilChange("cliente")}
-							radius="md"
-						>
-							Cliente
-						</Button>
-						<Button
-							variant={perfilSelecionado === "tecnico" ? "filled" : "light"}
-							onClick={() => onPerfilChange("tecnico")}
-							radius="md"
-						>
-							Tecnico
-						</Button>
-					</Group>
-				</Stack>
+				{mostrarSeletoresPapel ? (
+					<Stack gap={4}>
+						<Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+							Definir papel
+						</Text>
+						<Text size="sm" c="dimmed">
+							Escolha se este deposito vai ativar a conta como cliente ou tecnico.
+						</Text>
+						<Group grow wrap="nowrap">
+							<Button
+								variant={perfilSelecionado === "cliente" ? "filled" : "light"}
+								onClick={() => onPerfilChange("cliente")}
+								radius="md"
+							>
+								Cliente
+							</Button>
+							<Button
+								variant={perfilSelecionado === "tecnico" ? "filled" : "light"}
+								onClick={() => onPerfilChange("tecnico")}
+								radius="md"
+							>
+								Tecnico
+							</Button>
+						</Group>
+					</Stack>
+				) : (
+					<Stack gap={4}>
+						<Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+							Papel registrado
+						</Text>
+						<Text size="sm" c="dimmed">
+							O seletor fica oculto porque a conta ja esta ativa. Use o botao abaixo para trocar de cliente para tecnico ou de tecnico para cliente.
+						</Text>
+					</Stack>
+				)}
 
 				<Group align="stretch" grow wrap="wrap">
 					<BalanceSummary
@@ -115,7 +131,7 @@ export function EligibilityPanelView({
 						}}
 					>
 						<Text size="xs" tt="uppercase" fw={700} c="dimmed">
-							Nivel do {perfilSelecionado}
+							Nivel do {perfilExibido}
 						</Text>
 						<Text size="xl" fw={800}>
 							{badgeLevel}
@@ -124,7 +140,7 @@ export function EligibilityPanelView({
 							{isActive ? "Conta ativa" : "Aguardando deposito"}
 						</Text>
 						<Text size="sm" c="dimmed">
-							Este e o nivel que sera usado para o {perfilSelecionado}.
+							Este e o nivel que sera usado para o {perfilExibido}.
 						</Text>
 					</Stack>
 				</Group>

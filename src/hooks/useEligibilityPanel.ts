@@ -20,6 +20,8 @@ type UseEligibilityPanelResult = {
 	rptBalance: string;
 	badgeLevel: string;
 	isActive: boolean;
+	perfilAtivo: "cliente" | "tecnico" | null;
+	mostrarSeletoresPapel: boolean;
 	perfilSelecionado: "cliente" | "tecnico";
 	quantidadeRpt: QuantidadeRpt;
 	quantidadeErro: string | null;
@@ -41,7 +43,12 @@ const METRICAS_PADRAO: EligibilityMetrics = {
 	tokensPerEth: "0",
 	badgeLevel: "Sem carteira",
 	isActive: false,
+	perfilAtivo: null,
 };
+
+function obterPerfilOposto(perfil: "cliente" | "tecnico"): "cliente" | "tecnico" {
+	return perfil === "cliente" ? "tecnico" : "cliente";
+}
 
 export function useEligibilityPanel(): UseEligibilityPanelResult {
 	const { state } = useWalletStatus();
@@ -56,6 +63,9 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 	const usdBalance = connected ? state.usdBalance : "0";
 	const ethUsdPrice = connected ? state.ethUsdPrice : "0";
 	const walletNotice = connected ? null : "Carteira desconectada";
+	const perfilRegistrado = metricas.perfilAtivo ?? perfilSelecionado;
+	const mostrarSeletoresPapel = !metricas.isActive;
+	const perfilParaTroca = metricas.isActive ? obterPerfilOposto(perfilRegistrado) : perfilSelecionado;
 	const quantidadeMinima = Number(metricas.minDeposit) > 0 ? Number(metricas.minDeposit) : VALOR_MINIMO_DEPOSITO_PADRAO;
 	const quantidadeTexto = typeof quantidadeRpt === "number"
 		? String(quantidadeRpt)
@@ -68,16 +78,12 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 		: quantidadeNumerica < quantidadeMinima
 			? `O valor para deposito deve ser maior ou igual a ${quantidadeMinima} RPT.`
 			: null;
-	const acaoLabel = perfilSelecionado === "cliente"
-		? (metricas.isActive ? "Mudar para cliente" : "Ativar como cliente")
-		: (metricas.isActive ? "Depositar mais como tecnico" : "Ativar como tecnico");
-	const mensagemAcao = perfilSelecionado === "cliente"
-		? (metricas.isActive
-			? "Ao mudar para cliente, todo o valor atual sera sacado e o valor digitado sera o inicio do novo nivel."
-			: "Ao ativar como cliente, o valor digitado sera o inicio do novo nivel.")
-		: (metricas.isActive
-			? "Ao manter tecnico, voce pode depositar mais RPT sem sacar o saldo atual."
-			: "Ao ativar como tecnico, o valor digitado sera o inicio do novo nivel.");
+	const acaoLabel = metricas.isActive
+		? `Trocar para ${perfilParaTroca}`
+		: `Ativar como ${perfilSelecionado}`;
+	const mensagemAcao = metricas.isActive
+		? `Ao trocar para ${perfilParaTroca}, o saldo atual sera sacado, a confirmacao sera aguardada e o novo nivel comecara do zero.`
+		: `Ao ativar como ${perfilSelecionado}, o valor digitado sera o inicio do novo nivel.`;
 
 	useEffect(() => {
 		let ativo = true;
@@ -130,11 +136,11 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 		setError(null);
 
 		try {
-			if (perfilSelecionado === "cliente" && metricas.isActive) {
+			if (metricas.isActive) {
 				await sacarDeposito(ethereum);
 			}
 
-			await depositarTokens(ethereum, quantidade, perfilSelecionado === "tecnico");
+			await depositarTokens(ethereum, quantidade, perfilParaTroca === "tecnico");
 		} catch (depositError) {
 			setError(depositError instanceof Error ? depositError.message : "Nao foi possivel concluir o deposito dos RPT.");
 		} finally {
@@ -143,6 +149,10 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 	}
 
 	function handlePerfilChange(value: "cliente" | "tecnico") {
+		if (metricas.isActive) {
+			return;
+		}
+
 		setPerfilSelecionado(value);
 		setError(null);
 	}
@@ -156,6 +166,8 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 		rptBalance: connected ? metricas.rptBalance : "0",
 		badgeLevel: connected ? metricas.badgeLevel : "Sem carteira",
 		isActive: connected ? metricas.isActive : false,
+		perfilAtivo: connected ? metricas.perfilAtivo : null,
+		mostrarSeletoresPapel: connected ? mostrarSeletoresPapel : false,
 		perfilSelecionado,
 		quantidadeRpt,
 		quantidadeErro,

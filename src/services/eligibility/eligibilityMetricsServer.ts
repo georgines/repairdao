@@ -28,6 +28,26 @@ const REPAIR_DEPOSIT_READ_ABI = [
 		inputs: [{ name: "user", type: "address" }],
 		outputs: [{ name: "active", type: "bool" }],
 	},
+	{
+		type: "function",
+		name: "getDeposit",
+		stateMutability: "view",
+		inputs: [{ name: "user", type: "address" }],
+		outputs: [
+			{
+				name: "deposit",
+				type: "tuple",
+				components: [
+					{ name: "amount", type: "uint256" },
+					{ name: "depositedAt", type: "uint256" },
+					{ name: "lastClaimedAt", type: "uint256" },
+					{ name: "customRate", type: "uint256" },
+					{ name: "active", type: "bool" },
+					{ name: "isTechnician", type: "bool" },
+				],
+			},
+		],
+	},
 ] as const;
 
 const REPAIR_BADGE_READ_ABI = [
@@ -47,6 +67,7 @@ export type EligibilityMetrics = {
 	tokensPerEth: string;
 	badgeLevel: string;
 	isActive: boolean;
+	perfilAtivo: "cliente" | "tecnico" | null;
 	minDepositRaw: bigint;
 	minDeposit: string;
 };
@@ -64,9 +85,16 @@ export async function carregarMetricasElegibilidadeNoServidor(address?: string |
 	const rptBalanceRaw = address ? await tokenContract.balanceOf(address).catch(() => 0n) : 0n;
 	const tokensPerEthRaw = await tokenContract.tokensPerEth().catch(() => 0n);
 	const isActive = address ? await depositContract.isActive(address).catch(() => false) : false;
+	const deposito = address ? await depositContract.getDeposit(address).catch(() => null) : null;
 	const badgeLevel = address ? await badgeContract.getLevelName(address).catch(() => "Sem badge") : "Sem carteira";
 	const minDepositRawHex = await provider.getStorage(REPAIRDAO_CONTRACTOS.deposit.address, MIN_DEPOSIT_STORAGE_SLOT).catch(() => "0x0");
 	const minDepositRaw = BigInt(minDepositRawHex);
+	const perfilAtivo = isActive && deposito
+		? ((deposito as { isTechnician?: boolean; [index: number]: unknown }).isTechnician
+			?? (deposito as { [index: number]: unknown })[5])
+			? "tecnico"
+			: "cliente"
+		: null;
 
 	return {
 		rptBalanceRaw,
@@ -75,6 +103,7 @@ export async function carregarMetricasElegibilidadeNoServidor(address?: string |
 		tokensPerEth: String(tokensPerEthRaw),
 		badgeLevel,
 		isActive,
+		perfilAtivo,
 		minDepositRaw,
 		minDeposit: formatUnits(minDepositRaw, 18),
 	};

@@ -21,6 +21,7 @@ describe("/api/eligibility/metrics", () => {
 			tokensPerEth: "250",
 			badgeLevel: "bronze",
 			isActive: true,
+			perfilAtivo: "cliente",
 			minDepositRaw: 100000000000000000000n,
 			minDeposit: "100",
 		});
@@ -36,6 +37,7 @@ describe("/api/eligibility/metrics", () => {
 			tokensPerEth: "250",
 			badgeLevel: "bronze",
 			isActive: true,
+			perfilAtivo: "cliente",
 			minDepositRaw: "100000000000000000000",
 			minDeposit: "100",
 		});

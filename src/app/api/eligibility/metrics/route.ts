@@ -15,6 +15,7 @@ export async function GET(request: Request) {
 		tokensPerEth: metricas.tokensPerEth,
 		badgeLevel: metricas.badgeLevel,
 		isActive: metricas.isActive,
+		perfilAtivo: metricas.perfilAtivo,
 		minDepositRaw: metricas.minDepositRaw.toString(),
 		minDeposit: metricas.minDeposit,
 	});

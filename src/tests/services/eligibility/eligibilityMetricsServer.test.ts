@@ -67,6 +67,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 		};
 		const depositContract = {
 			isActive: vi.fn().mockResolvedValue(true),
+			getDeposit: vi.fn().mockResolvedValue({ isTechnician: false }),
 			getStorage: vi.fn().mockResolvedValue("0x56bc75e2d63100000"),
 		};
 		const badgeContract = {
@@ -82,6 +83,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 			tokensPerEth: "1000",
 			badgeLevel: "bronze",
 			isActive: true,
+			perfilAtivo: "cliente",
 			minDepositRaw: 100000000000000000000n,
 			minDeposit: "100",
 		});
@@ -94,6 +96,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 		};
 		const depositContract = {
 			isActive: vi.fn().mockResolvedValue(false),
+			getDeposit: vi.fn().mockResolvedValue({ isTechnician: false }),
 			getStorage: vi.fn().mockResolvedValue("0x56bc75e2d63100000"),
 		};
 		const badgeContract = {
@@ -109,6 +112,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 			tokensPerEth: "1000",
 			badgeLevel: "Sem carteira",
 			isActive: false,
+			perfilAtivo: null,
 			minDepositRaw: 100000000000000000000n,
 			minDeposit: "100",
 		});
@@ -123,6 +127,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 		};
 		const depositContract = {
 			isActive: vi.fn().mockResolvedValue(false),
+			getDeposit: vi.fn().mockResolvedValue({ isTechnician: false }),
 			getStorage: vi.fn().mockResolvedValue("0x56bc75e2d63100000"),
 		};
 		const badgeContract = {
@@ -145,6 +150,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 		};
 		const depositContract = {
 			isActive: vi.fn().mockResolvedValue(false),
+			getDeposit: vi.fn().mockResolvedValue({ isTechnician: false }),
 			getStorage: vi.fn().mockResolvedValue("0x56bc75e2d63100000"),
 		};
 		const badgeContract = {
@@ -165,6 +171,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 		};
 		const depositContract = {
 			isActive: vi.fn().mockRejectedValue(new Error("falha no estado")),
+			getDeposit: vi.fn().mockRejectedValue(new Error("falha no deposito")),
 			getStorage: vi.fn().mockResolvedValue("0x56bc75e2d63100000"),
 		};
 		const badgeContract = {
@@ -180,6 +187,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 			tokensPerEth: "0",
 			badgeLevel: "Sem badge",
 			isActive: false,
+			perfilAtivo: null,
 			minDepositRaw: 100000000000000000000n,
 			minDeposit: "100",
 		});
@@ -194,6 +202,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 		};
 		const depositContract = {
 			isActive: vi.fn().mockResolvedValue(true),
+			getDeposit: vi.fn().mockResolvedValue({ isTechnician: true }),
 			getStorage: vi.fn(),
 		};
 		const badgeContract = {
@@ -209,8 +218,31 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 			tokensPerEth: "1000",
 			badgeLevel: "bronze",
 			isActive: true,
+			perfilAtivo: "tecnico",
 			minDepositRaw: 0n,
 			minDeposit: "0",
+		});
+	});
+
+	it("usa o perfil do deposito quando o contrato indica tecnico", async () => {
+		const tokenContract = {
+			balanceOf: vi.fn().mockResolvedValue(0n),
+			tokensPerEth: vi.fn().mockResolvedValue(1000n),
+		};
+		const depositContract = {
+			isActive: vi.fn().mockResolvedValue(true),
+			getDeposit: vi.fn().mockResolvedValue([0n, 0n, 0n, 0n, true, true]),
+			getStorage: vi.fn().mockResolvedValue("0x56bc75e2d63100000"),
+		};
+		const badgeContract = {
+			getLevelName: vi.fn().mockResolvedValue("bronze"),
+		};
+
+		ethersMocks.nextContracts.push(tokenContract, depositContract, badgeContract);
+
+		await expect(carregarMetricasElegibilidadeNoServidor("0xabc")).resolves.toMatchObject({
+			perfilAtivo: "tecnico",
+			isActive: true,
 		});
 	});
 });
