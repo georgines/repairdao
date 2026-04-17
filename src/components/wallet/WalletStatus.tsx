@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge, Button, Group, Paper, Text } from "@mantine/core";
+import { formatarEnderecoCurto, formatarNumero, formatarUSD } from "@/services/wallet/formatters";
 
 export type WalletStatusProps = {
 	connected: boolean;
@@ -12,9 +13,6 @@ export type WalletStatusProps = {
 	usdBalance: string;
 	actionLabel: string;
 	onAction: () => void;
-	formatarEnderecoCurto: (address?: string | null) => string;
-	formatarNumero: (valor: string, casasDecimais?: number) => string;
-	formatarUSD: (valor: string) => string;
 };
 
 export function WalletStatus({
@@ -27,9 +25,6 @@ export function WalletStatus({
 	usdBalance,
 	actionLabel,
 	onAction,
-	formatarEnderecoCurto,
-	formatarNumero,
-	formatarUSD,
 }: WalletStatusProps) {
 	return (
 		<Paper

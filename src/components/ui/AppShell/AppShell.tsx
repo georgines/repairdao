@@ -34,7 +34,7 @@ type AppShellProps = {
 
 export default function AppShell({ children }: AppShellProps) {
     const [mobileOpened, { toggle: toggleMobile, close: closeMobile }] = useDisclosure(false);
-    const { state, actionLabel, actionHandler, formatarEnderecoCurto, formatarNumero, formatarUSD } = useWalletStatus();
+    const { state, actionLabel, actionHandler } = useWalletStatus();
 
     return (
         <MantineProvider theme={theme} defaultColorScheme="light">
@@ -69,9 +69,6 @@ export default function AppShell({ children }: AppShellProps) {
                                 usdBalance={state.usdBalance}
                                 actionLabel={actionLabel}
                                 onAction={actionHandler}
-                                formatarEnderecoCurto={formatarEnderecoCurto}
-                                formatarNumero={formatarNumero}
-                                formatarUSD={formatarUSD}
                             />
                         </Group>
                     </Stack>

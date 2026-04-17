@@ -10,12 +10,23 @@ const serviceMocks = vi.hoisted(() => ({
 	obterEthereumProvider: vi.fn(),
 	obterRedeAtual: vi.fn(),
 	reconexaoAutomaticaHabilitada: vi.fn(),
-	formatarEnderecoCurto: vi.fn((address?: string | null) => address ?? "sem-endereco"),
-	formatarNumero: vi.fn((valor: string) => `num:${valor}`),
-	formatarUSD: vi.fn((valor: string) => `usd:${valor}`),
 }));
 
-vi.mock("@/services/walletService", () => ({
+vi.mock("@/services/wallet/walletReader", () => ({
+	carregarCarteira: serviceMocks.carregarCarteira,
+	obterRedeAtual: serviceMocks.obterRedeAtual,
+}));
+
+vi.mock("@/services/wallet/preferences", () => ({
+	definirReconexaoAutomatica: serviceMocks.definirReconexaoAutomatica,
+	reconexaoAutomaticaHabilitada: serviceMocks.reconexaoAutomaticaHabilitada,
+}));
+
+vi.mock("@/services/wallet/provider", () => ({
+	obterEthereumProvider: serviceMocks.obterEthereumProvider,
+}));
+
+vi.mock("@/services/wallet/walletSnapshot", () => ({
 	ESTADO_INICIAL_CARTEIRA: {
 		connected: false,
 		address: null,
@@ -24,14 +35,6 @@ vi.mock("@/services/walletService", () => ({
 		ethBalance: "0",
 		usdBalance: "$0.00",
 	},
-	carregarCarteira: serviceMocks.carregarCarteira,
-	definirReconexaoAutomatica: serviceMocks.definirReconexaoAutomatica,
-	formatarEnderecoCurto: serviceMocks.formatarEnderecoCurto,
-	formatarNumero: serviceMocks.formatarNumero,
-	formatarUSD: serviceMocks.formatarUSD,
-	obterEthereumProvider: serviceMocks.obterEthereumProvider,
-	obterRedeAtual: serviceMocks.obterRedeAtual,
-	reconexaoAutomaticaHabilitada: serviceMocks.reconexaoAutomaticaHabilitada,
 }));
 
 import { useWalletStatus } from "@/hooks/useWalletStatus";
@@ -81,7 +84,6 @@ describe("useWalletStatus", () => {
 
 		expect(getLatest()?.state.connected).toBe(false);
 		expect(getLatest()?.actionLabel).toBe("Conectar carteira");
-		expect(getLatest()?.formatarNumero("1")).toBe("num:1");
 		expect(serviceMocks.carregarCarteira).not.toHaveBeenCalled();
 
 		await act(async () => {

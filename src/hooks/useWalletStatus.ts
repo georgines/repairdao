@@ -1,18 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-	carregarCarteira,
-	definirReconexaoAutomatica,
-	ESTADO_INICIAL_CARTEIRA,
-	formatarEnderecoCurto,
-	formatarNumero,
-	formatarUSD,
-	obterEthereumProvider,
-	obterRedeAtual,
-	reconexaoAutomaticaHabilitada,
-	type WalletSnapshot,
-} from "@/services/walletService";
+import { carregarCarteira, obterRedeAtual } from "@/services/wallet/walletReader";
+import { definirReconexaoAutomatica, reconexaoAutomaticaHabilitada } from "@/services/wallet/preferences";
+import { ESTADO_INICIAL_CARTEIRA, type WalletSnapshot } from "@/services/wallet/walletSnapshot";
+import { obterEthereumProvider } from "@/services/wallet/provider";
 
 type WalletState = WalletSnapshot & {
 	loading: boolean;
@@ -119,8 +111,5 @@ export function useWalletStatus() {
 		state,
 		actionLabel: state.connected ? "Desconectar carteira" : "Conectar carteira",
 		actionHandler: state.connected ? desconectar : conectar,
-		formatarEnderecoCurto,
-		formatarNumero,
-		formatarUSD,
 	};
 }

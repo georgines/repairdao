@@ -2,11 +2,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { MantineProvider } from "@mantine/core";
 import { WalletStatus } from "@/components/wallet/WalletStatus";
-import {
-	formatarEnderecoCurto,
-	formatarNumero,
-	formatarUSD,
-} from "@/services/walletService";
 
 describe("WalletStatus", () => {
 	it("renderiza estado desconectado com CTA de conexao", () => {
@@ -22,9 +17,6 @@ describe("WalletStatus", () => {
 					usdBalance="0"
 					actionLabel="Conectar carteira"
 					onAction={() => {}}
-					formatarEnderecoCurto={formatarEnderecoCurto}
-					formatarNumero={formatarNumero}
-					formatarUSD={formatarUSD}
 				/>
 			</MantineProvider>
 		);
@@ -47,9 +39,6 @@ describe("WalletStatus", () => {
 			usdBalance: "1000",
 			actionLabel: "Desconectar carteira",
 			onAction: () => {},
-			formatarEnderecoCurto,
-			formatarNumero,
-			formatarUSD,
 		} as const;
 
 		const markup = renderToStaticMarkup(

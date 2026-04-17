@@ -59,7 +59,7 @@ import {
 	obterEthereumProvider,
 	obterRedeAtual,
 	reconexaoAutomaticaHabilitada,
-} from "@/services/walletService";
+} from "@/services/wallet";
 
 describe("walletService coverage", () => {
 	beforeEach(() => {
