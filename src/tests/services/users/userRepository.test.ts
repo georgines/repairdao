@@ -103,6 +103,38 @@ describe("userRepository", () => {
 		expect(prismaMocks.userAuditEvent.create).not.toHaveBeenCalled();
 	});
 
+	it("saves a client profile without expertise area", async () => {
+		prismaMocks.userProfile.upsert.mockResolvedValue({
+			address: "0xabc",
+			name: "Ana",
+			expertiseArea: null,
+			role: "CLIENTE",
+			badgeLevel: "bronze",
+			reputation: 0,
+			depositLevel: 0,
+			isActive: true,
+			isEligible: false,
+			updatedAt: new Date("2026-04-17T10:00:00.000Z"),
+			syncedAt: new Date("2026-04-17T10:01:00.000Z"),
+		});
+
+		await expect(
+			saveOrUpdateUser({
+				address: "0xABC",
+				name: "Ana",
+				role: "cliente",
+				badgeLevel: "bronze",
+				reputation: 0,
+				depositLevel: 0,
+				isActive: true,
+				isEligible: false,
+			}),
+		).resolves.toMatchObject({
+			role: "cliente",
+			expertiseArea: null,
+		});
+	});
+
 	it("registers audit when creating a user", async () => {
 		prismaMocks.userProfile.upsert.mockResolvedValue({
 			address: "0xabc",
@@ -233,6 +265,45 @@ describe("userRepository", () => {
 
 		await expect(updateUserRole("0xabc", "tecnico")).resolves.toBeNull();
 		expect(prismaMocks.userProfile.update).not.toHaveBeenCalled();
+	});
+
+	it("preserva area de atuacao quando altera para tecnico", async () => {
+		prismaMocks.userProfile.findUnique.mockResolvedValue({
+			address: "0xabc",
+			name: "Ana",
+			expertiseArea: "Eletrica",
+			role: "CLIENTE",
+			badgeLevel: "bronze",
+			reputation: 12,
+			depositLevel: 1,
+			isActive: true,
+			isEligible: false,
+			updatedAt: new Date("2026-04-17T10:00:00.000Z"),
+			syncedAt: new Date("2026-04-17T10:01:00.000Z"),
+		});
+		prismaMocks.userProfile.update.mockResolvedValue({
+			address: "0xabc",
+			name: "Ana",
+			expertiseArea: "Eletrica",
+			role: "TECNICO",
+			badgeLevel: "bronze",
+			reputation: 12,
+			depositLevel: 1,
+			isActive: true,
+			isEligible: true,
+			updatedAt: new Date("2026-04-17T10:05:00.000Z"),
+			syncedAt: new Date("2026-04-17T10:01:00.000Z"),
+		});
+
+		await expect(updateUserRole("0xabc", "tecnico")).resolves.toMatchObject({
+			role: "tecnico",
+			expertiseArea: "Eletrica",
+			isEligible: true,
+		});
+		expect(prismaMocks.userProfile.update).toHaveBeenCalledWith({
+			where: { address: "0xabc" },
+			data: { role: "TECNICO", isEligible: true, expertiseArea: "Eletrica" },
+		});
 	});
 
 	it("removes the user projection on withdrawal", async () => {

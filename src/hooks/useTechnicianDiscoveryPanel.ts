@@ -147,7 +147,7 @@ export function useTechnicianDiscoveryPanel({
 		filteredTechnicians,
 		selectedTechnician,
 		contractedTechnician: contractedTechnicianAddress
-			? findUserDetails(initialTechnicians, contractedTechnicianAddress) ?? findUserDetails(filteredTechnicians, contractedTechnicianAddress)
+			? findUserDetails(initialTechnicians, contractedTechnicianAddress)
 			: null,
 		technicianModalMode,
 		technicianModalOpened: technicianModalMode !== null && selectedTechnician !== null,

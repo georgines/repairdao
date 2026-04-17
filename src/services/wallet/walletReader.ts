@@ -1,5 +1,6 @@
-import { BrowserProvider, Contract, formatEther } from "ethers";
-import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
+import { BrowserProvider, formatEther } from "ethers";
+import { criarRepairDAOBrowserContractClient } from "@/services/blockchain/browserContractClient";
+import { criarRepairDepositGateway } from "@/services/blockchain/gateways/depositGateway";
 import { formatarBlockchain, normalizarPrecoEthUsd } from "@/services/wallet/formatters";
 import { ESTADO_INICIAL_CARTEIRA, type WalletSnapshot } from "@/services/wallet/walletSnapshot";
 import type { EthereumProvider } from "@/services/wallet/provider";
@@ -25,11 +26,11 @@ export async function carregarCarteira(ethereum: EthereumProvider, solicitarPerm
 		};
 	}
 
-	const depositContract = new Contract(REPAIRDAO_CONTRACTOS.deposit.address, REPAIRDAO_CONTRACTOS.deposit.abi, provider);
+	const depositContract = criarRepairDepositGateway(criarRepairDAOBrowserContractClient(provider));
 
 	const [balanceWei, ethUsdPriceRaw] = await Promise.all([
 		provider.getBalance(address),
-		depositContract.getEthUsdPrice().catch(() => 0),
+		depositContract.readContract<bigint>({ functionName: "getEthUsdPrice" }).catch(() => 0n),
 	]);
 
 	const ethBalance = formatEther(balanceWei);

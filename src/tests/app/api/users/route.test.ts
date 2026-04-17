@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it, vi } from "vitest";
+import { RepairDAODominioError } from "@/erros/errors";
 
 const serviceMocks = vi.hoisted(() => ({
 	getUserDetails: vi.fn(),
@@ -113,6 +114,16 @@ describe("/api/users", () => {
 		expect(body).toHaveLength(1);
 	});
 
+	it("retorna 500 quando a consulta falha com erro generico", async () => {
+		serviceMocks.listUsers.mockRejectedValue(new Error("falha inesperada"));
+
+		const response = await GET(new Request("http://localhost/api/users"));
+		const body = await response.json();
+
+		expect(response.status).toBe(500);
+		expect(body).toMatchObject({ message: "falha inesperada" });
+	});
+
 	it("atualiza o usuario cadastrado", async () => {
 		serviceMocks.updateUserProfile.mockResolvedValue({
 			address: "0xabc",
@@ -177,5 +188,163 @@ describe("/api/users", () => {
 		);
 
 		expect(response.status).toBe(400);
+	});
+
+	it("retorna 404 quando o usuario nao existe na busca", async () => {
+		serviceMocks.getUserDetails.mockResolvedValue(null);
+
+		const response = await GET(new Request("http://localhost/api/users?address=0xabc"));
+		const body = await response.json();
+
+		expect(response.status).toBe(404);
+		expect(body).toMatchObject({ message: "Usuario nao encontrado." });
+	});
+
+	it("retorna 400 quando o cadastro falha com erro de dominio", async () => {
+		serviceMocks.registerUser.mockRejectedValue(
+			new RepairDAODominioError("papel_invalido", "O papel do usuario e invalido."),
+		);
+
+		const response = await POST(
+			new Request("http://localhost/api/users", {
+				method: "POST",
+				body: JSON.stringify({
+					address: "0xabc",
+					name: "Ana",
+					expertiseArea: "Eletrica",
+					role: "cliente",
+					badgeLevel: "bronze",
+					reputation: 0,
+					depositLevel: 1,
+					isActive: true,
+					isEligible: true,
+				}),
+			}),
+		);
+		const body = await response.json();
+
+		expect(response.status).toBe(400);
+		expect(body).toMatchObject({
+			code: "papel_invalido",
+			message: "O papel do usuario e invalido.",
+		});
+	});
+
+	it("retorna 500 quando a remocao falha com erro generico", async () => {
+		serviceMocks.withdrawUser.mockRejectedValue(new Error("falha inesperada"));
+
+		const response = await DELETE(
+			new Request("http://localhost/api/users", {
+				method: "DELETE",
+				body: JSON.stringify({ address: "0xabc" }),
+			}),
+		);
+		const body = await response.json();
+
+		expect(response.status).toBe(500);
+		expect(body).toMatchObject({ message: "falha inesperada" });
+	});
+
+	it("retorna 500 quando o cadastro falha com erro generico", async () => {
+		serviceMocks.registerUser.mockRejectedValue(new Error("falha inesperada"));
+
+		const response = await POST(
+			new Request("http://localhost/api/users", {
+				method: "POST",
+				body: JSON.stringify({
+					address: "0xabc",
+					name: "Ana",
+					expertiseArea: "Eletrica",
+					role: "cliente",
+					badgeLevel: "bronze",
+					reputation: 0,
+					depositLevel: 1,
+					isActive: true,
+					isEligible: true,
+				}),
+			}),
+		);
+		const body = await response.json();
+
+		expect(response.status).toBe(500);
+		expect(body).toMatchObject({ message: "falha inesperada" });
+	});
+
+	it("retorna 500 quando a atualizacao falha com erro generico", async () => {
+		serviceMocks.updateUserProfile.mockRejectedValue(new Error("falha inesperada"));
+
+		const response = await PUT(
+			new Request("http://localhost/api/users", {
+				method: "PUT",
+				body: JSON.stringify({
+					address: "0xabc",
+					name: "Ana",
+					expertiseArea: "Eletrica",
+					role: "tecnico",
+					badgeLevel: "bronze",
+					reputation: 0,
+					depositLevel: 1,
+					isActive: true,
+					isEligible: true,
+				}),
+			}),
+		);
+		const body = await response.json();
+
+		expect(response.status).toBe(500);
+		expect(body).toMatchObject({ message: "falha inesperada" });
+	});
+
+	it("retorna 404 quando a retirada nao encontra o usuario", async () => {
+		serviceMocks.withdrawUser.mockResolvedValue(false);
+
+		const response = await DELETE(
+			new Request("http://localhost/api/users", {
+				method: "DELETE",
+				body: JSON.stringify({ address: "0xabc" }),
+			}),
+		);
+		const body = await response.json();
+
+		expect(response.status).toBe(404);
+		expect(body).toMatchObject({ message: "Usuario nao encontrado." });
+	});
+
+	it("retorna mensagem padrao quando o cadastro falha com valor nao tipado", async () => {
+		serviceMocks.registerUser.mockRejectedValue("falha bruta");
+
+		const response = await POST(
+			new Request("http://localhost/api/users", {
+				method: "POST",
+				body: JSON.stringify({
+					address: "0xabc",
+					name: "Ana",
+					expertiseArea: "Eletrica",
+					role: "cliente",
+					badgeLevel: "bronze",
+					reputation: 0,
+					depositLevel: 1,
+					isActive: true,
+					isEligible: true,
+				}),
+			}),
+		);
+		const body = await response.json();
+
+		expect(response.status).toBe(500);
+		expect(body).toMatchObject({ message: "Falha ao processar o usuario." });
+	});
+
+	it("retorna mensagem padrao quando o corpo do cadastro e invalido", async () => {
+		const response = await POST(
+			new Request("http://localhost/api/users", {
+				method: "POST",
+				body: "{",
+			}),
+		);
+		const body = await response.json();
+
+		expect(response.status).toBe(500);
+		expect(body.message).toMatch(/JSON/);
 	});
 });

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it, vi } from "vitest";
+import { RepairDAODominioError } from "@/erros/errors";
 
 const serviceMocks = vi.hoisted(() => ({
 	createServiceRequest: vi.fn(),
@@ -47,6 +48,36 @@ describe("/api/service-requests", () => {
 		expect(serviceMocks.listServiceRequests).toHaveBeenCalledWith({
 			clientAddress: "0xcliente",
 			technicianAddress: undefined,
+		});
+		expect(body).toHaveLength(1);
+	});
+
+	it("lista as ordens filtrando por tecnico", async () => {
+		serviceMocks.listServiceRequests.mockResolvedValue([
+			{
+				id: 1,
+				clientAddress: "0xcliente",
+				clientName: "Cliente",
+				technicianAddress: "0xtec",
+				technicianName: "Tecnico",
+				description: "Servico",
+				status: "aberta",
+				budgetAmount: null,
+				acceptedAt: null,
+				budgetSentAt: null,
+				clientAcceptedAt: null,
+				createdAt: "2026-04-17T10:00:00.000Z",
+				updatedAt: "2026-04-17T10:00:00.000Z",
+			},
+		]);
+
+		const response = await GET(new Request("http://localhost/api/service-requests?technicianAddress=0xtec"));
+		const body = await response.json();
+
+		expect(response.status).toBe(200);
+		expect(serviceMocks.listServiceRequests).toHaveBeenCalledWith({
+			clientAddress: undefined,
+			technicianAddress: "0xtec",
 		});
 		expect(body).toHaveLength(1);
 	});
@@ -193,5 +224,106 @@ describe("/api/service-requests", () => {
 			id: 2,
 			clientAddress: "0xcliente",
 		});
+	});
+
+	it("retorna 400 quando a consulta falha com erro de dominio", async () => {
+		serviceMocks.listServiceRequests.mockRejectedValue(
+			new RepairDAODominioError("ordem_nao_encontrada", "A ordem de servico nao foi encontrada."),
+		);
+
+		const response = await GET(new Request("http://localhost/api/service-requests?clientAddress=0xcliente"));
+		const body = await response.json();
+
+		expect(response.status).toBe(400);
+		expect(body).toMatchObject({
+			code: "ordem_nao_encontrada",
+			message: "A ordem de servico nao foi encontrada.",
+		});
+	});
+
+	it("retorna 500 quando a criacao falha com erro generico", async () => {
+		serviceMocks.createServiceRequest.mockRejectedValue(new Error("falha inesperada"));
+
+		const response = await POST(
+			new Request("http://localhost/api/service-requests", {
+				method: "POST",
+				body: JSON.stringify({
+					clientAddress: "0xcliente",
+					clientName: "Cliente",
+					technicianAddress: "0xtec",
+					technicianName: "Tecnico",
+					description: "Servico",
+				}),
+			}),
+		);
+		const body = await response.json();
+
+		expect(response.status).toBe(500);
+		expect(body).toMatchObject({ message: "falha inesperada" });
+	});
+
+	it("retorna mensagem padrao quando a criacao falha com valor nao tipado", async () => {
+		serviceMocks.createServiceRequest.mockRejectedValue("falha bruta");
+
+		const response = await POST(
+			new Request("http://localhost/api/service-requests", {
+				method: "POST",
+				body: JSON.stringify({
+					clientAddress: "0xcliente",
+					clientName: "Cliente",
+					technicianAddress: "0xtec",
+					technicianName: "Tecnico",
+					description: "Servico",
+				}),
+			}),
+		);
+		const body = await response.json();
+
+		expect(response.status).toBe(500);
+		expect(body).toMatchObject({ message: "Falha ao processar a ordem de servico." });
+	});
+
+	it("retorna 400 quando a atualizacao falha com erro de dominio", async () => {
+		serviceMocks.sendServiceBudget.mockRejectedValue(
+			new RepairDAODominioError("orcamento_invalido", "O valor do orcamento precisa ser maior que zero."),
+		);
+
+		const response = await PATCH(
+			new Request("http://localhost/api/service-requests", {
+				method: "PATCH",
+				body: JSON.stringify({
+					action: "budget",
+					id: 2,
+					technicianAddress: "0xtec",
+					budgetAmount: 240,
+				}),
+			}),
+		);
+		const body = await response.json();
+
+		expect(response.status).toBe(400);
+		expect(body).toMatchObject({
+			code: "orcamento_invalido",
+			message: "O valor do orcamento precisa ser maior que zero.",
+		});
+	});
+
+	it("retorna 500 quando a aceitacao do orcamento falha com erro generico", async () => {
+		serviceMocks.acceptServiceBudget.mockRejectedValue(new Error("falha inesperada"));
+
+		const response = await PATCH(
+			new Request("http://localhost/api/service-requests", {
+				method: "PATCH",
+				body: JSON.stringify({
+					action: "accept_budget",
+					id: 2,
+					clientAddress: "0xcliente",
+				}),
+			}),
+		);
+		const body = await response.json();
+
+		expect(response.status).toBe(500);
+		expect(body).toMatchObject({ message: "falha inesperada" });
 	});
 });

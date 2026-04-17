@@ -114,6 +114,39 @@ describe("serviceRequestRepository", () => {
 		});
 	});
 
+	it("lista ordens sem filtros quando nenhum endereco e informado", async () => {
+		prismaMocks.serviceRequest.findMany.mockResolvedValue([]);
+
+		await expect(listServiceRequests()).resolves.toEqual([]);
+
+		expect(prismaMocks.serviceRequest.findMany).toHaveBeenCalledWith({
+			where: {
+				clientAddress: undefined,
+				technicianAddress: undefined,
+			},
+			orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+		});
+	});
+
+	it("lista ordens filtradas por cliente e tecnico", async () => {
+		prismaMocks.serviceRequest.findMany.mockResolvedValue([]);
+
+		await expect(
+			listServiceRequests({
+				clientAddress: "0xCLIENTE",
+				technicianAddress: "0xTEC",
+			}),
+		).resolves.toEqual([]);
+
+		expect(prismaMocks.serviceRequest.findMany).toHaveBeenCalledWith({
+			where: {
+				clientAddress: "0xcliente",
+				technicianAddress: "0xtec",
+			},
+			orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+		});
+	});
+
 	it("aceita uma ordem do tecnico", async () => {
 		prismaMocks.serviceRequest.findUnique.mockResolvedValue({
 			id: 2,
@@ -212,6 +245,13 @@ describe("serviceRequestRepository", () => {
 		expect(prismaMocks.serviceRequest.update).not.toHaveBeenCalled();
 	});
 
+	it("rejeita quando a ordem nao existe ao aceitar", async () => {
+		prismaMocks.serviceRequest.findUnique.mockResolvedValue(null);
+
+		await expect(acceptServiceRequest({ id: 999, technicianAddress: "0xTEC" })).rejects.toBeInstanceOf(RepairDAODominioError);
+		expect(prismaMocks.serviceRequest.update).not.toHaveBeenCalled();
+	});
+
 	it("aceita o orcamento quando pertence ao cliente e a ordem esta orcada", async () => {
 		prismaMocks.serviceRequest.findUnique.mockResolvedValue({
 			id: 3,
@@ -248,5 +288,82 @@ describe("serviceRequestRepository", () => {
 			id: 3,
 			status: "aceito_cliente",
 		});
+	});
+
+	it("rejeita quando o cliente nao corresponde ao orcamento", async () => {
+		prismaMocks.serviceRequest.findUnique.mockResolvedValue({
+			id: 3,
+			clientAddress: "0xcliente",
+			clientName: "Cliente",
+			technicianAddress: "0xtec",
+			technicianName: "Tecnico",
+			description: "Servico",
+			status: "ORCADA",
+			budgetAmount: 240,
+			acceptedAt: new Date("2026-04-17T11:00:00.000Z"),
+			budgetSentAt: new Date("2026-04-17T12:00:00.000Z"),
+			clientAcceptedAt: null,
+			createdAt: new Date("2026-04-17T10:00:00.000Z"),
+			updatedAt: new Date("2026-04-17T12:00:00.000Z"),
+		});
+
+		await expect(acceptServiceBudget({ id: 3, clientAddress: "0xoutro" })).rejects.toBeInstanceOf(RepairDAODominioError);
+		expect(prismaMocks.serviceRequest.update).not.toHaveBeenCalled();
+	});
+
+	it("rejeita quando o orcamento nao foi enviado", async () => {
+		prismaMocks.serviceRequest.findUnique.mockResolvedValue({
+			id: 3,
+			clientAddress: "0xcliente",
+			clientName: "Cliente",
+			technicianAddress: "0xtec",
+			technicianName: "Tecnico",
+			description: "Servico",
+			status: "ACEITA",
+			budgetAmount: null,
+			acceptedAt: new Date("2026-04-17T11:00:00.000Z"),
+			budgetSentAt: null,
+			clientAcceptedAt: null,
+			createdAt: new Date("2026-04-17T10:00:00.000Z"),
+			updatedAt: new Date("2026-04-17T12:00:00.000Z"),
+		});
+
+		await expect(acceptServiceBudget({ id: 3, clientAddress: "0xcliente" })).rejects.toBeInstanceOf(RepairDAODominioError);
+		expect(prismaMocks.serviceRequest.update).not.toHaveBeenCalled();
+	});
+
+	it("rejeita quando a ordem nao existe ao enviar orcamento", async () => {
+		prismaMocks.serviceRequest.findUnique.mockResolvedValue(null);
+
+		await expect(sendServiceBudget({ id: 999, technicianAddress: "0xTEC", budgetAmount: 240 })).rejects.toBeInstanceOf(RepairDAODominioError);
+		expect(prismaMocks.serviceRequest.update).not.toHaveBeenCalled();
+	});
+
+	it("rejeita quando o tecnico nao corresponde ao orcamento", async () => {
+		prismaMocks.serviceRequest.findUnique.mockResolvedValue({
+			id: 2,
+			clientAddress: "0xcliente",
+			clientName: "Cliente",
+			technicianAddress: "0xoutro",
+			technicianName: "Tecnico",
+			description: "Servico",
+			status: "ABERTA",
+			budgetAmount: null,
+			acceptedAt: null,
+			budgetSentAt: null,
+			clientAcceptedAt: null,
+			createdAt: new Date("2026-04-17T10:00:00.000Z"),
+			updatedAt: new Date("2026-04-17T10:00:00.000Z"),
+		});
+
+		await expect(sendServiceBudget({ id: 2, technicianAddress: "0xTEC", budgetAmount: 240 })).rejects.toBeInstanceOf(RepairDAODominioError);
+		expect(prismaMocks.serviceRequest.update).not.toHaveBeenCalled();
+	});
+
+	it("rejeita quando a ordem nao existe ao aceitar o orcamento", async () => {
+		prismaMocks.serviceRequest.findUnique.mockResolvedValue(null);
+
+		await expect(acceptServiceBudget({ id: 3, clientAddress: "0xcliente" })).rejects.toBeInstanceOf(RepairDAODominioError);
+		expect(prismaMocks.serviceRequest.update).not.toHaveBeenCalled();
 	});
 });

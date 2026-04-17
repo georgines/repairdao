@@ -9,10 +9,9 @@ const ethersMocks = vi.hoisted(() => ({
 		balanceOf: ReturnType<typeof vi.fn>;
 		tokensPerEth: ReturnType<typeof vi.fn>;
 		isActive: ReturnType<typeof vi.fn>;
+		minDeposit: ReturnType<typeof vi.fn>;
 		getLevelName: ReturnType<typeof vi.fn>;
-		getStorage: ReturnType<typeof vi.fn>;
 	}>,
-	getStorageMock: vi.fn(),
 	formatUnitsMock: vi.fn(),
 }));
 
@@ -23,10 +22,6 @@ vi.mock("ethers", () => ({
 		constructor(rpcUrl: string) {
 			this.rpcUrl = rpcUrl;
 			ethersMocks.jsonRpcProviderInstances.push({ rpcUrl });
-		}
-
-		async getStorage(...args: unknown[]) {
-			return ethersMocks.getStorageMock(...args);
 		}
 	},
 	Contract: class {
@@ -46,7 +41,6 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 		ethersMocks.jsonRpcProviderInstances.length = 0;
 		ethersMocks.contractCalls.length = 0;
 		ethersMocks.nextContracts.length = 0;
-		ethersMocks.getStorageMock.mockResolvedValue("0x56bc75e2d63100000");
 		ethersMocks.formatUnitsMock.mockImplementation((value: bigint) => {
 			if (value === 1500000000000000000n) {
 				return "1.5";
@@ -68,7 +62,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 		const depositContract = {
 			isActive: vi.fn().mockResolvedValue(true),
 			getDeposit: vi.fn().mockResolvedValue({ isTechnician: false }),
-			getStorage: vi.fn().mockResolvedValue("0x56bc75e2d63100000"),
+			minDeposit: vi.fn().mockResolvedValue(100000000000000000000n),
 		};
 		const badgeContract = {
 			getLevelName: vi.fn().mockResolvedValue("bronze"),
@@ -97,7 +91,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 		const depositContract = {
 			isActive: vi.fn().mockResolvedValue(false),
 			getDeposit: vi.fn().mockResolvedValue({ isTechnician: false }),
-			getStorage: vi.fn().mockResolvedValue("0x56bc75e2d63100000"),
+			minDeposit: vi.fn().mockResolvedValue(100000000000000000000n),
 		};
 		const badgeContract = {
 			getLevelName: vi.fn().mockResolvedValue("Sem carteira"),
@@ -128,7 +122,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 		const depositContract = {
 			isActive: vi.fn().mockResolvedValue(false),
 			getDeposit: vi.fn().mockResolvedValue({ isTechnician: false }),
-			getStorage: vi.fn().mockResolvedValue("0x56bc75e2d63100000"),
+			minDeposit: vi.fn().mockResolvedValue(100000000000000000000n),
 		};
 		const badgeContract = {
 			getLevelName: vi.fn().mockResolvedValue("bronze"),
@@ -151,7 +145,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 		const depositContract = {
 			isActive: vi.fn().mockResolvedValue(false),
 			getDeposit: vi.fn().mockResolvedValue({ isTechnician: false }),
-			getStorage: vi.fn().mockResolvedValue("0x56bc75e2d63100000"),
+			minDeposit: vi.fn().mockResolvedValue(100000000000000000000n),
 		};
 		const badgeContract = {
 			getLevelName: vi.fn().mockResolvedValue("bronze"),
@@ -172,7 +166,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 		const depositContract = {
 			isActive: vi.fn().mockRejectedValue(new Error("falha no estado")),
 			getDeposit: vi.fn().mockRejectedValue(new Error("falha no deposito")),
-			getStorage: vi.fn().mockResolvedValue("0x56bc75e2d63100000"),
+			minDeposit: vi.fn().mockResolvedValue(100000000000000000000n),
 		};
 		const badgeContract = {
 			getLevelName: vi.fn().mockRejectedValue(new Error("falha no nivel")),
@@ -194,8 +188,6 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 	});
 
 	it("usa fallback quando a leitura do minimo falha", async () => {
-		ethersMocks.getStorageMock.mockRejectedValueOnce(new Error("falha no storage"));
-
 		const tokenContract = {
 			balanceOf: vi.fn().mockResolvedValue(1500000000000000000n),
 			tokensPerEth: vi.fn().mockResolvedValue(1000n),
@@ -203,7 +195,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 		const depositContract = {
 			isActive: vi.fn().mockResolvedValue(true),
 			getDeposit: vi.fn().mockResolvedValue({ isTechnician: true }),
-			getStorage: vi.fn(),
+			minDeposit: vi.fn().mockRejectedValueOnce(new Error("falha no minimo")),
 		};
 		const badgeContract = {
 			getLevelName: vi.fn().mockResolvedValue("bronze"),
@@ -224,6 +216,35 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 		});
 	});
 
+	it("usa fallback quando o tokensPerEth falha", async () => {
+		const tokenContract = {
+			balanceOf: vi.fn().mockResolvedValue(1500000000000000000n),
+			tokensPerEth: vi.fn().mockRejectedValue(new Error("falha nos tokens por eth")),
+		};
+		const depositContract = {
+			isActive: vi.fn().mockResolvedValue(true),
+			getDeposit: vi.fn().mockResolvedValue({ isTechnician: false }),
+			minDeposit: vi.fn().mockResolvedValue(100000000000000000000n),
+		};
+		const badgeContract = {
+			getLevelName: vi.fn().mockResolvedValue("bronze"),
+		};
+
+		ethersMocks.nextContracts.push(tokenContract, depositContract, badgeContract);
+
+		await expect(carregarMetricasElegibilidadeNoServidor("0xabc")).resolves.toEqual({
+			rptBalanceRaw: 1500000000000000000n,
+			rptBalance: "1.5",
+			tokensPerEthRaw: 0n,
+			tokensPerEth: "0",
+			badgeLevel: "bronze",
+			isActive: true,
+			perfilAtivo: "cliente",
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
+		});
+	});
+
 	it("usa o perfil do deposito quando o contrato indica tecnico", async () => {
 		const tokenContract = {
 			balanceOf: vi.fn().mockResolvedValue(0n),
@@ -232,7 +253,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 		const depositContract = {
 			isActive: vi.fn().mockResolvedValue(true),
 			getDeposit: vi.fn().mockResolvedValue([0n, 0n, 0n, 0n, true, true]),
-			getStorage: vi.fn().mockResolvedValue("0x56bc75e2d63100000"),
+			minDeposit: vi.fn().mockResolvedValue(100000000000000000000n),
 		};
 		const badgeContract = {
 			getLevelName: vi.fn().mockResolvedValue("bronze"),

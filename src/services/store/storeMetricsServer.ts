@@ -1,5 +1,6 @@
-import { Contract, JsonRpcProvider, formatUnits } from "ethers";
-import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
+import { formatUnits } from "ethers";
+import { criarGatewaysRepairDAO } from "@/services/blockchain/gateway";
+import { criarRepairDAOContractClient } from "@/services/blockchain/contractClient";
 
 export type StoreMetrics = {
 	rptBalanceRaw: bigint;
@@ -13,11 +14,11 @@ function obterRpcUrl() {
 }
 
 export async function carregarMetricasDaLojaNoServidor(address?: string | null): Promise<StoreMetrics> {
-	const provider = new JsonRpcProvider(obterRpcUrl());
-	const tokenContract = new Contract(REPAIRDAO_CONTRACTOS.token.address, REPAIRDAO_CONTRACTOS.token.abi, provider);
+	const contractClient = criarRepairDAOContractClient({ rpcUrl: obterRpcUrl() });
+	const tokenContract = criarGatewaysRepairDAO(contractClient).token;
 
-	const tokensPerEthRaw = await tokenContract.tokensPerEth().catch(() => 0n);
-	const rptBalanceRaw = address ? await tokenContract.balanceOf(address).catch(() => 0n) : 0n;
+	const tokensPerEthRaw = await tokenContract.readContract<bigint>({ functionName: "tokensPerEth" }).catch(() => 0n);
+	const rptBalanceRaw = address ? await tokenContract.readContract<bigint>({ functionName: "balanceOf", args: [address] }).catch(() => 0n) : 0n;
 
 	return {
 		rptBalanceRaw,

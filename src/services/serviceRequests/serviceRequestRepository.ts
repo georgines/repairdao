@@ -19,24 +19,26 @@ import {
 
 type PrismaStatus = "ABERTA" | "ACEITA" | "ORCADA" | "ACEITO_CLIENTE";
 
+const STATUS_PRISMA_POR_DOMINIO: Record<ServiceRequestStatus, PrismaStatus> = {
+	aberta: "ABERTA",
+	aceita: "ACEITA",
+	orcada: "ORCADA",
+	aceito_cliente: "ACEITO_CLIENTE",
+};
+
+const STATUS_DOMINIO_POR_PRISMA: Record<PrismaStatus, ServiceRequestStatus> = {
+	ABERTA: "aberta",
+	ACEITA: "aceita",
+	ORCADA: "orcada",
+	ACEITO_CLIENTE: "aceito_cliente",
+};
+
 function toPrismaStatus(status: ServiceRequestStatus): PrismaStatus {
-	return status === "aceita"
-		? "ACEITA"
-		: status === "orcada"
-			? "ORCADA"
-			: status === "aceito_cliente"
-				? "ACEITO_CLIENTE"
-				: "ABERTA";
+	return STATUS_PRISMA_POR_DOMINIO[status];
 }
 
 function toDomainStatus(status: PrismaStatus): ServiceRequestStatus {
-	return status === "ACEITA"
-		? "aceita"
-		: status === "ORCADA"
-			? "orcada"
-			: status === "ACEITO_CLIENTE"
-				? "aceito_cliente"
-				: "aberta";
+	return STATUS_DOMINIO_POR_PRISMA[status];
 }
 
 function toSummary(record: {

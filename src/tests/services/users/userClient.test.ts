@@ -65,4 +65,56 @@ describe("userClient", () => {
 			}),
 		);
 	});
+
+	it("usa a mensagem da API quando o salvamento falha", async () => {
+		vi.spyOn(globalThis, "fetch").mockResolvedValue(
+			new Response(JSON.stringify({ message: "Falha ao salvar." }), {
+				status: 500,
+				headers: { "Content-Type": "application/json" },
+			}),
+		);
+
+		await expect(
+			persistUserProfile({
+				address: "0xabc",
+				name: "Ana",
+				expertiseArea: null,
+				role: "cliente",
+				badgeLevel: "bronze",
+				reputation: 0,
+				depositLevel: 0,
+				isActive: false,
+				isEligible: false,
+			}),
+		).rejects.toThrow("Falha ao salvar.");
+	});
+
+	it("usa a mensagem padrao quando a API responde sem mensagem", async () => {
+		vi.spyOn(globalThis, "fetch").mockResolvedValue(
+			new Response(JSON.stringify({}), {
+				status: 500,
+				headers: { "Content-Type": "application/json" },
+			}),
+		);
+
+		await expect(
+			persistUserProfile({
+				address: "0xabc",
+				name: "Ana",
+				expertiseArea: null,
+				role: "cliente",
+				badgeLevel: "bronze",
+				reputation: 0,
+				depositLevel: 0,
+				isActive: false,
+				isEligible: false,
+			}),
+		).rejects.toThrow("Nao foi possivel salvar o usuario.");
+	});
+
+	it("usa a mensagem padrao quando a API nao retorna json", async () => {
+		vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("erro bruto", { status: 500 }));
+
+		await expect(deleteUserProfile("0xabc")).rejects.toThrow("Nao foi possivel remover o usuario.");
+	});
 });

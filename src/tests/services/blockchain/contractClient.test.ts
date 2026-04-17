@@ -1,12 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { contractCtor, providerCtor, walletCtor, contractSpy, providerSpy, walletSpy, getFunctionMock, staticCallMock, sendMock } = vi.hoisted(() => {
-  const staticCallMock = vi.fn().mockResolvedValue("read-result");
-  const sendMock = vi.fn().mockResolvedValue("write-result");
-  const getFunctionMock = vi.fn().mockReturnValue({
-    staticCall: staticCallMock,
-    send: sendMock,
-  });
+const { contractCtor, providerCtor, walletCtor, contractSpy, providerSpy, walletSpy, readMock, writeMock } = vi.hoisted(() => {
+  const readMock = vi.fn().mockResolvedValue("read-result");
+  const writeMock = vi.fn().mockResolvedValue("write-result");
   const contractSpy = vi.fn();
   const providerSpy = vi.fn();
   class JsonRpcProviderMock {
@@ -32,7 +28,9 @@ const { contractCtor, providerCtor, walletCtor, contractSpy, providerSpy, wallet
   }
 
   class ContractMock {
-    getFunction = getFunctionMock;
+    getOrder = readMock;
+    createOrder = writeMock;
+    acceptOrder = writeMock;
 
     constructor(...args: unknown[]) {
       contractSpy(...args);
@@ -46,9 +44,8 @@ const { contractCtor, providerCtor, walletCtor, contractSpy, providerSpy, wallet
     contractSpy,
     providerSpy,
     walletSpy,
-    getFunctionMock,
-    staticCallMock,
-    sendMock,
+    readMock,
+    writeMock,
   };
 });
 
@@ -98,13 +95,28 @@ describe("contractClient", () => {
 
     expect(providerSpy).toHaveBeenCalledWith("http://localhost:8545");
     expect(walletSpy).toHaveBeenCalledWith("0xabc123", expect.anything());
-    expect(contractSpy).toHaveBeenCalledTimes(3);
-    expect(getFunctionMock).toHaveBeenNthCalledWith(1, "getOrder");
-    expect(getFunctionMock).toHaveBeenNthCalledWith(2, "createOrder");
-    expect(getFunctionMock).toHaveBeenNthCalledWith(3, "acceptOrder");
-    expect(staticCallMock).toHaveBeenCalledWith();
-    expect(sendMock).toHaveBeenNthCalledWith(1, "troca");
-    expect(sendMock).toHaveBeenNthCalledWith(2);
+    expect(contractSpy).toHaveBeenCalledTimes(2);
+    expect(readMock).toHaveBeenCalledWith();
+    expect(writeMock).toHaveBeenNthCalledWith(1, "troca");
+    expect(writeMock).toHaveBeenNthCalledWith(2);
+  });
+
+  it("permite client read-only sem chave privada", async () => {
+    const client = criarRepairDAOContractClient({
+      rpcUrl: "http://localhost:8545",
+    });
+
+    await expect(
+      client.readContract({
+        address: "0x0000000000000000000000000000000000000001",
+        abi: [],
+        functionName: "getOrder",
+      }),
+    ).resolves.toBe("read-result");
+
+    expect(client.writeContract).toBeUndefined();
+    expect(walletSpy).not.toHaveBeenCalled();
+    expect(providerSpy).toHaveBeenCalledWith("http://localhost:8545");
   });
 
   it("valida configuracoes vazias", () => {

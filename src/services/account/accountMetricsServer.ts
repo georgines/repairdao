@@ -1,5 +1,6 @@
-import { Contract, JsonRpcProvider, formatUnits } from "ethers";
-import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
+import { formatUnits } from "ethers";
+import { criarGatewaysRepairDAO } from "@/services/blockchain/gateway";
+import { criarRepairDAOContractClient } from "@/services/blockchain/contractClient";
 import { formatarNumeroCompleto } from "@/services/wallet/formatters";
 
 const DEFAULT_ACCOUNT_LEVEL = "Sem carteira";
@@ -55,16 +56,14 @@ function calcularMediaAvaliacao(ratingSumRaw: bigint, totalRatingsRaw: bigint) {
 }
 
 export async function carregarMetricasDaContaNoServidor(address?: string | null): Promise<AccountMetrics> {
-	const provider = new JsonRpcProvider(obterRpcUrl());
-	const depositContract = new Contract(REPAIRDAO_CONTRACTOS.deposit.address, REPAIRDAO_CONTRACTOS.deposit.abi, provider);
-	const badgeContract = new Contract(REPAIRDAO_CONTRACTOS.badge.address, REPAIRDAO_CONTRACTOS.badge.abi, provider);
-	const reputationContract = new Contract(REPAIRDAO_CONTRACTOS.reputation.address, REPAIRDAO_CONTRACTOS.reputation.abi, provider);
+	const contractClient = criarRepairDAOContractClient({ rpcUrl: obterRpcUrl() });
+	const gateways = criarGatewaysRepairDAO(contractClient);
 
-	const deposito = address ? await depositContract.getDeposit(address).catch(() => null) : null;
-	const rewardsRaw = address ? await depositContract.getRewards(address).catch(() => 0n) : 0n;
-	const isActive = address ? await depositContract.isActive(address).catch(() => false) : false;
-	const badgeLevel = address ? await badgeContract.getLevelName(address).catch(() => DEFAULT_ACCOUNT_LEVEL) : DEFAULT_ACCOUNT_LEVEL;
-	const reputation = address ? await reputationContract.getReputation(address).catch(() => null) : null;
+	const deposito = address ? await gateways.deposit.readContract<unknown>({ functionName: "getDeposit", args: [address] }).catch(() => null) : null;
+	const rewardsRaw = address ? await gateways.deposit.readContract<bigint>({ functionName: "getRewards", args: [address] }).catch(() => 0n) : 0n;
+	const isActive = address ? await gateways.deposit.readContract<boolean>({ functionName: "isActive", args: [address] }).catch(() => false) : false;
+	const badgeLevel = address ? await gateways.badge.readContract<string>({ functionName: "getLevelName", args: [address] }).catch(() => DEFAULT_ACCOUNT_LEVEL) : DEFAULT_ACCOUNT_LEVEL;
+	const reputation = address ? await gateways.reputation.readContract<unknown>({ functionName: "getReputation", args: [address] }).catch(() => null) : null;
 
 	const depositRaw = deposito ? lerValorNumerico(deposito, "amount", 0) : 0n;
 	const perfilAtivo = isActive && deposito

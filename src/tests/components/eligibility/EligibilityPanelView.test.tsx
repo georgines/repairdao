@@ -3,6 +3,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { ReactElement } from "react";
@@ -199,5 +200,47 @@ describe("EligibilityPanelView", () => {
 		expect(markup).toContain("Ativar como tecnico");
 		expect(markup).toContain("Tecnico");
 		expect(markup).toContain("Area de atuacao");
+	});
+
+	it("dispara os handlers dos seletores e entradas", async () => {
+		const onPerfilChange = vi.fn();
+		const onNomeChange = vi.fn();
+		const onAreaAtuacaoChange = vi.fn();
+		const onQuantidadeChange = vi.fn();
+
+		await act(async () => {
+			root.render(
+				<MantineProvider>
+					<EligibilityPanelView
+						{...baseProps}
+						onPerfilChange={onPerfilChange}
+						onNomeChange={onNomeChange}
+						onAreaAtuacaoChange={onAreaAtuacaoChange}
+						onQuantidadeChange={onQuantidadeChange}
+						perfilSelecionado="tecnico"
+						perfilConfirmacao="tecnico"
+						areaAtuacao="Eletrica"
+					/>
+				</MantineProvider>,
+			);
+			await Promise.resolve();
+		});
+
+		fireEvent.click(screen.getByRole("button", { name: "Cliente" }));
+		fireEvent.click(screen.getByRole("button", { name: "Tecnico" }));
+		fireEvent.change(screen.getByRole("textbox", { name: "Nome do usuario" }), {
+			target: { value: "Maria" },
+		});
+		fireEvent.change(screen.getByPlaceholderText("Ex.: eletrica residencial"), {
+			target: { value: "Redes" },
+		});
+		fireEvent.change(screen.getByRole("textbox", { name: "Quanto RPT deseja depositar" }), {
+			target: { value: "250" },
+		});
+
+		expect(onPerfilChange).toHaveBeenCalledWith("tecnico");
+		expect(onNomeChange).toHaveBeenCalledWith("Maria");
+		expect(onAreaAtuacaoChange).toHaveBeenCalledWith("Redes");
+		expect(onQuantidadeChange).toHaveBeenCalled();
 	});
 });

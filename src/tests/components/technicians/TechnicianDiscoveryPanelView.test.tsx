@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useState } from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import type { ReactElement } from "react";
@@ -35,6 +36,12 @@ const inactiveTechnician: UserSummary = {
 	isActive: false,
 	isEligible: false,
 	updatedAt: "2026-04-17T12:00:00.000Z",
+};
+
+const activeButNotEligibleTechnician: UserSummary = {
+	...inactiveTechnician,
+	isActive: true,
+	isEligible: false,
 };
 
 describe("components/technicians/TechnicianDiscoveryPanelView", () => {
@@ -234,5 +241,93 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 
 		expect(screen.getByText("Nenhum tecnico encontrou este criterio.")).toBeDefined();
 		expect(screen.getByText("inativo")).toBeDefined();
+	});
+
+	it("mostra tecnico fora da busca, contratado e com erro no modal", () => {
+		renderWithMantine(
+			<TechnicianDiscoveryPanelView
+				query="carla"
+				minReputation={0}
+				totalTechnicians={1}
+				filteredTechnicians={[activeButNotEligibleTechnician]}
+				selectedTechnician={activeButNotEligibleTechnician}
+				contractedTechnician={activeButNotEligibleTechnician}
+				technicianModalMode="hire"
+				technicianModalOpened
+				hasResults
+				serviceDescription="Troca de tomada"
+				submittingRequest={false}
+				requestError={"falha na ordem"}
+				onQueryChange={vi.fn()}
+				onMinReputationChange={vi.fn()}
+				onSelectTechnician={vi.fn()}
+				onHireTechnician={vi.fn()}
+				onCloseTechnicianModal={vi.fn()}
+				onServiceDescriptionChange={vi.fn()}
+				onConfirmTechnicianHire={vi.fn().mockResolvedValue(undefined)}
+				onClearFilters={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByText("fora da busca")).toBeDefined();
+		expect(screen.getByText("contratado: Carla Lima")).toBeDefined();
+		expect(screen.getByText("Area: -")).toBeDefined();
+		expect(screen.getByText("Ativo: sim")).toBeDefined();
+		expect(screen.getByText("Elegivel: nao")).toBeDefined();
+		expect(screen.getByText("falha na ordem")).toBeDefined();
+	});
+
+	it("propaga a descricao e a confirmacao da contratacao", () => {
+		const onServiceDescriptionChange = vi.fn();
+		const onConfirmTechnicianHire = vi.fn().mockResolvedValue(undefined);
+
+		function Harness() {
+			const [serviceDescription, setServiceDescription] = useState("");
+
+			return (
+				<TechnicianDiscoveryPanelView
+					query=""
+					minReputation={0}
+					totalTechnicians={1}
+					filteredTechnicians={[technician]}
+					selectedTechnician={technician}
+					contractedTechnician={null}
+					technicianModalMode="hire"
+					technicianModalOpened
+					hasResults
+					serviceDescription={serviceDescription}
+					submittingRequest={false}
+					requestError={null}
+					onQueryChange={vi.fn()}
+					onMinReputationChange={vi.fn()}
+					onSelectTechnician={vi.fn()}
+					onHireTechnician={vi.fn()}
+					onCloseTechnicianModal={vi.fn()}
+					onServiceDescriptionChange={(value) => {
+						onServiceDescriptionChange(value);
+						setServiceDescription(value);
+					}}
+					onConfirmTechnicianHire={onConfirmTechnicianHire}
+					onClearFilters={vi.fn()}
+				/>
+			);
+		}
+
+		renderWithMantine(
+			<Harness />,
+		);
+
+		const textarea = screen.getByRole("textbox", { name: "Descricao do servico" });
+
+		fireEvent.input(textarea, {
+			target: { value: "Troca de cabo" },
+		});
+		fireEvent.change(textarea, {
+			target: { value: "Troca de cabo" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Contratar tecnico" }));
+
+		expect(onServiceDescriptionChange).toHaveBeenCalledWith("Troca de cabo");
+		expect(onConfirmTechnicianHire).toHaveBeenCalledTimes(1);
 	});
 });

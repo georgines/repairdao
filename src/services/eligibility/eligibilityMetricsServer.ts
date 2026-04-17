@@ -1,7 +1,6 @@
-import { Contract, JsonRpcProvider, formatUnits } from "ethers";
-import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
-
-const MIN_DEPOSIT_STORAGE_SLOT = 5n;
+import { formatUnits } from "ethers";
+import { criarGatewaysRepairDAO } from "@/services/blockchain/gateway";
+import { criarRepairDAOContractClient } from "@/services/blockchain/contractClient";
 
 export type EligibilityMetrics = {
 	rptBalanceRaw: bigint;
@@ -20,18 +19,15 @@ function obterRpcUrl() {
 }
 
 export async function carregarMetricasElegibilidadeNoServidor(address?: string | null): Promise<EligibilityMetrics> {
-	const provider = new JsonRpcProvider(obterRpcUrl());
-	const tokenContract = new Contract(REPAIRDAO_CONTRACTOS.token.address, REPAIRDAO_CONTRACTOS.token.abi, provider);
-	const depositContract = new Contract(REPAIRDAO_CONTRACTOS.deposit.address, REPAIRDAO_CONTRACTOS.deposit.abi, provider);
-	const badgeContract = new Contract(REPAIRDAO_CONTRACTOS.badge.address, REPAIRDAO_CONTRACTOS.badge.abi, provider);
+	const contractClient = criarRepairDAOContractClient({ rpcUrl: obterRpcUrl() });
+	const gateways = criarGatewaysRepairDAO(contractClient);
 
-	const rptBalanceRaw = address ? await tokenContract.balanceOf(address).catch(() => 0n) : 0n;
-	const tokensPerEthRaw = await tokenContract.tokensPerEth().catch(() => 0n);
-	const isActive = address ? await depositContract.isActive(address).catch(() => false) : false;
-	const deposito = address ? await depositContract.getDeposit(address).catch(() => null) : null;
-	const badgeLevel = address ? await badgeContract.getLevelName(address).catch(() => "Sem badge") : "Sem carteira";
-	const minDepositRawHex = await provider.getStorage(REPAIRDAO_CONTRACTOS.deposit.address, MIN_DEPOSIT_STORAGE_SLOT).catch(() => "0x0");
-	const minDepositRaw = BigInt(minDepositRawHex);
+	const rptBalanceRaw = address ? await gateways.token.readContract<bigint>({ functionName: "balanceOf", args: [address] }).catch(() => 0n) : 0n;
+	const tokensPerEthRaw = await gateways.token.readContract<bigint>({ functionName: "tokensPerEth" }).catch(() => 0n);
+	const isActive = address ? await gateways.deposit.readContract<boolean>({ functionName: "isActive", args: [address] }).catch(() => false) : false;
+	const deposito = address ? await gateways.deposit.readContract<unknown>({ functionName: "getDeposit", args: [address] }).catch(() => null) : null;
+	const badgeLevel = address ? await gateways.badge.readContract<string>({ functionName: "getLevelName", args: [address] }).catch(() => "Sem badge") : "Sem carteira";
+	const minDepositRaw = await gateways.deposit.readContract<bigint>({ functionName: "minDeposit" }).catch(() => 0n);
 	const perfilAtivo = isActive && deposito
 		? ((deposito as { isTechnician?: boolean; [index: number]: unknown }).isTechnician
 			?? (deposito as { [index: number]: unknown })[5])

@@ -3,6 +3,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as userValidation from "@/services/users/userValidation";
 
 const serviceMocks = vi.hoisted(() => ({
 	carregarMetricasElegibilidade: vi.fn(),
@@ -351,6 +352,284 @@ describe("useEligibilityPanel", () => {
 		expect(getLatest()?.error).toBe("falha de deposito");
 	});
 
+	it("valida os dados antes de depositar", async () => {
+		serviceMocks.persistUserProfile.mockResolvedValue({
+			address: "0x1234567890abcdef1234567890abcdef12345678",
+			name: "Ana",
+			expertiseArea: null,
+			role: "cliente",
+			badgeLevel: "bronze",
+			reputation: 0,
+			depositLevel: 5,
+			isActive: true,
+			isEligible: true,
+			updatedAt: "2026-04-17T10:00:00.000Z",
+			syncedAt: "2026-04-17T10:01:00.000Z",
+		});
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.handleNomeChange("   ");
+			getLatest()?.handleAreaAtuacaoChange("   ");
+			getLatest()?.handleQuantidadeChange(150);
+			await flush();
+		});
+
+		await act(async () => {
+			await getLatest()?.handleDeposit();
+			await flush();
+		});
+
+		expect(getLatest()?.error).toBe("O campo nome nao pode ser vazio.");
+		expect(serviceMocks.depositarTokens).not.toHaveBeenCalled();
+	});
+
+	it("faz rollback quando o endereco desaparece apos o deposito", async () => {
+		serviceMocks.persistUserProfile.mockResolvedValue({
+			address: "0x1234567890abcdef1234567890abcdef12345678",
+			name: "Ana",
+			expertiseArea: null,
+			role: "cliente",
+			badgeLevel: "bronze",
+			reputation: 0,
+			depositLevel: 5,
+			isActive: true,
+			isEligible: true,
+			updatedAt: "2026-04-17T10:00:00.000Z",
+			syncedAt: "2026-04-17T10:01:00.000Z",
+		});
+		serviceMocks.depositarTokens.mockResolvedValue("ok");
+		serviceMocks.sacarDeposito.mockResolvedValue("ok");
+
+		serviceMocks.useWalletStatus.mockReturnValue({
+			state: {
+				connected: true,
+				loading: false,
+				address: null,
+				chainLabel: "Local",
+				ethBalance: "0.5",
+				usdBalance: "1000",
+				ethUsdPrice: "2000",
+			},
+		});
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.handleNomeChange("Ana");
+			getLatest()?.handleAreaAtuacaoChange("Eletrica");
+			getLatest()?.handleQuantidadeChange(150);
+			await flush();
+		});
+
+		await act(async () => {
+			await getLatest()?.handleDeposit();
+			await flush();
+		});
+
+		expect(getLatest()?.error).toBe("Endereco da carteira indisponivel.");
+		expect(serviceMocks.sacarDeposito).toHaveBeenCalledTimes(2);
+	});
+
+	it("ignora a falha do rollback quando o endereco desaparece apos o deposito", async () => {
+		serviceMocks.persistUserProfile.mockResolvedValue({
+			address: "0x1234567890abcdef1234567890abcdef12345678",
+			name: "Ana",
+			expertiseArea: null,
+			role: "cliente",
+			badgeLevel: "bronze",
+			reputation: 0,
+			depositLevel: 5,
+			isActive: true,
+			isEligible: true,
+			updatedAt: "2026-04-17T10:00:00.000Z",
+			syncedAt: "2026-04-17T10:01:00.000Z",
+		});
+		serviceMocks.depositarTokens.mockResolvedValue("ok");
+		serviceMocks.sacarDeposito
+			.mockResolvedValueOnce("ok")
+			.mockRejectedValueOnce(new Error("rollback falhou"));
+
+		serviceMocks.useWalletStatus.mockReturnValue({
+			state: {
+				connected: true,
+				loading: false,
+				address: null,
+				chainLabel: "Local",
+				ethBalance: "0.5",
+				usdBalance: "1000",
+				ethUsdPrice: "2000",
+			},
+		});
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.handleNomeChange("Ana");
+			getLatest()?.handleAreaAtuacaoChange("Eletrica");
+			getLatest()?.handleQuantidadeChange(150);
+			await flush();
+		});
+
+		await act(async () => {
+			await getLatest()?.handleDeposit();
+			await flush();
+		});
+
+		expect(getLatest()?.error).toBe("Endereco da carteira indisponivel.");
+		expect(serviceMocks.sacarDeposito).toHaveBeenCalledTimes(2);
+	});
+
+	it("usa a mensagem padrao quando a validacao falha com valor nao tipado", async () => {
+		const validateSpy = vi.spyOn(userValidation, "validateUserActivationForm").mockImplementation(() => {
+			throw "falha bruta";
+		});
+
+		try {
+			await act(async () => {
+				root.render(<Probe />);
+				await flush();
+			});
+
+			await act(async () => {
+				getLatest()?.handleNomeChange("Ana");
+				getLatest()?.handleQuantidadeChange(150);
+				await flush();
+			});
+
+			await act(async () => {
+				await getLatest()?.handleDeposit();
+				await flush();
+			});
+
+			expect(getLatest()?.error).toBe("Dados invalidos para ativacao.");
+		} finally {
+			validateSpy.mockRestore();
+		}
+	});
+
+	it("ativa um cliente sem area de atuacao", async () => {
+		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
+			rptBalanceRaw: 5500000000000000000n,
+			rptBalance: "5.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
+			badgeLevel: "bronze",
+			isActive: false,
+			perfilAtivo: null,
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
+		});
+		serviceMocks.depositarTokens.mockResolvedValue("ok");
+		serviceMocks.persistUserProfile.mockResolvedValue({
+			address: "0x1234567890abcdef1234567890abcdef12345678",
+			name: "Ana",
+			expertiseArea: null,
+			role: "cliente",
+			badgeLevel: "bronze",
+			reputation: 0,
+			depositLevel: 5,
+			isActive: true,
+			isEligible: true,
+			updatedAt: "2026-04-17T10:00:00.000Z",
+			syncedAt: "2026-04-17T10:01:00.000Z",
+		});
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.handleNomeChange("Ana");
+			getLatest()?.handleQuantidadeChange(150);
+			await flush();
+		});
+
+		await act(async () => {
+			await getLatest()?.handleDeposit();
+			await flush();
+		});
+
+		expect(serviceMocks.persistUserProfile).toHaveBeenCalledWith(
+			expect.objectContaining({
+				role: "cliente",
+				expertiseArea: null,
+			}),
+		);
+	});
+
+	it("ignora a atualizacao do intervalo apos desmontar", async () => {
+		vi.useFakeTimers();
+		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
+			rptBalanceRaw: 5500000000000000000n,
+			rptBalance: "5.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
+			badgeLevel: "bronze",
+			isActive: true,
+			perfilAtivo: "cliente",
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
+		});
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			root.unmount();
+			vi.advanceTimersByTime(15000);
+			await flush();
+		});
+
+		expect(serviceMocks.carregarMetricasElegibilidade).toHaveBeenCalled();
+	});
+
+	it("bloqueia troca de papel quando a conta ja esta ativa", async () => {
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.handlePerfilChange("cliente");
+			await flush();
+		});
+
+		expect(getLatest()?.perfilSelecionado).toBe("cliente");
+
+		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
+			rptBalanceRaw: 5500000000000000000n,
+			rptBalance: "5.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
+			badgeLevel: "bronze",
+			isActive: true,
+			perfilAtivo: "cliente",
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
+		});
+
+		await act(async () => {
+			getLatest()?.handlePerfilChange("tecnico");
+			await flush();
+		});
+
+		expect(getLatest()?.perfilSelecionado).toBe("cliente");
+	});
+
 	it("zera o saldo e o nivel quando a carteira esta desconectada", async () => {
 		serviceMocks.useWalletStatus.mockReturnValue({
 			state: {
@@ -431,6 +710,85 @@ describe("useEligibilityPanel", () => {
 		expect(serviceMocks.carregarMetricasElegibilidade).toHaveBeenCalledTimes(2);
 		expect(getLatest()?.rptBalance).toBe("7");
 		expect(getLatest()?.badgeLevel).toBe("silver");
+	});
+
+	it("ignora a atualizacao do intervalo depois que o componente e desmontado enquanto a consulta ainda esta pendente", async () => {
+		let resolver!: (value: {
+			rptBalanceRaw: bigint;
+			rptBalance: string;
+			tokensPerEthRaw: bigint;
+			tokensPerEth: string;
+			badgeLevel: string;
+			isActive: boolean;
+			perfilAtivo: "cliente" | "tecnico" | null;
+			minDepositRaw: bigint;
+			minDeposit: string;
+		}) => void;
+		let intervalo: (() => void) | null = null;
+		const setIntervalSpy = vi.spyOn(window, "setInterval").mockImplementation(((handler: TimerHandler) => {
+			intervalo = () => {
+				void handler();
+			};
+			return 1 as unknown as number;
+		}) as typeof window.setInterval);
+		const clearIntervalSpy = vi.spyOn(window, "clearInterval").mockImplementation(() => undefined);
+
+		serviceMocks.carregarMetricasElegibilidade
+			.mockResolvedValueOnce({
+				rptBalanceRaw: 5500000000000000000n,
+				rptBalance: "5.5",
+				tokensPerEthRaw: 250n,
+				tokensPerEth: "250",
+				badgeLevel: "bronze",
+				isActive: true,
+				perfilAtivo: "cliente",
+				minDepositRaw: 100000000000000000000n,
+				minDeposit: "100",
+			})
+			.mockReturnValueOnce(
+				new Promise((resolve) => {
+					resolver = resolve;
+				}),
+			);
+
+		try {
+			await act(async () => {
+				root.render(<Probe />);
+				await flush();
+			});
+
+			await act(async () => {
+				intervalo?.();
+				await flush();
+			});
+
+			await act(async () => {
+				root.unmount();
+				await flush();
+			});
+
+			await act(async () => {
+				resolver({
+					rptBalanceRaw: 9000000000000000000n,
+					rptBalance: "9",
+					tokensPerEthRaw: 250n,
+					tokensPerEth: "250",
+					badgeLevel: "silver",
+					isActive: true,
+					perfilAtivo: "cliente",
+					minDepositRaw: 100000000000000000000n,
+					minDeposit: "100",
+				});
+				await flush();
+			});
+
+			expect(serviceMocks.carregarMetricasElegibilidade).toHaveBeenCalledTimes(2);
+			expect(clearIntervalSpy).toHaveBeenCalledTimes(1);
+			expect(setIntervalSpy).toHaveBeenCalledTimes(1);
+		} finally {
+			setIntervalSpy.mockRestore();
+			clearIntervalSpy.mockRestore();
+		}
 	});
 
 	it("nao atualiza as metricas apos desmontar durante a sincronizacao", async () => {

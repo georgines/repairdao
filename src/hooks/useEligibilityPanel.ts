@@ -111,7 +111,7 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 	useEffect(() => {
 		let ativo = true;
 
-		async function carregarMetricas() {
+		async function sincronizarMetricas() {
 			const dados = await carregarMetricasAtualizadas(connected ? state.address : null);
 
 			if (!ativo) {
@@ -121,14 +121,10 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 			setMetricas(dados);
 		}
 
-		void carregarMetricas();
+		void sincronizarMetricas();
 
 		const intervalo = window.setInterval(() => {
-			void carregarMetricasAtualizadas(connected ? state.address : null).then((dados) => {
-				if (ativo) {
-					setMetricas(dados);
-				}
-			});
+			void sincronizarMetricas();
 		}, 15000);
 
 		return () => {

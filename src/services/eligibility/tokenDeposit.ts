@@ -1,5 +1,7 @@
-import { BrowserProvider, Contract } from "ethers";
+import { BrowserProvider } from "ethers";
 import { RepairDAODominioError } from "@/erros/errors";
+import { criarRepairDAOBrowserContractClient } from "@/services/blockchain/browserContractClient";
+import { criarGatewaysRepairDAO } from "@/services/blockchain/gateway";
 import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
 import type { EthereumProvider } from "@/services/wallet/provider";
 import { aguardarTransacao } from "@/services/wallet/transaction";
@@ -14,18 +16,23 @@ export async function depositarTokens(
 	}
 
 	const provider = new BrowserProvider(ethereum as never);
-	const signer = await provider.getSigner();
-	const token = new Contract(REPAIRDAO_CONTRACTOS.token.address, REPAIRDAO_CONTRACTOS.token.abi, signer);
-	const deposito = new Contract(REPAIRDAO_CONTRACTOS.deposit.address, REPAIRDAO_CONTRACTOS.deposit.abi, signer);
+	const gateways = criarGatewaysRepairDAO(criarRepairDAOBrowserContractClient(provider));
 
-	await aguardarTransacao(await token.approve(REPAIRDAO_CONTRACTOS.deposit.address, quantidade));
+	await aguardarTransacao(await gateways.token.writeContract({
+		functionName: "approve",
+		args: [REPAIRDAO_CONTRACTOS.deposit.address, quantidade],
+	}));
 
-	return aguardarTransacao(await deposito.deposit(quantidade, isTechnician));
+	return aguardarTransacao(await gateways.deposit.writeContract({
+		functionName: "deposit",
+		args: [quantidade, isTechnician],
+	}));
 }
 
 export async function sacarDeposito(ethereum: EthereumProvider): Promise<unknown> {
 	const provider = new BrowserProvider(ethereum as never);
-	const signer = await provider.getSigner();
-	const contrato = new Contract(REPAIRDAO_CONTRACTOS.deposit.address, REPAIRDAO_CONTRACTOS.deposit.abi, signer);
-	return aguardarTransacao(await contrato.withdrawDeposit());
+	const gateways = criarGatewaysRepairDAO(criarRepairDAOBrowserContractClient(provider));
+	return aguardarTransacao(await gateways.deposit.writeContract({
+		functionName: "withdrawDeposit",
+	}));
 }

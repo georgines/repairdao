@@ -101,12 +101,16 @@ describe("useTechnicianDiscoveryPanel", () => {
 		return capture.mock.calls.at(-1)?.[0];
 	}
 
-	beforeEach(() => {
+beforeEach(() => {
 		(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 		container = document.createElement("div");
 		document.body.appendChild(container);
 		root = createRoot(container);
 		vi.clearAllMocks();
+		walletMocks.state = {
+			connected: true,
+			address: "0xcliente",
+		};
 	});
 
 	afterEach(async () => {
@@ -222,5 +226,88 @@ describe("useTechnicianDiscoveryPanel", () => {
 		expect(getLatest()?.selectedTechnician).toBeNull();
 		expect(getLatest()?.minReputation).toBe(0);
 		expect(getLatest()?.hasResults).toBe(false);
+	});
+
+	it("bloqueia a contratacao quando a carteira nao esta conectada", async () => {
+		walletMocks.state = {
+			connected: false,
+			address: null,
+		};
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.onHireTechnician("0xaaa");
+			await flush();
+		});
+
+		await act(async () => {
+			await getLatest()?.onConfirmTechnicianHire();
+			await flush();
+		});
+
+		expect(getLatest()?.requestError).toBe("Conecte a carteira para contratar o servico.");
+	});
+
+	it("usa mensagem padrao quando a criacao da ordem falha com valor nao tipado", async () => {
+		serviceMocks.createServiceRequest.mockRejectedValueOnce("falha bruta");
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.onHireTechnician("0xaaa");
+			getLatest()?.onServiceDescriptionChange("Troca de cabo");
+			await flush();
+		});
+
+		await act(async () => {
+			await getLatest()?.onConfirmTechnicianHire();
+			await flush();
+		});
+
+		expect(getLatest()?.requestError).toBe("Nao foi possivel criar a ordem de servico.");
+	});
+
+	it("usa a mensagem do erro quando a criacao da ordem falha com Error", async () => {
+		serviceMocks.createServiceRequest.mockRejectedValueOnce(new Error("falha de contrato"));
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.onHireTechnician("0xaaa");
+			getLatest()?.onServiceDescriptionChange("Troca de cabo");
+			await flush();
+		});
+
+		await act(async () => {
+			await getLatest()?.onConfirmTechnicianHire();
+			await flush();
+		});
+
+		expect(getLatest()?.requestError).toBe("falha de contrato");
+	});
+
+	it("retorna cedo quando nao ha tecnico selecionado", async () => {
+		await act(async () => {
+			root.render(<EmptyProbe />);
+			await flush();
+		});
+
+		await act(async () => {
+			await getLatest()?.onConfirmTechnicianHire();
+			await flush();
+		});
+
+		expect(serviceMocks.criarOrdemServicoNoContrato).not.toHaveBeenCalled();
+		expect(serviceMocks.createServiceRequest).not.toHaveBeenCalled();
 	});
 });

@@ -328,6 +328,35 @@ describe("useAccountPanel", () => {
 		expect(serviceMocks.sacarRendimento).not.toHaveBeenCalled();
 	});
 
+	it("saca o deposito sem remover o perfil quando o endereco nao esta disponivel", async () => {
+		serviceMocks.useWalletStatus.mockReturnValue({
+			state: {
+				connected: true,
+				loading: false,
+				address: null,
+				chainLabel: "Local",
+				ethBalance: "0.5",
+				usdBalance: "1000",
+				ethUsdPrice: "2000",
+			},
+		});
+		serviceMocks.sacarDeposito.mockResolvedValue("ok");
+		serviceMocks.deleteUserProfile.mockResolvedValue(undefined);
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			await getLatest()?.handleWithdrawDeposit();
+			await flush();
+		});
+
+		expect(serviceMocks.sacarDeposito).toHaveBeenCalledTimes(1);
+		expect(serviceMocks.deleteUserProfile).not.toHaveBeenCalled();
+	});
+
 	it("usa mensagens especificas quando o saque falha", async () => {
 		serviceMocks.sacarDeposito.mockRejectedValue("falha bruta");
 		serviceMocks.sacarRendimento.mockRejectedValue(new Error("falha de rendimento"));

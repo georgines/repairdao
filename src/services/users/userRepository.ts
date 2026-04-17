@@ -6,20 +6,33 @@ import { validateUserProfileInput, validateUserWithdrawalInput } from "@/service
 type PrismaRole = "CLIENTE" | "TECNICO";
 type PrismaEventType = "REGISTERED" | "UPDATED" | "WITHDRAWN" | "ROLE_CHANGED";
 
+const ROLE_PRISMA_POR_DOMINIO: Record<UserRole, PrismaRole> = {
+	cliente: "CLIENTE",
+	tecnico: "TECNICO",
+};
+
+const ROLE_DOMINIO_POR_PRISMA: Record<PrismaRole, UserRole> = {
+	CLIENTE: "cliente",
+	TECNICO: "tecnico",
+};
+
+const EVENT_TYPE_PRISMA_POR_DOMINIO: Record<UserAuditInput["eventType"], PrismaEventType> = {
+	registered: "REGISTERED",
+	updated: "UPDATED",
+	withdrawn: "WITHDRAWN",
+	role_changed: "ROLE_CHANGED",
+};
+
 function toPrismaRole(role: UserRole): PrismaRole {
-	return role === "tecnico" ? "TECNICO" : "CLIENTE";
+	return ROLE_PRISMA_POR_DOMINIO[role];
 }
 
 function toDomainRole(role: PrismaRole): UserRole {
-	return role === "TECNICO" ? "tecnico" : "cliente";
+	return ROLE_DOMINIO_POR_PRISMA[role];
 }
 
 function toPrismaEventType(eventType: UserAuditInput["eventType"]): PrismaEventType {
-	return eventType === "role_changed"
-		? "ROLE_CHANGED"
-		: eventType === "withdrawn"
-			? "WITHDRAWN"
-			: eventType.toUpperCase() as PrismaEventType;
+	return EVENT_TYPE_PRISMA_POR_DOMINIO[eventType];
 }
 
 function toUserDetails(user: {

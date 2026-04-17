@@ -1,6 +1,7 @@
-import { BrowserProvider, Contract, parseEther } from "ethers";
+import { BrowserProvider, parseEther } from "ethers";
 import { RepairDAODominioError } from "@/erros/errors";
-import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
+import { criarRepairDAOBrowserContractClient } from "@/services/blockchain/browserContractClient";
+import { criarRepairTokenGateway } from "@/services/blockchain/gateways/tokenGateway";
 import type { EthereumProvider } from "@/services/wallet/provider";
 import { aguardarTransacao } from "@/services/wallet/transaction";
 
@@ -23,12 +24,16 @@ function normalizarQuantidadeEth(valor: string | number): string {
 }
 
 export async function comprarToken(ethereum: EthereumProvider, quantidadeEth: string | number): Promise<unknown> {
-	const provider = new BrowserProvider(ethereum as never);
-	const signer = await provider.getSigner();
 	const valorNormalizado = normalizarQuantidadeEth(quantidadeEth);
-	const contrato = new Contract(REPAIRDAO_CONTRACTOS.token.address, REPAIRDAO_CONTRACTOS.token.abi, signer);
-	const transacao = await contrato.buy({
-		value: parseEther(valorNormalizado),
+	const provider = new BrowserProvider(ethereum as never);
+	const contrato = criarRepairTokenGateway(criarRepairDAOBrowserContractClient(provider));
+	const transacao = await contrato.writeContract({
+		functionName: "buy",
+		args: [
+			{
+				value: parseEther(valorNormalizado),
+			},
+		],
 	});
 
 	return aguardarTransacao(transacao);

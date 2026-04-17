@@ -51,6 +51,7 @@ export const REPAIR_DEPOSIT_ABI = [
   { type: "function", name: "authorizeContract", stateMutability: "nonpayable", inputs: [{ name: "contractAddress", type: "address" }], outputs: [] },
   { type: "function", name: "setRepairReputation", stateMutability: "nonpayable", inputs: [{ name: "reputationAddress", type: "address" }], outputs: [] },
   { type: "function", name: "getEthUsdPrice", stateMutability: "view", inputs: [], outputs: [{ name: "price", type: "int256" }] },
+  { type: "function", name: "minDeposit", stateMutability: "view", inputs: [], outputs: [{ name: "minDeposit", type: "uint256" }] },
   {
     type: "function",
     name: "deposit",

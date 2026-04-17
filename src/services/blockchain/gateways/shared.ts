@@ -14,7 +14,11 @@ export interface GatewayContratoConfig {
   abi: InterfaceAbi;
 }
 
-export function garantirEscritaDisponivel(contractClient: RepairDAOContractClient): void {
+export function garantirEscritaDisponivel(
+  contractClient: RepairDAOContractClient,
+): asserts contractClient is RepairDAOContractClient & {
+  writeContract: NonNullable<RepairDAOContractClient["writeContract"]>;
+} {
   if (!contractClient.writeContract) {
     throw new RepairDAODominioError("escrita_indisponivel", "O client de escrita do contrato nao foi configurado.");
   }
