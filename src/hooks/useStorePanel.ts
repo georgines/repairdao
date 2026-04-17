@@ -55,20 +55,14 @@ export function useStorePanel(onPurchased: () => void): UseStorePanelResult {
 	const usdBalance = connected ? state.usdBalance : "0";
 	const walletNotice = connected ? null : "Carteira desconectada";
 	const quantidadeNumerica = normalizarQuantidadeEth(quantityEth);
-	const rptPreview = connected ? String(quantidadeNumerica * Number(metricas.tokensPerEth)) : "0";
+	const rptPreview = String(quantidadeNumerica * Number(metricas.tokensPerEth));
 
 	useEffect(() => {
 		let ativo = true;
 
 		async function sincronizarMetricas() {
-			if (!ethereum || !connected || !state.address) {
-				setMetricas(METRICAS_PADRAO);
-
-				return;
-			}
-
 			try {
-				const dados = await carregarMetricasDaLoja(ethereum, state.address);
+				const dados = await carregarMetricasDaLoja(connected ? state.address : null);
 
 				if (ativo) {
 					setMetricas(dados);
@@ -145,7 +139,7 @@ export function useStorePanel(onPurchased: () => void): UseStorePanelResult {
 		ethBalance,
 		usdBalance,
 		rptBalance: connected ? metricas.rptBalance : "0",
-		tokensPerEth: connected ? metricas.tokensPerEth : "0",
+		tokensPerEth: metricas.tokensPerEth,
 		rptPreview,
 		walletNotice,
 		quantityEth,

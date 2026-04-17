@@ -112,7 +112,9 @@ describe("StorePanel", () => {
 		});
 
 		expect(serviceMocks.comprarToken).toHaveBeenCalledWith(expect.any(Object), "0,10");
-		expect(serviceMocks.carregarMetricasDaLoja).toHaveBeenCalledWith(expect.any(Object), "0x1234567890abcdef1234567890abcdef12345678");
+		expect(serviceMocks.carregarMetricasDaLoja).toHaveBeenCalledWith("0x1234567890abcdef1234567890abcdef12345678");
+		expect(container.textContent).toContain("1 ETH = 250,00 RPT");
+		expect(container.textContent).toContain("Você receberá cerca de 25,00 RPT");
 	});
 
 	it("mostra zero quando a carteira esta desconectada", async () => {

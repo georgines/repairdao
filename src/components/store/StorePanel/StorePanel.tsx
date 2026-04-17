@@ -11,18 +11,22 @@ type StorePanelContainerProps = {
 function StorePanelContainer({ onPurchased }: StorePanelContainerProps) {
 	const panel = useStorePanel(onPurchased);
 
-		return (
-			<StorePanelView
-				ethBalance={panel.ethBalance}
-				usdBalance={panel.usdBalance}
-				walletNotice={panel.walletNotice}
-				quantityEth={panel.quantityEth}
-				buying={panel.buying}
-				error={panel.error}
-				onQuantityEthChange={panel.handleQuantityEthChange}
-				onBuy={panel.handleBuy}
-				connected={panel.connected}
-			/>
+	return (
+		<StorePanelView
+			ethBalance={panel.ethBalance}
+			rptBalance={panel.rptBalance}
+			tokensPerEth={panel.tokensPerEth}
+			rptPreview={panel.rptPreview}
+			walletNotice={panel.walletNotice}
+			quantityEth={panel.quantityEth}
+			buying={panel.buying}
+			depositing={panel.depositing}
+			error={panel.error}
+			onQuantityEthChange={panel.handleQuantityEthChange}
+			onBuy={panel.handleBuy}
+			onDeposit={panel.handleDeposit}
+			connected={panel.connected}
+		/>
 	);
 }
 

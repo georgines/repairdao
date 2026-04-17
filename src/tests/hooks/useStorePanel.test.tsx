@@ -115,7 +115,7 @@ describe("useStorePanel", () => {
 		});
 
 	expect(serviceMocks.comprarToken).toHaveBeenCalledWith(expect.any(Object), "0,25");
-	expect(serviceMocks.carregarMetricasDaLoja).toHaveBeenCalledWith(expect.any(Object), "0x1234567890abcdef1234567890abcdef12345678");
+	expect(serviceMocks.carregarMetricasDaLoja).toHaveBeenCalledWith("0x1234567890abcdef1234567890abcdef12345678");
 	});
 
 	it("zera o simulador quando a quantidade eh invalida", async () => {
@@ -189,6 +189,7 @@ describe("useStorePanel", () => {
 
 		expect(serviceMocks.comprarToken).not.toHaveBeenCalled();
 		expect(getLatest()?.error).toBe("Conecte a carteira para trocar ETH por RPT.");
+		expect(serviceMocks.carregarMetricasDaLoja).toHaveBeenCalledWith(null);
 	});
 
 	it("zera os saldos visiveis quando a carteira esta desconectada", async () => {
@@ -212,8 +213,8 @@ describe("useStorePanel", () => {
 		expect(getLatest()?.ethBalance).toBe("0");
 		expect(getLatest()?.usdBalance).toBe("0");
 		expect(getLatest()?.rptBalance).toBe("0");
-		expect(getLatest()?.tokensPerEth).toBe("0");
-		expect(getLatest()?.rptPreview).toBe("0");
+		expect(getLatest()?.tokensPerEth).toBe("250");
+		expect(getLatest()?.rptPreview).toBe("25");
 		expect(getLatest()?.walletNotice).toBe("Carteira desconectada");
 
 		await act(async () => {
