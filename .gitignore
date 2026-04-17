@@ -13,6 +13,7 @@
 .mcp.json
 .codex
 .vscode
+AGENTS.md
 
 # testing
 /coverage
