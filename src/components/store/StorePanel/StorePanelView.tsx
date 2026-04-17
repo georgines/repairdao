@@ -1,5 +1,5 @@
 import { Badge, Button, Card, Divider, Stack, Text, TextInput, Title } from "@mantine/core";
-import { formatarNumero } from "@/services/wallet/formatters";
+import { formatarNumero, formatarNumeroCompleto } from "@/services/wallet/formatters";
 
 export type StorePanelViewProps = {
 	ethBalance: string;
@@ -54,7 +54,7 @@ export function StorePanelView({
 						Preço atual
 					</Text>
 					<Badge variant="light" color="green" size="lg">
-						1 ETH = {formatarNumero(tokensPerEth, 2)} RPT
+						1 ETH = {formatarNumeroCompleto(tokensPerEth, 2)} RPT
 					</Badge>
 				</Stack>
 
@@ -63,7 +63,7 @@ export function StorePanelView({
 						Saldo atual
 					</Text>
 					<Text size="xl" fw={800}>
-						RPT {formatarNumero(rptBalance, 2)}
+						RPT {formatarNumeroCompleto(rptBalance, 2)}
 					</Text>
 					<Text size="sm" c="dimmed">
 						ETH {formatarNumero(ethBalance, 4)}
@@ -86,7 +86,7 @@ export function StorePanelView({
 						onChange={(event) => onQuantityEthChange(event.currentTarget.value)}
 					/>
 					<Text size="sm" c="dimmed">
-						Você receberá cerca de {formatarNumero(rptPreview, 2)} RPT
+						Você receberá cerca de {formatarNumeroCompleto(rptPreview, 2)} RPT
 					</Text>
 
 					<Button onClick={onBuy} disabled={!podeComprar} loading={buying}>

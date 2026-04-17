@@ -51,6 +51,22 @@ export function formatarNumero(valor: string, casasDecimais = 2) {
 	}).format(numero);
 }
 
+export function formatarNumeroCompleto(valor: string, casasDecimais = 2) {
+	const numero = Number(valor);
+
+	if (!Number.isFinite(numero)) {
+		return new Intl.NumberFormat("pt-BR", {
+			minimumFractionDigits: casasDecimais,
+			maximumFractionDigits: casasDecimais,
+		}).format(0);
+	}
+
+	return new Intl.NumberFormat("pt-BR", {
+		minimumFractionDigits: casasDecimais,
+		maximumFractionDigits: casasDecimais,
+	}).format(numero);
+}
+
 export function formatarUSD(valor: string) {
 	const numero = Number(valor);
 

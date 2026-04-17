@@ -145,6 +145,33 @@ describe("EligibilityPanelView", () => {
 		expect(markup).toContain("Nivel do cliente");
 	});
 
+	it("exibe saldo de RPT grande sem abreviação", () => {
+		const markup = renderWithMantine(
+			<EligibilityPanelView
+				ethBalance="0"
+				usdBalance="0"
+				rptBalance="1000000"
+				badgeLevel="bronze"
+				isActive={true}
+				perfilSelecionado="cliente"
+				quantidadeRpt={null}
+				quantidadeErro={null}
+				quantidadeMinima={100}
+				acaoLabel="Mudar para cliente"
+				mensagemAcao="Mensagem"
+				walletNotice={null}
+				depositing={false}
+				error={null}
+				onPerfilChange={() => {}}
+				onQuantidadeChange={() => {}}
+				onDeposit={() => {}}
+				connected={true}
+			/>,
+		);
+
+		expect(markup).toContain("RPT 1.000.000,00");
+	});
+
 	it("propaga a troca de perfil e o clique de deposito", async () => {
 		const onPerfilChange = vi.fn();
 		const onDeposit = vi.fn();

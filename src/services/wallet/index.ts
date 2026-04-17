@@ -1,4 +1,11 @@
-export { formatarBlockchain, formatarEnderecoCurto, formatarNumero, formatarUSD, normalizarPrecoEthUsd } from "@/services/wallet/formatters";
+export {
+	formatarBlockchain,
+	formatarEnderecoCurto,
+	formatarNumero,
+	formatarNumeroCompleto,
+	formatarUSD,
+	normalizarPrecoEthUsd,
+} from "@/services/wallet/formatters";
 export { definirReconexaoAutomatica, reconexaoAutomaticaHabilitada } from "@/services/wallet/preferences";
 export { obterEthereumProvider } from "@/services/wallet/provider";
 export { carregarCarteira, obterRedeAtual } from "@/services/wallet/walletReader";

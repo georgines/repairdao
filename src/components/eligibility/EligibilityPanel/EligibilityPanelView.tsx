@@ -1,5 +1,5 @@
 import { Button, Card, Divider, Group, NumberInput, Stack, Text, Title } from "@mantine/core";
-import { formatarNumero, formatarUSD } from "@/services/wallet/formatters";
+import { formatarNumero, formatarNumeroCompleto, formatarUSD } from "@/services/wallet/formatters";
 
 export type EligibilityPanelViewProps = {
 	ethBalance: string;
@@ -94,7 +94,7 @@ export function EligibilityPanelView({
 							Saldo atual
 						</Text>
 						<Text size="xl" fw={800}>
-							RPT {formatarNumero(rptBalance, 2)}
+							RPT {formatarNumeroCompleto(rptBalance, 2)}
 						</Text>
 						<Text size="sm" c="dimmed">
 							ETH {formatarNumero(ethBalance, 4)}

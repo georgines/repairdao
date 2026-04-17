@@ -54,6 +54,7 @@ import {
 	definirReconexaoAutomatica,
 	formatarBlockchain,
 	formatarNumero,
+	formatarNumeroCompleto,
 	formatarUSD,
 	normalizarPrecoEthUsd,
 	obterEthereumProvider,
@@ -83,6 +84,7 @@ describe("walletService coverage", () => {
 		expect(formatarBlockchain(999)).toBe("Chain 999");
 		expect(formatarNumero("abc")).toBe("0,00");
 		expect(formatarNumero("1000000")).toContain("mi");
+		expect(formatarNumeroCompleto("1000000")).toBe("1.000.000,00");
 		expect(formatarUSD("abc")).toBe("$0.00");
 		expect(normalizarPrecoEthUsd("abc")).toBe(0);
 		expect(ESTADO_INICIAL_CARTEIRA.connected).toBe(false);

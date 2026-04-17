@@ -89,6 +89,28 @@ describe("StorePanelView", () => {
 		expect(markup).toContain("1 ETH = 0,00 RPT");
 	});
 
+	it("exibe valores grandes de RPT sem abreviar", () => {
+		const markup = renderWithMantine(
+			<StorePanelView
+				ethBalance="0"
+				rptBalance="1000000"
+				tokensPerEth="1000000"
+				rptPreview="1000000"
+				walletNotice={null}
+				quantityEth="1"
+				buying={false}
+				error={null}
+				onQuantityEthChange={() => {}}
+				onBuy={() => {}}
+				connected={true}
+			/>,
+		);
+
+		expect(markup).toContain("RPT 1.000.000,00");
+		expect(markup).toContain("1 ETH = 1.000.000,00 RPT");
+		expect(markup).toContain("Você receberá cerca de 1.000.000,00 RPT");
+	});
+
 	it("propaga mudanÃ§as e aÃ§Ãµes da interface", async () => {
 		const onBuy = vi.fn();
 		const onQuantityEthChange = vi.fn();
