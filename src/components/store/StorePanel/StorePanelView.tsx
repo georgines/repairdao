@@ -1,8 +1,11 @@
 import { Badge, Button, Card, Divider, Stack, Text, TextInput, Title } from "@mantine/core";
-import { formatarNumero, formatarNumeroCompleto } from "@/services/wallet/formatters";
+import { BalanceSummary } from "@/components/balance/BalanceSummary";
+import { formatarNumeroCompleto } from "@/services/wallet/formatters";
 
 export type StorePanelViewProps = {
 	ethBalance: string;
+	usdBalance: string;
+	ethUsdPrice: string;
 	rptBalance: string;
 	tokensPerEth: string;
 	rptPreview: string;
@@ -17,6 +20,8 @@ export type StorePanelViewProps = {
 
 export function StorePanelView({
 	ethBalance,
+	usdBalance,
+	ethUsdPrice,
 	rptBalance,
 	tokensPerEth,
 	rptPreview,
@@ -58,22 +63,14 @@ export function StorePanelView({
 					</Badge>
 				</Stack>
 
-				<Stack gap={4}>
-					<Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-						Saldo atual
-					</Text>
-					<Text size="xl" fw={800}>
-						RPT {formatarNumeroCompleto(rptBalance, 2)}
-					</Text>
-					<Text size="sm" c="dimmed">
-						ETH {formatarNumero(ethBalance, 4)}
-					</Text>
-					{walletNotice ? (
-						<Text size="xs" c="dimmed">
-							{walletNotice}
-						</Text>
-					) : null}
-				</Stack>
+				<BalanceSummary
+					rptBalance={rptBalance}
+					tokensPerEth={tokensPerEth}
+					ethUsdPrice={ethUsdPrice}
+					ethBalance={ethBalance}
+					usdBalance={usdBalance}
+					note={walletNotice}
+				/>
 
 				<Divider />
 

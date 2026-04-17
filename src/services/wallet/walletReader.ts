@@ -46,5 +46,6 @@ export async function carregarCarteira(ethereum: EthereumProvider, solicitarPerm
 		chainLabel: formatarBlockchain(network.chainId),
 		ethBalance,
 		usdBalance: usdBalance.toFixed(2),
+		ethUsdPrice: ethUsdPrice.toFixed(2),
 	};
 }

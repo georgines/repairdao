@@ -10,6 +10,7 @@ type UseStorePanelResult = {
 	connected: boolean;
 	ethBalance: string;
 	usdBalance: string;
+	ethUsdPrice: string;
 	rptBalance: string;
 	tokensPerEth: string;
 	rptPreview: string;
@@ -49,6 +50,7 @@ export function useStorePanel(onPurchased: () => void): UseStorePanelResult {
 	const connected = state.connected;
 	const ethBalance = connected ? state.ethBalance : "0";
 	const usdBalance = connected ? state.usdBalance : "0";
+	const ethUsdPrice = connected ? state.ethUsdPrice : "0";
 	const walletNotice = connected ? null : "Carteira desconectada";
 	const quantidadeNumerica = normalizarQuantidadeEth(quantityEth);
 	const rptPreview = String(quantidadeNumerica * Number(metricas.tokensPerEth));
@@ -110,6 +112,7 @@ export function useStorePanel(onPurchased: () => void): UseStorePanelResult {
 		connected,
 		ethBalance,
 		usdBalance,
+		ethUsdPrice,
 		rptBalance: connected ? metricas.rptBalance : "0",
 		tokensPerEth: metricas.tokensPerEth,
 		rptPreview,

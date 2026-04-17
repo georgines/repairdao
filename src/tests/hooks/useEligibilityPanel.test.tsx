@@ -66,11 +66,14 @@ describe("useEligibilityPanel", () => {
 				chainLabel: "Local",
 				ethBalance: "0.5",
 				usdBalance: "1000",
+				ethUsdPrice: "2000",
 			},
 		});
 		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
 			rptBalanceRaw: 5500000000000000000n,
 			rptBalance: "5.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
 			badgeLevel: "bronze",
 			isActive: true,
 			minDepositRaw: 100000000000000000000n,
@@ -150,6 +153,8 @@ describe("useEligibilityPanel", () => {
 		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
 			rptBalanceRaw: 0n,
 			rptBalance: "0",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
 			badgeLevel: "Sem carteira",
 			isActive: false,
 			minDepositRaw: 100000000000000000000n,
@@ -235,6 +240,7 @@ describe("useEligibilityPanel", () => {
 				chainLabel: "Sem conexao",
 				ethBalance: "0",
 				usdBalance: "0",
+				ethUsdPrice: "0",
 			},
 		});
 
@@ -313,6 +319,7 @@ describe("useEligibilityPanel", () => {
 				chainLabel: "Sem conexao",
 				ethBalance: "9.9",
 				usdBalance: "999",
+				ethUsdPrice: "0",
 			},
 		});
 
@@ -346,20 +353,24 @@ describe("useEligibilityPanel", () => {
 		vi.useFakeTimers();
 		serviceMocks.carregarMetricasElegibilidade
 			.mockResolvedValueOnce({
-				rptBalanceRaw: 5500000000000000000n,
-				rptBalance: "5.5",
-				badgeLevel: "bronze",
-				isActive: true,
-				minDepositRaw: 100000000000000000000n,
-				minDeposit: "100",
+			rptBalanceRaw: 5500000000000000000n,
+			rptBalance: "5.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
+			badgeLevel: "bronze",
+			isActive: true,
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
 			})
 			.mockResolvedValueOnce({
-				rptBalanceRaw: 7000000000000000000n,
-				rptBalance: "7",
-				badgeLevel: "silver",
-				isActive: true,
-				minDepositRaw: 100000000000000000000n,
-				minDeposit: "100",
+			rptBalanceRaw: 7000000000000000000n,
+			rptBalance: "7",
+			tokensPerEthRaw: 300n,
+			tokensPerEth: "300",
+			badgeLevel: "silver",
+			isActive: true,
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
 			});
 
 		await act(async () => {
@@ -383,6 +394,8 @@ describe("useEligibilityPanel", () => {
 		let resolver!: (value: {
 			rptBalanceRaw: bigint;
 			rptBalance: string;
+			tokensPerEthRaw: bigint;
+			tokensPerEth: string;
 			badgeLevel: string;
 			isActive: boolean;
 			minDepositRaw: bigint;
@@ -409,6 +422,8 @@ describe("useEligibilityPanel", () => {
 			resolver({
 				rptBalanceRaw: 9000000000000000000n,
 				rptBalance: "9",
+				tokensPerEthRaw: 250n,
+				tokensPerEth: "250",
 				badgeLevel: "silver",
 				isActive: true,
 				minDepositRaw: 100000000000000000000n,

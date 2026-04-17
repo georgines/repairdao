@@ -65,6 +65,7 @@ describe("StorePanel", () => {
 				chainLabel: "Local",
 				ethBalance: "0.5",
 				usdBalance: "1000",
+				ethUsdPrice: "2000",
 			},
 		});
 		serviceMocks.carregarMetricasDaLoja.mockResolvedValue({
@@ -121,6 +122,7 @@ describe("StorePanel", () => {
 				chainLabel: "Sem conexao",
 				ethBalance: "9.9",
 				usdBalance: "999",
+				ethUsdPrice: "0",
 			},
 		});
 

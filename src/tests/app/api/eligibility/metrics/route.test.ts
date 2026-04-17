@@ -17,6 +17,8 @@ describe("/api/eligibility/metrics", () => {
 		serviceMocks.carregarMetricasElegibilidadeNoServidor.mockResolvedValue({
 			rptBalanceRaw: 1500000000000000000n,
 			rptBalance: "1.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
 			badgeLevel: "bronze",
 			isActive: true,
 			minDepositRaw: 100000000000000000000n,
@@ -30,6 +32,8 @@ describe("/api/eligibility/metrics", () => {
 		expect(body).toEqual({
 			rptBalanceRaw: "1500000000000000000",
 			rptBalance: "1.5",
+			tokensPerEthRaw: "250",
+			tokensPerEth: "250",
 			badgeLevel: "bronze",
 			isActive: true,
 			minDepositRaw: "100000000000000000000",

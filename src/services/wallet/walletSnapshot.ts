@@ -4,6 +4,7 @@ export type WalletSnapshot = {
 	chainLabel: string;
 	ethBalance: string;
 	usdBalance: string;
+	ethUsdPrice: string;
 };
 
 export const ESTADO_INICIAL_CARTEIRA: WalletSnapshot = {
@@ -12,4 +13,5 @@ export const ESTADO_INICIAL_CARTEIRA: WalletSnapshot = {
 	chainLabel: "Sem conexao",
 	ethBalance: "0",
 	usdBalance: "$0.00",
+	ethUsdPrice: "0",
 };

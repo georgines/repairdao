@@ -33,6 +33,7 @@ vi.mock("@/services/wallet/walletSnapshot", () => ({
 		chainLabel: "Sem conexao",
 		ethBalance: "0",
 		usdBalance: "$0.00",
+		ethUsdPrice: "0",
 	},
 }));
 
@@ -158,6 +159,7 @@ describe("useWalletStatus", () => {
 				chainLabel: "Base",
 				ethBalance: "2",
 				usdBalance: "3",
+				ethUsdPrice: "1.5",
 			})
 			.mockResolvedValueOnce({
 				connected: true,
@@ -165,6 +167,7 @@ describe("useWalletStatus", () => {
 				chainLabel: "Base",
 				ethBalance: "5",
 				usdBalance: "6",
+				ethUsdPrice: "1.2",
 			});
 
 		await act(async () => {
@@ -190,6 +193,7 @@ describe("useWalletStatus", () => {
 			chainLabel: "Base",
 			ethBalance: "8",
 			usdBalance: "9",
+			ethUsdPrice: "1.125",
 		});
 
 		await act(async () => {
@@ -235,6 +239,7 @@ describe("useWalletStatus", () => {
 			chainLabel: "Local",
 			ethBalance: "8",
 			usdBalance: "9",
+			ethUsdPrice: "1.125",
 		});
 
 		await act(async () => {
@@ -292,6 +297,7 @@ describe("useWalletStatus", () => {
 			chainLabel: "Local",
 			ethBalance: "8",
 			usdBalance: "9",
+			ethUsdPrice: "1.125",
 		});
 
 		await act(async () => {
@@ -347,6 +353,7 @@ describe("useWalletStatus", () => {
 				chainLabel: "Late",
 				ethBalance: "1",
 				usdBalance: "1",
+				ethUsdPrice: "1",
 			});
 			await flush();
 		});
@@ -433,6 +440,7 @@ describe("useWalletStatus", () => {
 			chainLabel: "Local",
 			ethBalance: "5",
 			usdBalance: "10",
+			ethUsdPrice: "2",
 		});
 
 		await act(async () => {
@@ -463,6 +471,7 @@ describe("useWalletStatus", () => {
 			chainLabel: "Local",
 			ethBalance: "7",
 			usdBalance: "14",
+			ethUsdPrice: "2",
 		});
 
 		const handlerConectar = getLatest()?.actionHandler;

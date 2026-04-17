@@ -10,6 +10,8 @@ export function EligibilityPanel() {
 		<EligibilityPanelView
 			ethBalance={panel.ethBalance}
 			usdBalance={panel.usdBalance}
+			ethUsdPrice={panel.ethUsdPrice}
+			tokensPerEth={panel.tokensPerEth}
 			rptBalance={panel.rptBalance}
 			badgeLevel={panel.badgeLevel}
 			isActive={panel.isActive}

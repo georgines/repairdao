@@ -1,9 +1,11 @@
 import { Button, Card, Divider, Group, NumberInput, Stack, Text, Title } from "@mantine/core";
-import { formatarNumero, formatarNumeroCompleto, formatarUSD } from "@/services/wallet/formatters";
+import { BalanceSummary } from "@/components/balance/BalanceSummary";
 
 export type EligibilityPanelViewProps = {
 	ethBalance: string;
 	usdBalance: string;
+	ethUsdPrice: string;
+	tokensPerEth: string;
 	rptBalance: string;
 	badgeLevel: string;
 	isActive: boolean;
@@ -25,6 +27,8 @@ export type EligibilityPanelViewProps = {
 export function EligibilityPanelView({
 	ethBalance,
 	usdBalance,
+	ethUsdPrice,
+	tokensPerEth,
 	rptBalance,
 	badgeLevel,
 	isActive,
@@ -89,25 +93,15 @@ export function EligibilityPanelView({
 				</Stack>
 
 				<Group align="stretch" grow wrap="wrap">
-					<Stack gap={4} style={{ flex: "1 1 280px" }}>
-						<Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-							Saldo atual
-						</Text>
-						<Text size="xl" fw={800}>
-							RPT {formatarNumeroCompleto(rptBalance, 2)}
-						</Text>
-						<Text size="sm" c="dimmed">
-							ETH {formatarNumero(ethBalance, 4)}
-						</Text>
-						<Text size="sm" c="dimmed">
-							USD {formatarUSD(usdBalance)}
-						</Text>
-						{walletNotice ? (
-							<Text size="xs" c="dimmed">
-								{walletNotice}
-							</Text>
-						) : null}
-					</Stack>
+					<BalanceSummary
+						rptBalance={rptBalance}
+						tokensPerEth={tokensPerEth}
+						ethUsdPrice={ethUsdPrice}
+						ethBalance={ethBalance}
+						usdBalance={usdBalance}
+						note={walletNotice}
+						style={{ flex: "1 1 280px" }}
+					/>
 
 					<Stack
 						gap={6}

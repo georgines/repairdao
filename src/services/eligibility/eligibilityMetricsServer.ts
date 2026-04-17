@@ -11,6 +11,13 @@ const REPAIR_TOKEN_READ_ABI = [
 		inputs: [{ name: "account", type: "address" }],
 		outputs: [{ name: "balance", type: "uint256" }],
 	},
+	{
+		type: "function",
+		name: "tokensPerEth",
+		stateMutability: "view",
+		inputs: [],
+		outputs: [{ name: "rate", type: "uint256" }],
+	},
 ] as const;
 
 const REPAIR_DEPOSIT_READ_ABI = [
@@ -36,6 +43,8 @@ const REPAIR_BADGE_READ_ABI = [
 export type EligibilityMetrics = {
 	rptBalanceRaw: bigint;
 	rptBalance: string;
+	tokensPerEthRaw: bigint;
+	tokensPerEth: string;
 	badgeLevel: string;
 	isActive: boolean;
 	minDepositRaw: bigint;
@@ -53,6 +62,7 @@ export async function carregarMetricasElegibilidadeNoServidor(address?: string |
 	const badgeContract = new Contract(REPAIRDAO_CONTRACTOS.badge.address, REPAIR_BADGE_READ_ABI, provider);
 
 	const rptBalanceRaw = address ? await tokenContract.balanceOf(address).catch(() => 0n) : 0n;
+	const tokensPerEthRaw = await tokenContract.tokensPerEth().catch(() => 0n);
 	const isActive = address ? await depositContract.isActive(address).catch(() => false) : false;
 	const badgeLevel = address ? await badgeContract.getLevelName(address).catch(() => "Sem badge") : "Sem carteira";
 	const minDepositRawHex = await provider.getStorage(REPAIRDAO_CONTRACTOS.deposit.address, MIN_DEPOSIT_STORAGE_SLOT).catch(() => "0x0");
@@ -61,6 +71,8 @@ export async function carregarMetricasElegibilidadeNoServidor(address?: string |
 	return {
 		rptBalanceRaw,
 		rptBalance: formatUnits(rptBalanceRaw, 18),
+		tokensPerEthRaw,
+		tokensPerEth: String(tokensPerEthRaw),
 		badgeLevel,
 		isActive,
 		minDepositRaw,

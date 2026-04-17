@@ -14,6 +14,8 @@ describe("carregarMetricasElegibilidade", () => {
 			json: vi.fn().mockResolvedValue({
 				rptBalanceRaw: "1500000000000000000",
 				rptBalance: "1.5",
+				tokensPerEthRaw: "250",
+				tokensPerEth: "250",
 				badgeLevel: "bronze",
 				isActive: true,
 				minDepositRaw: "100000000000000000000",
@@ -26,6 +28,8 @@ describe("carregarMetricasElegibilidade", () => {
 		await expect(carregarMetricasElegibilidade("0xabc")).resolves.toEqual({
 			rptBalanceRaw: 1500000000000000000n,
 			rptBalance: "1.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
 			badgeLevel: "bronze",
 			isActive: true,
 			minDepositRaw: 100000000000000000000n,

@@ -11,6 +11,8 @@ export async function GET(request: Request) {
 	return NextResponse.json({
 		rptBalanceRaw: metricas.rptBalanceRaw.toString(),
 		rptBalance: metricas.rptBalance,
+		tokensPerEthRaw: metricas.tokensPerEthRaw.toString(),
+		tokensPerEth: metricas.tokensPerEth,
 		badgeLevel: metricas.badgeLevel,
 		isActive: metricas.isActive,
 		minDepositRaw: metricas.minDepositRaw.toString(),

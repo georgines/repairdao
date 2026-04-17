@@ -45,6 +45,8 @@ describe("StorePanelView", () => {
 		const markup = renderWithMantine(
 			<StorePanelView
 				ethBalance="0.5"
+				usdBalance="1000"
+				ethUsdPrice="2000"
 				rptBalance="10"
 				tokensPerEth="250"
 				rptPreview="62.5"
@@ -61,6 +63,10 @@ describe("StorePanelView", () => {
 		expect(markup).toContain("Trocar ETH por RPT");
 		expect(markup).toContain("1 ETH = 250,00 RPT");
 		expect(markup).toContain("RPT 10,00");
+		expect(markup).toContain("ETH comprado 0,0400");
+		expect(markup).toContain("USD comprado US$");
+		expect(markup).toContain("80,00");
+		expect(markup).toContain("Na carteira");
 		expect(markup).toContain("ETH 0,5000");
 		expect(markup).toContain("Quanto ETH quer gastar");
 		expect(markup).toContain("62,50 RPT");
@@ -70,6 +76,8 @@ describe("StorePanelView", () => {
 		const markup = renderWithMantine(
 			<StorePanelView
 				ethBalance="0"
+				usdBalance="0"
+				ethUsdPrice="0"
 				rptBalance="0"
 				tokensPerEth="0"
 				rptPreview="0"
@@ -85,6 +93,9 @@ describe("StorePanelView", () => {
 
 		expect(markup).toContain("ETH 0,0000");
 		expect(markup).toContain("RPT 0,00");
+		expect(markup).toContain("USD comprado US$");
+		expect(markup).toContain("0,00");
+		expect(markup).toContain("Na carteira");
 		expect(markup).toContain("Carteira desconectada");
 		expect(markup).toContain("1 ETH = 0,00 RPT");
 	});
@@ -93,6 +104,8 @@ describe("StorePanelView", () => {
 		const markup = renderWithMantine(
 			<StorePanelView
 				ethBalance="0"
+				usdBalance="0"
+				ethUsdPrice="2000"
 				rptBalance="1000000"
 				tokensPerEth="1000000"
 				rptPreview="1000000"
@@ -120,6 +133,8 @@ describe("StorePanelView", () => {
 				<MantineProvider>
 					<StorePanelView
 						ethBalance="0"
+						usdBalance="0"
+						ethUsdPrice="0"
 						rptBalance="0"
 						tokensPerEth="0"
 						rptPreview="0"

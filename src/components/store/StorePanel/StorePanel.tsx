@@ -14,6 +14,8 @@ function StorePanelContainer({ onPurchased }: StorePanelContainerProps) {
 	return (
 		<StorePanelView
 			ethBalance={panel.ethBalance}
+			usdBalance={panel.usdBalance}
+			ethUsdPrice={panel.ethUsdPrice}
 			rptBalance={panel.rptBalance}
 			tokensPerEth={panel.tokensPerEth}
 			rptPreview={panel.rptPreview}

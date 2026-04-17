@@ -51,6 +51,8 @@ describe("EligibilityPanelView", () => {
 			<EligibilityPanelView
 				ethBalance="0.5"
 				usdBalance="1000"
+				ethUsdPrice="2000"
+				tokensPerEth="250"
 				rptBalance="10"
 				badgeLevel="bronze"
 				isActive={true}
@@ -79,7 +81,12 @@ describe("EligibilityPanelView", () => {
 		expect(markup).toContain("Quanto RPT deseja depositar");
 		expect(markup).toContain("Mudar para cliente");
 		expect(markup).toContain("RPT 10,00");
+		expect(markup).toContain("ETH comprado 0,0400");
+		expect(markup).toContain("USD comprado US$");
+		expect(markup).toContain("80,00");
+		expect(markup).toContain("Na carteira");
 		expect(markup).toContain("ETH 0,5000");
+		expect(markup).toContain("USD US$");
 		expect(markup).toContain("1.000,00");
 		expect(markup).toContain("Valor minimo: 100 RPT.");
 
@@ -89,6 +96,8 @@ describe("EligibilityPanelView", () => {
 					<EligibilityPanelView
 						ethBalance="0.5"
 						usdBalance="1000"
+						ethUsdPrice="2000"
+						tokensPerEth="250"
 						rptBalance="10"
 						badgeLevel="bronze"
 						isActive={true}
@@ -121,6 +130,8 @@ describe("EligibilityPanelView", () => {
 			<EligibilityPanelView
 				ethBalance="0"
 				usdBalance="0"
+				ethUsdPrice="0"
+				tokensPerEth="0"
 				rptBalance="0"
 				badgeLevel="Sem carteira"
 				isActive={false}
@@ -143,6 +154,8 @@ describe("EligibilityPanelView", () => {
 		expect(markup).toContain("Carteira desconectada");
 		expect(markup).toContain("O valor para deposito deve ser maior ou igual a 100 RPT.");
 		expect(markup).toContain("Nivel do cliente");
+		expect(markup).toContain("USD comprado US$");
+		expect(markup).toContain("0,00");
 	});
 
 	it("exibe saldo de RPT grande sem abreviação", () => {
@@ -150,6 +163,8 @@ describe("EligibilityPanelView", () => {
 			<EligibilityPanelView
 				ethBalance="0"
 				usdBalance="0"
+				ethUsdPrice="2000"
+				tokensPerEth="1000000"
 				rptBalance="1000000"
 				badgeLevel="bronze"
 				isActive={true}
@@ -182,6 +197,8 @@ describe("EligibilityPanelView", () => {
 					<EligibilityPanelView
 						ethBalance="0"
 						usdBalance="0"
+						ethUsdPrice="0"
+						tokensPerEth="250"
 						rptBalance="5"
 						badgeLevel="bronze"
 						isActive={false}

@@ -160,6 +160,7 @@ describe("walletService coverage", () => {
 			chainLabel: "Local",
 			ethBalance: "1.5",
 			usdBalance: "0.00",
+			ethUsdPrice: "0.00",
 		});
 
 		expect(ethersMocks.browserProviderInstances.at(-1)?.send).toHaveBeenCalledWith("eth_requestAccounts", []);
@@ -184,6 +185,7 @@ describe("walletService coverage", () => {
 			chainLabel: "Base",
 			ethBalance: "2",
 			usdBalance: "4000.00",
+			ethUsdPrice: "2000.00",
 		});
 		expect(ethersMocks.browserProviderInstances.at(-1)?.send).toHaveBeenCalledWith("eth_accounts", []);
 		expect(ethersMocks.formatEtherMock).toHaveBeenCalledWith(2n);
@@ -215,6 +217,7 @@ describe("walletService coverage", () => {
 		await expect(carregarCarteira(ethereum, false)).resolves.toMatchObject({
 			ethBalance: "2",
 			usdBalance: "0.00",
+			ethUsdPrice: "0.00",
 		});
 
 		Number.isFinite = originalIsFinite;

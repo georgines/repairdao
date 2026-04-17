@@ -18,6 +18,8 @@ export async function carregarMetricasElegibilidade(address?: string | null) {
 	const dados = (await resposta.json()) as {
 		rptBalanceRaw: string;
 		rptBalance: string;
+		tokensPerEthRaw: string;
+		tokensPerEth: string;
 		badgeLevel: string;
 		isActive: boolean;
 		minDepositRaw: string;
@@ -27,6 +29,8 @@ export async function carregarMetricasElegibilidade(address?: string | null) {
 	return {
 		rptBalanceRaw: BigInt(dados.rptBalanceRaw),
 		rptBalance: dados.rptBalance,
+		tokensPerEthRaw: BigInt(dados.tokensPerEthRaw),
+		tokensPerEth: dados.tokensPerEth,
 		badgeLevel: dados.badgeLevel,
 		isActive: dados.isActive,
 		minDepositRaw: BigInt(dados.minDepositRaw),

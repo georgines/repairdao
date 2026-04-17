@@ -72,11 +72,14 @@ describe("EligibilityPanel", () => {
 				chainLabel: "Local",
 				ethBalance: "0.5",
 				usdBalance: "1000",
+				ethUsdPrice: "2000",
 			},
 		});
 		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
 			rptBalanceRaw: 5500000000000000000n,
 			rptBalance: "5.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
 			badgeLevel: "bronze",
 			isActive: true,
 			minDepositRaw: 100000000000000000000n,
@@ -117,6 +120,7 @@ describe("EligibilityPanel", () => {
 				chainLabel: "Sem conexao",
 				ethBalance: "9.9",
 				usdBalance: "999",
+				ethUsdPrice: "0",
 			},
 		});
 

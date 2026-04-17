@@ -43,11 +43,14 @@ describe("app/eligibility/page", () => {
 				chainLabel: "Sem conexao",
 				ethBalance: "0",
 				usdBalance: "0",
+				ethUsdPrice: "0",
 			},
 		});
 		eligibilityMocks.carregarMetricasElegibilidade.mockResolvedValue({
 			rptBalanceRaw: 0n,
 			rptBalance: "0",
+			tokensPerEthRaw: 0n,
+			tokensPerEth: "0",
 			badgeLevel: "Sem carteira",
 			isActive: false,
 			minDepositRaw: 100000000000000000000n,

@@ -38,6 +38,7 @@ describe("app/store/page", () => {
 				chainLabel: "Sem conexao",
 				ethBalance: "0",
 				usdBalance: "0",
+				ethUsdPrice: "0",
 			},
 		});
 		storeMocks.carregarMetricasDaLoja.mockResolvedValue({
