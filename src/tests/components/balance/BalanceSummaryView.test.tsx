@@ -9,7 +9,7 @@ function renderWithMantine(node: ReactElement) {
 }
 
 describe("BalanceSummaryView", () => {
-	it("renderiza o resumo com seções genéricas", () => {
+	it("renderiza o resumo com secoes genericas", () => {
 		const markup = renderWithMantine(
 			<BalanceSummaryView
 				title="Saldo atual"
@@ -37,5 +37,25 @@ describe("BalanceSummaryView", () => {
 		expect(markup).toContain("ETH 10,0000");
 		expect(markup).toContain("USD US$");
 		expect(markup).toContain("Carteira desconectada");
+	});
+
+	it("aceita secao sem separador e sem nota", () => {
+		const markup = renderWithMantine(
+			<BalanceSummaryView
+				title="Resumo"
+				primaryText="RPT 0,00"
+				sections={[
+					{
+						lines: ["ETH 0,0000"],
+					},
+				]}
+				note={null}
+			/>,
+		);
+
+		expect(markup).toContain("Resumo");
+		expect(markup).toContain("RPT 0,00");
+		expect(markup).toContain("ETH 0,0000");
+		expect(markup).not.toContain("Carteira desconectada");
 	});
 });

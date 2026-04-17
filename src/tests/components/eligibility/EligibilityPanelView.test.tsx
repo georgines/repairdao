@@ -250,4 +250,37 @@ describe("EligibilityPanelView", () => {
 		expect(container.textContent).toContain("falha no deposito");
 		expect(container.textContent).toContain("Papel registrado");
 	});
+
+	it("destaca o papel tecnico antes da ativacao", () => {
+		const markup = renderWithMantine(
+			<EligibilityPanelView
+				ethBalance="0"
+				usdBalance="0"
+				ethUsdPrice="0"
+				tokensPerEth="250"
+				rptBalance="5"
+				badgeLevel="bronze"
+				isActive={false}
+				perfilAtivo={null}
+				mostrarSeletoresPapel={true}
+				perfilSelecionado="tecnico"
+				quantidadeRpt={2}
+				quantidadeErro={null}
+				quantidadeMinima={100}
+				acaoLabel="Ativar como tecnico"
+				mensagemAcao="Ao ativar como tecnico, o valor digitado sera o inicio do novo nivel."
+				walletNotice={null}
+				depositing={false}
+				error={null}
+				onPerfilChange={() => {}}
+				onQuantidadeChange={() => {}}
+				onDeposit={() => {}}
+				connected={true}
+			/>,
+		);
+
+		expect(markup).toContain("Definir papel");
+		expect(markup).toContain("Ativar como tecnico");
+		expect(markup).toContain("Tecnico");
+	});
 });

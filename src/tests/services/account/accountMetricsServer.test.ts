@@ -240,4 +240,44 @@ describe("carregarMetricasDaContaNoServidor", () => {
 			averageRating: "4,5",
 		});
 	});
+
+	it("usa fallback booleano quando o deposito nao entrega um valor valido", async () => {
+		const depositContract = {
+			getDeposit: vi.fn().mockResolvedValue({ amount: 50000000000000000000n, isTechnician: "sim" }),
+			getRewards: vi.fn().mockResolvedValue(0n),
+			isActive: vi.fn().mockResolvedValue(true),
+		};
+		const badgeContract = {
+			getLevelName: vi.fn().mockResolvedValue("Prata"),
+		};
+		const reputationContract = {
+			getReputation: vi.fn().mockResolvedValue(null),
+		};
+
+		ethersMocks.nextContracts.push(depositContract, badgeContract, reputationContract);
+
+		await expect(carregarMetricasDaContaNoServidor("0xabc")).resolves.toMatchObject({
+			perfilAtivo: "cliente",
+		});
+	});
+
+	it("usa fallback booleano quando o deposito vem em formato primitivo", async () => {
+		const depositContract = {
+			getDeposit: vi.fn().mockResolvedValue(50000000000000000000n),
+			getRewards: vi.fn().mockResolvedValue(0n),
+			isActive: vi.fn().mockResolvedValue(true),
+		};
+		const badgeContract = {
+			getLevelName: vi.fn().mockResolvedValue("Prata"),
+		};
+		const reputationContract = {
+			getReputation: vi.fn().mockResolvedValue(null),
+		};
+
+		ethersMocks.nextContracts.push(depositContract, badgeContract, reputationContract);
+
+		await expect(carregarMetricasDaContaNoServidor("0xabc")).resolves.toMatchObject({
+			perfilAtivo: "cliente",
+		});
+	});
 });

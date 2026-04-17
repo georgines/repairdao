@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CLIENTE
+  TECNICO
+}
+
+enum UserAuditEventType {
+  REGISTERED
+  UPDATED
+  WITHDRAWN
+  ROLE_CHANGED
+}
+
+model UserProfile {
+  id           Int      @id @default(autoincrement())
+  address      String   @unique
+  searchName   String
+  name         String
+  role         UserRole
+  badgeLevel   String
+  reputation   Int      @default(0)
+  depositLevel Int      @default(0)
+  isActive     Boolean  @default(false)
+  isEligible   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  syncedAt     DateTime @default(now())
+
+  @@index([isEligible, reputation])
+  @@index([searchName])
+  @@index([role, isActive])
+}
+
+model UserAuditEvent {
+  id        Int                      @id @default(autoincrement())
+  address   String
+  eventType UserAuditEventType
+  details   String
+  createdAt DateTime                 @default(now())
+
+  @@index([address, eventType])
+}

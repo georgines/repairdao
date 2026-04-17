@@ -31,7 +31,7 @@ describe('shared utilities', () => {
 
   it('garantirTransicaoEstado lança quando transição inválida', () => {
     const transicoes = { A: ['C'] } as const;
-    expect(() => garantirTransicaoEstado('A', 'B', transicoes as any, 'err', 'ent')).toThrow(RepairDAODominioError);
+    expect(() => garantirTransicaoEstado('A', 'B', transicoes, 'err', 'ent')).toThrow(RepairDAODominioError);
   });
 
   it('clamp limita o valor ao intervalo', () => {

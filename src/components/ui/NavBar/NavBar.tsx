@@ -9,6 +9,7 @@ const menuItems = [
   { label: "Minha conta", href: "/account" },
   { label: "Loja", href: "/store" },
   { label: "Elegibilidade", href: "/eligibility" },
+  { label: "Tecnicos", href: "/technicians" },
 ];
 
 type NavBarProps = {

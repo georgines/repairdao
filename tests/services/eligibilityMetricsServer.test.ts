@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('ethers', () => {
   return {
-      Contract: function (address: any, abi: any, provider: any) {
+      Contract: function (_address: string, _abi: readonly unknown[], _provider: unknown) {
         return {
           balanceOf: vi.fn(async (_addr: string) => 100n),
           tokensPerEth: vi.fn(async () => 200n),
@@ -11,12 +11,12 @@ vi.mock('ethers', () => {
           getLevelName: vi.fn(async () => 'Nivel 1'),
         };
       },
-    JsonRpcProvider: function (url: string) {
+    JsonRpcProvider: function (_url: string) {
       return {
         getStorage: vi.fn(async (_address: string, _slot: bigint) => '0x1'),
       };
     },
-    formatUnits: (v: any, d: any) => String(v),
+    formatUnits: (value: bigint, _decimals: number) => String(value),
   };
 });
 
