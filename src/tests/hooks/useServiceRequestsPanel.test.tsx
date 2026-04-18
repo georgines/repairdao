@@ -19,6 +19,7 @@ const serviceMocks = vi.hoisted(() => ({
 	avaliarServicoNoContrato: vi.fn(),
 	carregarEstadoAvaliacaoNoContrato: vi.fn(),
 	carregarEstadoConfirmacaoEntregaNoContrato: vi.fn(),
+	invalidarResumoAvaliacaoDoTecnicoCache: vi.fn(),
 	openServiceDispute: vi.fn(),
 	sendServiceBudget: vi.fn(),
 }));
@@ -58,6 +59,10 @@ vi.mock("@/services/serviceRequests/serviceRequestBlockchain", () => ({
 	avaliarServicoNoContrato: serviceMocks.avaliarServicoNoContrato,
 	carregarEstadoAvaliacaoNoContrato: serviceMocks.carregarEstadoAvaliacaoNoContrato,
 	carregarEstadoConfirmacaoEntregaNoContrato: serviceMocks.carregarEstadoConfirmacaoEntregaNoContrato,
+}));
+
+vi.mock("@/services/blockchain/technicianRatingBlockchain", () => ({
+	invalidarResumoAvaliacaoDoTecnicoCache: serviceMocks.invalidarResumoAvaliacaoDoTecnicoCache,
 }));
 
 vi.mock("@/services/serviceRequests/serviceRequestClient", () => ({
@@ -363,6 +368,8 @@ beforeEach(() => {
 		});
 
 		expect(serviceMocks.avaliarServicoNoContrato).toHaveBeenCalledWith({}, 2, 4);
+		expect(serviceMocks.invalidarResumoAvaliacaoDoTecnicoCache).toHaveBeenCalledWith("0xcliente");
+		expect(serviceMocks.invalidarResumoAvaliacaoDoTecnicoCache).toHaveBeenCalledWith("0xtec");
 		expect(serviceMocks.carregarEstadoAvaliacaoNoContrato).toHaveBeenCalledWith({}, 2);
 		expect(getLatest()?.requestModalOpened).toBe(false);
 	});

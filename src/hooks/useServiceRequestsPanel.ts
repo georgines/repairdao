@@ -15,6 +15,7 @@ import {
 	autorizarPagamentoNoContrato,
 	enviarOrcamentoNoContrato,
 } from "@/services/serviceRequests/serviceRequestBlockchain";
+import { invalidarResumoAvaliacaoDoTecnicoCache } from "@/services/blockchain/technicianRatingBlockchain";
 import {
 	acceptServiceBudget,
 	completeServiceRequest,
@@ -446,6 +447,8 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 
 		try {
 			await avaliarServicoNoContrato(ethereum, requestModalRequest.id, nota);
+			invalidarResumoAvaliacaoDoTecnicoCache(requestModalRequest.clientAddress);
+			invalidarResumoAvaliacaoDoTecnicoCache(requestModalRequest.technicianAddress);
 			const estadoAvaliacao = await carregarEstadoAvaliacaoNoContrato(ethereum, requestModalRequest.id);
 			if (estadoAvaliacao) {
 				updateRequest({ ...requestModalRequest, ...estadoAvaliacao });

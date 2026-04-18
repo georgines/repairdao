@@ -49,6 +49,7 @@ describe("AccountPanelView", () => {
 	it("renderiza os blocos da conta e as acoes principais", () => {
 		const markup = renderWithMantine(
 			<AccountPanelView
+				walletAddress="0x1234567890abcdef1234567890abcdef12345678"
 				walletNotice={null}
 				deposit="150"
 				rewards="5"
@@ -73,7 +74,7 @@ describe("AccountPanelView", () => {
 			/>,
 		);
 
-		expect(markup).toContain("Meu dinheiro depositado, rendimento, nivel e avaliacoes");
+		expect(markup).toContain("Meu dinheiro depositado, rendimento, nivel e minhas avaliacoes");
 		expect(markup).toContain("Conta ativa");
 		expect(markup).toContain("Nivel Ouro");
 		expect(markup).toContain("Perfil tecnico");
@@ -92,6 +93,7 @@ describe("AccountPanelView", () => {
 	it("mostra estado desconectado e bloqueia as acoes", () => {
 		const markup = renderWithMantine(
 			<AccountPanelView
+				walletAddress={null}
 				walletNotice="Carteira desconectada"
 				deposit="0"
 				rewards="0"
@@ -126,6 +128,7 @@ describe("AccountPanelView", () => {
 	it("mostra taxa zerada quando nao ha avaliacoes registradas", () => {
 		const markup = renderWithMantine(
 			<AccountPanelView
+				walletAddress={null}
 				walletNotice={null}
 				deposit="0"
 				rewards="0"
@@ -151,6 +154,7 @@ describe("AccountPanelView", () => {
 		);
 
 		expect(markup).toContain("0%");
+		expect(markup).toContain("(0)");
 		expect(markup).toContain("Soma das notas: 0");
 	});
 
@@ -162,6 +166,7 @@ describe("AccountPanelView", () => {
 			root.render(
 				<MantineProvider>
 					<AccountPanelView
+						walletAddress="0x1234567890abcdef1234567890abcdef12345678"
 						walletNotice={null}
 						deposit="150"
 						rewards="5"

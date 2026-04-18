@@ -8,6 +8,12 @@ import type { ReactElement } from "react";
 import type { UserSummary } from "@/services/users";
 import { TechnicianDiscoveryPanelView } from "@/components/technicians/TechnicianDiscoveryPanel/TechnicianDiscoveryPanelView";
 
+vi.mock("@/components/ratings/RatingSummary", () => ({
+	RatingSummary: ({ address }: { address: string }) => (
+		<span data-testid={`technician-rating-${address}`}>avaliacao</span>
+	),
+}));
+
 function renderWithMantine(node: ReactElement) {
 	return render(<MantineProvider>{node}</MantineProvider>);
 }

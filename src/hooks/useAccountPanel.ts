@@ -9,6 +9,7 @@ import { deleteUserProfile } from "@/services/users/userClient";
 
 type UseAccountPanelResult = {
 	connected: boolean;
+	walletAddress: string | null;
 	walletNotice: string | null;
 	deposit: string;
 	rewards: string;
@@ -63,6 +64,7 @@ export function useAccountPanel(): UseAccountPanelResult {
 	const [error, setError] = useState<string | null>(null);
 
 	const connected = state.connected;
+	const walletAddress = connected ? state.address : null;
 	const walletNotice = connected ? null : "Carteira desconectada";
 	const canWithdrawDeposit = connected && metricas.isActive && metricas.depositRaw > 0n && !withdrawingDeposit && !withdrawingRewards;
 	const canWithdrawRewards = connected && metricas.isActive && metricas.rewardsRaw > 0n && !withdrawingDeposit && !withdrawingRewards;
@@ -165,6 +167,7 @@ export function useAccountPanel(): UseAccountPanelResult {
 
 	return {
 		connected,
+		walletAddress,
 		walletNotice,
 		deposit: connected ? metricas.deposit : "0",
 		rewards: connected ? metricas.rewards : "0",

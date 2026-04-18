@@ -8,6 +8,7 @@ export function AccountPanel() {
 
 	return (
 		<AccountPanelView
+			walletAddress={panel.walletAddress}
 			walletNotice={panel.walletNotice}
 			deposit={panel.deposit}
 			rewards={panel.rewards}

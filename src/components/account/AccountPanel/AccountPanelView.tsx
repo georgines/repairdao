@@ -5,6 +5,7 @@ import { AccountRatingsCard } from "@/components/account/AccountPanel/AccountRat
 import { formatarNumeroCompleto } from "@/services/wallet/formatters";
 
 export type AccountPanelViewProps = {
+	walletAddress: string | null;
 	walletNotice: string | null;
 	deposit: string;
 	rewards: string;
@@ -29,6 +30,7 @@ export type AccountPanelViewProps = {
 };
 
 export function AccountPanelView({
+	walletAddress,
 	walletNotice,
 	deposit,
 	rewards,
@@ -67,7 +69,7 @@ export function AccountPanelView({
 					<Text size="xs" tt="uppercase" fw={700} c="dimmed">
 						Conta
 					</Text>
-					<Title order={1}>Meu dinheiro depositado, rendimento, nivel e avaliacoes</Title>
+					<Title order={1}>Meu dinheiro depositado, rendimento, nivel e minhas avaliacoes</Title>
 					<Text size="sm" c="dimmed">
 						Resumo centralizado para acompanhar o saldo travado, os rendimentos acumulados, o nivel atual e o historico de avaliacoes.
 					</Text>
@@ -119,6 +121,7 @@ export function AccountPanelView({
 				</Grid>
 
 				<AccountRatingsCard
+					walletAddress={walletAddress}
 					averageRating={averageRating}
 					positiveRatings={positiveRatings}
 					negativeRatings={negativeRatings}

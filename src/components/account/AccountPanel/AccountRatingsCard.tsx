@@ -1,6 +1,8 @@
 import { Card, Group, Progress, RingProgress, Stack, Text } from "@mantine/core";
+import { RatingSummary } from "@/components/ratings/RatingSummary";
 
 export type AccountRatingsCardProps = {
+	walletAddress: string | null;
 	averageRating: string;
 	positiveRatings: string;
 	negativeRatings: string;
@@ -30,6 +32,7 @@ function calcularTaxaPositiva(positiveRatings: string, totalRatings: string) {
 }
 
 export function AccountRatingsCard({
+	walletAddress,
 	averageRating,
 	positiveRatings,
 	negativeRatings,
@@ -48,14 +51,18 @@ export function AccountRatingsCard({
 	return (
 		<Card withBorder shadow="none" padding="md" radius="md" style={cardStyle}>
 			<Stack gap="md">
-				<Stack gap={2}>
-					<Text size="xs" tt="uppercase" fw={700} c="dimmed">
-						Avaliacoes
-					</Text>
-					<Text size="sm" c="dimmed">
-						Acompanhe a qualidade da conta e a proporcao de feedbacks positivos.
-					</Text>
-				</Stack>
+				<Group justify="space-between" align="flex-start" wrap="wrap">
+					<Stack gap={2}>
+						<Text size="xs" tt="uppercase" fw={700} c="dimmed">
+							Minhas avaliacoes
+						</Text>
+						<Text size="sm" c="dimmed">
+							Acompanhe a qualidade da conta e a proporcao de feedbacks positivos.
+						</Text>
+					</Stack>
+
+					<RatingSummary address={walletAddress} source="account" />
+				</Group>
 
 				<Group align="center" justify="space-between" wrap="wrap">
 					<Stack gap={0} style={{ flex: "1 1 180px" }}>
