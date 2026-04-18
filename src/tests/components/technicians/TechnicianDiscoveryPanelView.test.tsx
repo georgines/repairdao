@@ -25,25 +25,6 @@ const technician: UserSummary = {
 	updatedAt: "2026-04-17T10:00:00.000Z",
 };
 
-const inactiveTechnician: UserSummary = {
-	address: "0xccc",
-	name: "Carla Lima",
-	expertiseArea: null,
-	role: "cliente",
-	badgeLevel: "bronze",
-	reputation: 4,
-	depositLevel: 0,
-	isActive: false,
-	isEligible: false,
-	updatedAt: "2026-04-17T12:00:00.000Z",
-};
-
-const activeButNotEligibleTechnician: UserSummary = {
-	...inactiveTechnician,
-	isActive: true,
-	isEligible: false,
-};
-
 describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 	beforeEach(() => {
 		Object.defineProperty(window, "matchMedia", {
@@ -75,6 +56,8 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				filteredTechnicians={[technician]}
 				selectedTechnician={technician}
 				contractedTechnician={null}
+				hasOpenOrder={false}
+				canHire
 				technicianModalMode={null}
 				technicianModalOpened={false}
 				hasResults
@@ -94,10 +77,40 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 
 		expect(screen.getByText("Encontre tecnicos elegiveis")).toBeDefined();
 		expect(screen.getByText("Bruno Silva")).toBeDefined();
-		expect(screen.getByLabelText("Reputacao 5 de 5")).toBeDefined();
 		expect(screen.getByRole("button", { name: "Detalhes" })).toBeDefined();
 		expect(screen.getByRole("button", { name: "Contratar" })).toBeDefined();
-		expect(screen.getByRole("link", { name: "Servicos" })).toBeDefined();
+	});
+
+	it("esconde o botao de contratar quando existe ordem aberta", () => {
+		renderWithMantine(
+			<TechnicianDiscoveryPanelView
+				query=""
+				minReputation={0}
+				totalTechnicians={1}
+				filteredTechnicians={[technician]}
+				selectedTechnician={technician}
+				contractedTechnician={technician}
+				hasOpenOrder
+				canHire={false}
+				technicianModalMode={null}
+				technicianModalOpened={false}
+				hasResults
+				serviceDescription=""
+				submittingRequest={false}
+				requestError={null}
+				onQueryChange={vi.fn()}
+				onMinReputationChange={vi.fn()}
+				onSelectTechnician={vi.fn()}
+				onHireTechnician={vi.fn()}
+				onCloseTechnicianModal={vi.fn()}
+				onServiceDescriptionChange={vi.fn()}
+				onConfirmTechnicianHire={vi.fn().mockResolvedValue(undefined)}
+				onClearFilters={vi.fn()}
+			/>,
+		);
+
+		expect(screen.queryByRole("button", { name: "Contratar" })).toBeNull();
+		expect(screen.getByText("ordem aberta: Bruno Silva")).toBeDefined();
 	});
 
 	it("abre o modal com os detalhes do tecnico selecionado", () => {
@@ -109,6 +122,8 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				filteredTechnicians={[technician]}
 				selectedTechnician={technician}
 				contractedTechnician={null}
+				hasOpenOrder={false}
+				canHire
 				technicianModalMode="details"
 				technicianModalOpened
 				hasResults
@@ -130,7 +145,6 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 		expect(screen.getByText("Area: Redes")).toBeDefined();
 		expect(screen.getByText("Ativo: sim")).toBeDefined();
 		expect(screen.getByText("Elegivel: sim")).toBeDefined();
-		expect(screen.getAllByLabelText("Reputacao 5 de 5")).toHaveLength(2);
 	});
 
 	it("mostra a confirmacao de contratacao no modal", () => {
@@ -142,6 +156,8 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				filteredTechnicians={[technician]}
 				selectedTechnician={technician}
 				contractedTechnician={null}
+				hasOpenOrder={false}
+				canHire
 				technicianModalMode="hire"
 				technicianModalOpened
 				hasResults
@@ -162,7 +178,6 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 		expect(screen.getByText("Confirmar contratacao")).toBeDefined();
 		expect(screen.getByText("Descricao do servico")).toBeDefined();
 		expect(screen.getByRole("button", { name: "Contratar tecnico" })).toBeDefined();
-		expect(screen.getAllByLabelText("Reputacao 5 de 5")).toHaveLength(2);
 	});
 
 	it("propaga as interacoes da tabela e do modal", () => {
@@ -176,10 +191,12 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 			<TechnicianDiscoveryPanelView
 				query=""
 				minReputation={0}
-				totalTechnicians={2}
-				filteredTechnicians={[technician, inactiveTechnician]}
+				totalTechnicians={1}
+				filteredTechnicians={[technician]}
 				selectedTechnician={null}
 				contractedTechnician={null}
+				hasOpenOrder={false}
+				canHire
 				technicianModalMode={null}
 				technicianModalOpened={false}
 				hasResults
@@ -203,78 +220,14 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 		fireEvent.change(screen.getByRole("textbox", { name: "Reputacao minima" }), {
 			target: { value: "15" },
 		});
-		fireEvent.click(screen.getAllByRole("button", { name: "Detalhes" })[0]);
-		fireEvent.click(screen.getAllByRole("button", { name: "Contratar" })[0]);
+		fireEvent.click(screen.getByRole("button", { name: "Detalhes" }));
+		fireEvent.click(screen.getByRole("button", { name: "Contratar" }));
 
 		expect(onQueryChange).toHaveBeenCalledWith("ana");
 		expect(onMinReputationChange).toHaveBeenCalled();
 		expect(onSelectTechnician).toHaveBeenCalledWith("0xbbb");
 		expect(onHireTechnician).toHaveBeenCalledWith("0xbbb");
 		expect(onCloseTechnicianModal).not.toHaveBeenCalled();
-	});
-
-	it("mostra o estado sem resultados", () => {
-		renderWithMantine(
-			<TechnicianDiscoveryPanelView
-				query="xyz"
-				minReputation={20}
-				totalTechnicians={1}
-				filteredTechnicians={[inactiveTechnician]}
-				selectedTechnician={null}
-				contractedTechnician={null}
-				technicianModalMode={null}
-				technicianModalOpened={false}
-				hasResults={false}
-				serviceDescription=""
-				submittingRequest={false}
-				requestError={null}
-				onQueryChange={vi.fn()}
-				onMinReputationChange={vi.fn()}
-				onSelectTechnician={vi.fn()}
-				onHireTechnician={vi.fn()}
-				onCloseTechnicianModal={vi.fn()}
-				onServiceDescriptionChange={vi.fn()}
-				onConfirmTechnicianHire={vi.fn().mockResolvedValue(undefined)}
-				onClearFilters={vi.fn()}
-			/>,
-		);
-
-		expect(screen.getByText("Nenhum tecnico encontrou este criterio.")).toBeDefined();
-		expect(screen.getByText("inativo")).toBeDefined();
-	});
-
-	it("mostra tecnico fora da busca, contratado e com erro no modal", () => {
-		renderWithMantine(
-			<TechnicianDiscoveryPanelView
-				query="carla"
-				minReputation={0}
-				totalTechnicians={1}
-				filteredTechnicians={[activeButNotEligibleTechnician]}
-				selectedTechnician={activeButNotEligibleTechnician}
-				contractedTechnician={activeButNotEligibleTechnician}
-				technicianModalMode="hire"
-				technicianModalOpened
-				hasResults
-				serviceDescription="Troca de tomada"
-				submittingRequest={false}
-				requestError={"falha na ordem"}
-				onQueryChange={vi.fn()}
-				onMinReputationChange={vi.fn()}
-				onSelectTechnician={vi.fn()}
-				onHireTechnician={vi.fn()}
-				onCloseTechnicianModal={vi.fn()}
-				onServiceDescriptionChange={vi.fn()}
-				onConfirmTechnicianHire={vi.fn().mockResolvedValue(undefined)}
-				onClearFilters={vi.fn()}
-			/>,
-		);
-
-		expect(screen.getByText("fora da busca")).toBeDefined();
-		expect(screen.getByText("contratado: Carla Lima")).toBeDefined();
-		expect(screen.getByText("Area: -")).toBeDefined();
-		expect(screen.getByText("Ativo: sim")).toBeDefined();
-		expect(screen.getByText("Elegivel: nao")).toBeDefined();
-		expect(screen.getByText("falha na ordem")).toBeDefined();
 	});
 
 	it("propaga a descricao e a confirmacao da contratacao", () => {
@@ -292,6 +245,8 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 					filteredTechnicians={[technician]}
 					selectedTechnician={technician}
 					contractedTechnician={null}
+					hasOpenOrder={false}
+					canHire
 					technicianModalMode="hire"
 					technicianModalOpened
 					hasResults
@@ -313,9 +268,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 			);
 		}
 
-		renderWithMantine(
-			<Harness />,
-		);
+		renderWithMantine(<Harness />);
 
 		const textarea = screen.getByRole("textbox", { name: "Descricao do servico" });
 

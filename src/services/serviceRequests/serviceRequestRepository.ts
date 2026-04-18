@@ -3,6 +3,7 @@ import { RepairDAODominioError } from "@/erros/errors";
 import type {
 	ServiceRequestClientAcceptanceInput,
 	ServiceRequestAcceptInput,
+	ServiceRequestCompletionInput,
 	ServiceRequestBudgetInput,
 	ServiceRequestCreateInput,
 	ServiceRequestFilters,
@@ -24,6 +25,7 @@ const STATUS_PRISMA_POR_DOMINIO: Record<ServiceRequestStatus, PrismaStatus> = {
 	aceita: "ACEITA",
 	orcada: "ORCADA",
 	aceito_cliente: "ACEITO_CLIENTE",
+	concluida: "CONCLUIDA",
 };
 
 const STATUS_DOMINIO_POR_PRISMA: Record<PrismaStatus, ServiceRequestStatus> = {
@@ -31,6 +33,7 @@ const STATUS_DOMINIO_POR_PRISMA: Record<PrismaStatus, ServiceRequestStatus> = {
 	ACEITA: "aceita",
 	ORCADA: "orcada",
 	ACEITO_CLIENTE: "aceito_cliente",
+	CONCLUIDA: "concluida",
 };
 
 function toPrismaStatus(status: ServiceRequestStatus): PrismaStatus {
@@ -53,6 +56,7 @@ function toSummary(record: {
 	acceptedAt: Date | null;
 	budgetSentAt: Date | null;
 	clientAcceptedAt: Date | null;
+	completedAt?: Date | null;
 	createdAt: Date;
 	updatedAt: Date;
 }): ServiceRequestSummary {
@@ -70,6 +74,7 @@ function toSummary(record: {
 		clientAcceptedAt: record.clientAcceptedAt ? record.clientAcceptedAt.toISOString() : null,
 		createdAt: record.createdAt.toISOString(),
 		updatedAt: record.updatedAt.toISOString(),
+		...(record.completedAt ? { completedAt: record.completedAt.toISOString() } : {}),
 	};
 }
 
@@ -130,6 +135,10 @@ export async function acceptServiceRequest(input: ServiceRequestAcceptInput): Pr
 		throw new RepairDAODominioError("tecnico_invalido", "A ordem de servico nao pertence a este tecnico.");
 	}
 
+	if (record.status !== "ABERTA" && record.status !== "ACEITA") {
+		throw new RepairDAODominioError("ordem_nao_apta", "A ordem precisa estar aberta para receber o orcamento.");
+	}
+
 	const updated = await prisma.serviceRequest.update({
 		where: { id },
 		data: {
@@ -156,6 +165,10 @@ export async function sendServiceBudget(input: ServiceRequestBudgetInput): Promi
 
 	if (record.technicianAddress !== technicianAddress) {
 		throw new RepairDAODominioError("tecnico_invalido", "A ordem de servico nao pertence a este tecnico.");
+	}
+
+	if (record.status !== "ABERTA" && record.status !== "ACEITA") {
+		throw new RepairDAODominioError("ordem_nao_apta", "A ordem precisa estar aberta para receber o orcamento.");
 	}
 
 	const updated = await prisma.serviceRequest.update({
@@ -195,6 +208,37 @@ export async function acceptServiceBudget(input: ServiceRequestClientAcceptanceI
 		data: {
 			status: "ACEITO_CLIENTE",
 			clientAcceptedAt: new Date(),
+		},
+	});
+
+	return toSummary({
+		...updated,
+		status: updated.status as PrismaStatus,
+	});
+}
+
+export async function completeServiceRequest(input: ServiceRequestCompletionInput): Promise<ServiceRequestSummary> {
+	const id = validateServiceRequestIdentifier(input.id);
+	const technicianAddress = validateServiceRequestAddress(input.technicianAddress, "identificador do tecnico");
+	const record = await findServiceRequest(id);
+
+	if (!record) {
+		throw new RepairDAODominioError("ordem_nao_encontrada", "A ordem de servico nao foi encontrada.");
+	}
+
+	if (record.technicianAddress !== technicianAddress) {
+		throw new RepairDAODominioError("tecnico_invalido", "A ordem de servico nao pertence a este tecnico.");
+	}
+
+	if (record.status !== "ACEITO_CLIENTE") {
+		throw new RepairDAODominioError("ordem_nao_pronta", "A ordem precisa estar aceita pelo cliente antes da conclusao.");
+	}
+
+	const updated = await prisma.serviceRequest.update({
+		where: { id },
+		data: {
+			status: "CONCLUIDA",
+			completedAt: new Date(),
 		},
 	});
 

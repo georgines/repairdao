@@ -2,6 +2,7 @@ export {
 	acceptServiceBudget,
 	acceptServiceRequest,
 	createServiceRequest,
+	completeServiceRequest,
 	listServiceRequests,
 	sendServiceBudget,
 } from "@/services/serviceRequests/serviceRequestRepository";
@@ -10,6 +11,7 @@ export type {
 	ServiceRequestAcceptInput,
 	ServiceRequestBudgetInput,
 	ServiceRequestCreateInput,
+	ServiceRequestCompletionInput,
 	ServiceRequestFilters,
 	ServiceRequestStatus,
 	ServiceRequestSummary,

@@ -6,6 +6,12 @@ vi.mock("next/navigation", () => ({
 	usePathname: () => "/",
 }));
 
+vi.mock("@/hooks/useAccountProfile", () => ({
+	useAccountProfile: () => ({
+		perfilAtivo: "cliente",
+	}),
+}));
+
 describe("components/ui/AppShell/AppShell", () => {
 	it("envolve o conteudo no shell global", () => {
 		const markup = renderToStaticMarkup(

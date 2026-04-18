@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AppShell, NavLink, ScrollArea, Stack } from "@mantine/core";
+import { useAccountProfile } from "@/hooks/useAccountProfile";
 
 const menuItems = [
   { label: "Home", href: "/" },
   { label: "Minha conta", href: "/account" },
 	{ label: "Loja", href: "/store" },
 	{ label: "Elegibilidade", href: "/eligibility" },
-	{ label: "Servicos", href: "/services" },
-	{ label: "Tecnicos", href: "/technicians" },
+	{ label: "Servicos", href: "/services", visibleFor: "tecnico" },
+	{ label: "Tecnicos", href: "/technicians", visibleFor: "cliente" },
 ];
 
 type NavBarProps = {
@@ -19,12 +20,17 @@ type NavBarProps = {
 
 export function NavBar({ onNavigate }: NavBarProps) {
 	const pathname = usePathname();
+	const { perfilAtivo } = useAccountProfile();
 
 	return (
 		<Stack h="100%" gap="sm" p="md">
 			<AppShell.Section grow component={ScrollArea}>
 				<Stack gap={4}>
 					{menuItems.map((item) => {
+						if ("visibleFor" in item && item.visibleFor !== perfilAtivo) {
+							return null;
+						}
+
 						const active = item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
 						return (

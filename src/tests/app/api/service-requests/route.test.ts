@@ -9,6 +9,7 @@ const serviceMocks = vi.hoisted(() => ({
 	acceptServiceRequest: vi.fn(),
 	sendServiceBudget: vi.fn(),
 	acceptServiceBudget: vi.fn(),
+	completeServiceRequest: vi.fn(),
 }));
 
 vi.mock("@/services/serviceRequests/serviceRequestRepository", () => ({
@@ -17,6 +18,7 @@ vi.mock("@/services/serviceRequests/serviceRequestRepository", () => ({
 	acceptServiceRequest: serviceMocks.acceptServiceRequest,
 	sendServiceBudget: serviceMocks.sendServiceBudget,
 	acceptServiceBudget: serviceMocks.acceptServiceBudget,
+	completeServiceRequest: serviceMocks.completeServiceRequest,
 }));
 
 import { GET, PATCH, POST } from "@/app/api/service-requests/route";
@@ -226,6 +228,43 @@ describe("/api/service-requests", () => {
 		});
 	});
 
+	it("conclui a ordem pelo tecnico", async () => {
+		serviceMocks.completeServiceRequest.mockResolvedValue({
+			id: 2,
+			clientAddress: "0xcliente",
+			clientName: "Cliente",
+			technicianAddress: "0xtec",
+			technicianName: "Tecnico",
+			description: "Servico",
+			status: "concluida",
+			budgetAmount: 240,
+			acceptedAt: "2026-04-17T10:00:00.000Z",
+			budgetSentAt: "2026-04-17T11:00:00.000Z",
+			clientAcceptedAt: "2026-04-17T12:00:00.000Z",
+			completedAt: "2026-04-17T13:00:00.000Z",
+			createdAt: "2026-04-17T10:00:00.000Z",
+			updatedAt: "2026-04-17T13:00:00.000Z",
+		});
+
+		const response = await PATCH(
+			new Request("http://localhost/api/service-requests", {
+				method: "PATCH",
+				body: JSON.stringify({
+					action: "complete",
+					id: 2,
+					technicianAddress: "0xtec",
+				}),
+			}),
+		);
+
+		expect(response.status).toBe(200);
+		expect(serviceMocks.completeServiceRequest).toHaveBeenCalledWith({
+			action: "complete",
+			id: 2,
+			technicianAddress: "0xtec",
+		});
+	});
+
 	it("retorna 400 quando a consulta falha com erro de dominio", async () => {
 		serviceMocks.listServiceRequests.mockRejectedValue(
 			new RepairDAODominioError("ordem_nao_encontrada", "A ordem de servico nao foi encontrada."),
@@ -325,5 +364,24 @@ describe("/api/service-requests", () => {
 
 		expect(response.status).toBe(500);
 		expect(body).toMatchObject({ message: "falha inesperada" });
+	});
+
+	it("retorna 500 quando a conclusao falha com valor nao tipado", async () => {
+		serviceMocks.completeServiceRequest.mockRejectedValue("falha bruta");
+
+		const response = await PATCH(
+			new Request("http://localhost/api/service-requests", {
+				method: "PATCH",
+				body: JSON.stringify({
+					action: "complete",
+					id: 2,
+					technicianAddress: "0xtec",
+				}),
+			}),
+		);
+		const body = await response.json();
+
+		expect(response.status).toBe(500);
+		expect(body).toMatchObject({ message: "Falha ao processar a ordem de servico." });
 	});
 });

@@ -34,6 +34,8 @@ describe("escrowGateway", () => {
 
     await expect(gateway.criarOrdem({ descricao: "troca de pneu", cliente: "0xcliente" })).resolves.toBe("0xdef");
     await expect(gateway.enviarOrcamento({ ordemId: 1, tecnico: "0xtec", valor: 120 })).resolves.toBe("0xdef");
+    await expect(gateway.concluirOrdem({ ordemId: 1, tecnico: "0xtec" })).resolves.toBe("0xdef");
+    await expect(gateway.avaliarServico({ ordemId: 1, nota: 5 })).resolves.toBe("0xdef");
     await expect(gateway.abrirDisputa({ ordemId: 1, autor: "0xcliente", motivo: "falha" })).resolves.toBe("0xdef");
     await expect(gateway.buscarOrdem(1)).resolves.toEqual({
       id: 1,
@@ -50,7 +52,7 @@ describe("escrowGateway", () => {
       motivo: "falha",
     });
 
-    expect(contractClient.writeContract).toHaveBeenCalledTimes(3);
+    expect(contractClient.writeContract).toHaveBeenCalledTimes(5);
     expect(contractClient.readContract).toHaveBeenCalledTimes(2);
   });
 

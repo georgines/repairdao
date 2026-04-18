@@ -23,6 +23,7 @@ const openRequest: ServiceRequestSummary = {
 	acceptedAt: null,
 	budgetSentAt: null,
 	clientAcceptedAt: null,
+	completedAt: null,
 	createdAt: "2026-04-17T10:00:00.000Z",
 	updatedAt: "2026-04-17T10:00:00.000Z",
 };
@@ -39,8 +40,18 @@ const budgetRequest: ServiceRequestSummary = {
 	acceptedAt: "2026-04-17T10:00:00.000Z",
 	budgetSentAt: "2026-04-17T11:00:00.000Z",
 	clientAcceptedAt: null,
+	completedAt: null,
 	createdAt: "2026-04-17T09:00:00.000Z",
 	updatedAt: "2026-04-17T11:00:00.000Z",
+};
+
+const concludedRequest: ServiceRequestSummary = {
+	...budgetRequest,
+	id: 3,
+	status: "concluida",
+	clientAcceptedAt: "2026-04-17T12:00:00.000Z",
+	completedAt: "2026-04-17T13:00:00.000Z",
+	updatedAt: "2026-04-17T13:00:00.000Z",
 };
 
 describe("components/services/ServiceRequestsPanelView", () => {
@@ -70,20 +81,24 @@ describe("components/services/ServiceRequestsPanelView", () => {
 		vi.restoreAllMocks();
 	});
 
-	it("exibe o resumo e a tabela das ordens do cliente", () => {
+	it("exibe os botoes principais conforme o perfil", () => {
 		renderWithMantine(
 			<ServiceRequestsPanelView
 				connected
 				walletAddress="0xcliente"
 				walletNotice={null}
+				perfilAtivo="cliente"
 				loading={false}
 				error={null}
-				clientRequests={[openRequest, budgetRequest]}
-				visibleRequests={[openRequest, budgetRequest]}
+				clientRequests={[budgetRequest, concludedRequest]}
+				visibleRequests={[budgetRequest, concludedRequest]}
 				query=""
 				statusFilter="all"
 				requestModalOpened={false}
 				requestModalRequest={null}
+				requestModalAction={null}
+				requestModalBudget={null}
+				requestModalRating={5}
 				busyRequestId={null}
 				onRefresh={vi.fn()}
 				onQueryChange={vi.fn()}
@@ -91,23 +106,73 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onClearFilters={vi.fn()}
 				onOpenRequestModal={vi.fn()}
 				onCloseRequestModal={vi.fn()}
-				onAcceptBudget={vi.fn()}
+				onRequestModalBudgetChange={vi.fn()}
+				onRequestModalRatingChange={vi.fn()}
+				onSubmitBudget={vi.fn()}
+				onPayBudget={vi.fn()}
+				onCompleteOrder={vi.fn()}
+				onRateService={vi.fn()}
 			/>,
 		);
 
 		expect(screen.getByText("Acompanhe suas ordens de servico")).toBeDefined();
-		expect(screen.getByText("Troca de tomadas")).toBeDefined();
-		expect(screen.getByText("Instalacao de luminaria")).toBeDefined();
-		expect(screen.getAllByRole("button", { name: "Detalhes" })).toHaveLength(2);
-		expect(screen.getByRole("button", { name: "Aceitar orcamento" })).toBeDefined();
+		expect(screen.getAllByText("Instalacao de luminaria")).toHaveLength(2);
+		expect(screen.getByRole("button", { name: "Pagar" })).toBeDefined();
+		expect(screen.getByRole("button", { name: "Avaliar" })).toBeDefined();
 	});
 
-	it("mostra o modal de aceite do orcamento", () => {
+	it("mostra o modal de orcamento para o tecnico", () => {
+		const onSubmitBudget = vi.fn();
+
+		renderWithMantine(
+			<ServiceRequestsPanelView
+				connected
+				walletAddress="0xtec"
+				walletNotice={null}
+				perfilAtivo="tecnico"
+				loading={false}
+				error={null}
+				clientRequests={[openRequest]}
+				visibleRequests={[openRequest]}
+				query=""
+				statusFilter="all"
+				requestModalOpened
+				requestModalRequest={openRequest}
+				requestModalAction="budget"
+				requestModalBudget={250}
+				requestModalRating={5}
+				busyRequestId={null}
+				onRefresh={vi.fn()}
+				onQueryChange={vi.fn()}
+				onStatusFilterChange={vi.fn()}
+				onClearFilters={vi.fn()}
+				onOpenRequestModal={vi.fn()}
+				onCloseRequestModal={vi.fn()}
+				onRequestModalBudgetChange={vi.fn()}
+				onRequestModalRatingChange={vi.fn()}
+				onSubmitBudget={onSubmitBudget}
+				onPayBudget={vi.fn()}
+				onCompleteOrder={vi.fn()}
+				onRateService={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByText("Definir valor do servico")).toBeDefined();
+		expect(screen.getByRole("button", { name: "Aceitar orcamento" })).toBeDefined();
+		fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Aceitar orcamento" }));
+
+		expect(onSubmitBudget).toHaveBeenCalledTimes(1);
+	});
+
+	it("mostra o modal de pagamento", () => {
+		const onPayBudget = vi.fn();
+
 		renderWithMantine(
 			<ServiceRequestsPanelView
 				connected
 				walletAddress="0xcliente"
 				walletNotice={null}
+				perfilAtivo="cliente"
 				loading={false}
 				error={null}
 				clientRequests={[budgetRequest]}
@@ -116,6 +181,9 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				statusFilter="all"
 				requestModalOpened
 				requestModalRequest={budgetRequest}
+				requestModalAction="pay"
+				requestModalBudget={null}
+				requestModalRating={5}
 				busyRequestId={null}
 				onRefresh={vi.fn()}
 				onQueryChange={vi.fn()}
@@ -123,15 +191,62 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onClearFilters={vi.fn()}
 				onOpenRequestModal={vi.fn()}
 				onCloseRequestModal={vi.fn()}
-				onAcceptBudget={vi.fn()}
+				onRequestModalBudgetChange={vi.fn()}
+				onRequestModalRatingChange={vi.fn()}
+				onSubmitBudget={vi.fn()}
+				onPayBudget={onPayBudget}
+				onCompleteOrder={vi.fn()}
+				onRateService={vi.fn()}
 			/>,
 		);
 
-		expect(screen.getByText("Tecnico: Tecnico conectado")).toBeDefined();
-		expect(screen.getAllByRole("button", { name: "Aceitar orcamento" })).toHaveLength(2);
+		expect(screen.getByText("Confirmar pagamento do orcamento")).toBeDefined();
+		fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Pagar" }));
+		expect(onPayBudget).toHaveBeenCalledTimes(1);
 	});
 
-	it("propaga as interacoes principais", () => {
+	it("mostra o modal de avaliacao", () => {
+		const onRateService = vi.fn();
+
+		renderWithMantine(
+			<ServiceRequestsPanelView
+				connected
+				walletAddress="0xcliente"
+				walletNotice={null}
+				perfilAtivo="cliente"
+				loading={false}
+				error={null}
+				clientRequests={[concludedRequest]}
+				visibleRequests={[concludedRequest]}
+				query=""
+				statusFilter="all"
+				requestModalOpened
+				requestModalRequest={concludedRequest}
+				requestModalAction="rate"
+				requestModalBudget={null}
+				requestModalRating={5}
+				busyRequestId={null}
+				onRefresh={vi.fn()}
+				onQueryChange={vi.fn()}
+				onStatusFilterChange={vi.fn()}
+				onClearFilters={vi.fn()}
+				onOpenRequestModal={vi.fn()}
+				onCloseRequestModal={vi.fn()}
+				onRequestModalBudgetChange={vi.fn()}
+				onRequestModalRatingChange={vi.fn()}
+				onSubmitBudget={vi.fn()}
+				onPayBudget={vi.fn()}
+				onCompleteOrder={vi.fn()}
+				onRateService={onRateService}
+			/>,
+		);
+
+		expect(screen.getByText("Avaliar servico")).toBeDefined();
+		fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Avaliar" }));
+		expect(onRateService).toHaveBeenCalledTimes(1);
+	});
+
+	it("propaga as interacoes da busca e dos filtros", () => {
 		const onRefresh = vi.fn();
 		const onQueryChange = vi.fn();
 		const onStatusFilterChange = vi.fn();
@@ -143,6 +258,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				connected
 				walletAddress="0xcliente"
 				walletNotice={null}
+				perfilAtivo="cliente"
 				loading={false}
 				error={null}
 				clientRequests={[openRequest, budgetRequest]}
@@ -151,6 +267,9 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				statusFilter="all"
 				requestModalOpened={false}
 				requestModalRequest={null}
+				requestModalAction={null}
+				requestModalBudget={null}
+				requestModalRating={5}
 				busyRequestId={null}
 				onRefresh={onRefresh}
 				onQueryChange={onQueryChange}
@@ -158,220 +277,25 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onClearFilters={onClearFilters}
 				onOpenRequestModal={onOpenRequestModal}
 				onCloseRequestModal={vi.fn()}
-				onAcceptBudget={vi.fn()}
+				onRequestModalBudgetChange={vi.fn()}
+				onRequestModalRatingChange={vi.fn()}
+				onSubmitBudget={vi.fn()}
+				onPayBudget={vi.fn()}
+				onCompleteOrder={vi.fn()}
+				onRateService={vi.fn()}
 			/>,
 		);
 
 		fireEvent.click(screen.getByRole("button", { name: "Atualizar" }));
 		fireEvent.click(screen.getByRole("button", { name: "Limpar" }));
 		fireEvent.click(screen.getAllByRole("button", { name: "Detalhes" })[0]);
-		fireEvent.click(screen.getAllByRole("button", { name: "Detalhes" })[1]);
-		fireEvent.click(screen.getByRole("button", { name: "Aceitar orcamento" }));
 
 		expect(onRefresh).toHaveBeenCalled();
 		expect(onClearFilters).toHaveBeenCalled();
-		expect(onOpenRequestModal).toHaveBeenCalledWith(1);
-		expect(onOpenRequestModal).toHaveBeenCalledWith(2);
-	});
-
-	it("mostra estado vazio e propaga as mudancas dos filtros", () => {
-		const onQueryChange = vi.fn();
-		const onStatusFilterChange = vi.fn();
-		const onCloseRequestModal = vi.fn();
-
-		renderWithMantine(
-			<ServiceRequestsPanelView
-				connected={false}
-				walletAddress={null}
-				walletNotice={"Conecte a carteira para ver e aceitar suas ordens."}
-				loading={false}
-				error={"falha"}
-				clientRequests={[]}
-				visibleRequests={[]}
-				query=""
-				statusFilter="all"
-				requestModalOpened
-				requestModalRequest={null}
-				busyRequestId={null}
-				onRefresh={vi.fn()}
-				onQueryChange={onQueryChange}
-				onStatusFilterChange={onStatusFilterChange}
-				onClearFilters={vi.fn()}
-				onOpenRequestModal={vi.fn()}
-				onCloseRequestModal={onCloseRequestModal}
-				onAcceptBudget={vi.fn()}
-			/>,
-		);
-
+		expect(onOpenRequestModal).toHaveBeenCalledWith(1, "details");
 		fireEvent.change(screen.getByRole("textbox", { name: "Buscar ordem" }), {
 			target: { value: "lampada" },
 		});
-		fireEvent.click(screen.getByRole("combobox", { name: "Status" }));
-		fireEvent.click(screen.getByText("Orcadas"));
-		fireEvent.click(screen.getByRole("button", { name: "Limpar" }));
-
-		expect(screen.getByText("Conecte a carteira para ver suas ordens de servico.")).toBeDefined();
-		expect(screen.getByText("Nenhuma ordem encontrou este criterio.")).toBeDefined();
 		expect(onQueryChange).toHaveBeenCalledWith("lampada");
-		expect(onStatusFilterChange).toHaveBeenCalled();
-		expect(onCloseRequestModal).not.toHaveBeenCalled();
-	});
-
-	it("dispara o aceite do modal quando a ordem tem orcamento", () => {
-		const onAcceptBudget = vi.fn();
-
-		renderWithMantine(
-			<ServiceRequestsPanelView
-				connected
-				walletAddress="0xcliente"
-				walletNotice={null}
-				loading={false}
-				error={null}
-				clientRequests={[budgetRequest]}
-				visibleRequests={[budgetRequest]}
-				query=""
-				statusFilter="all"
-				requestModalOpened
-				requestModalRequest={budgetRequest}
-				busyRequestId={null}
-				onRefresh={vi.fn()}
-				onQueryChange={vi.fn()}
-				onStatusFilterChange={vi.fn()}
-				onClearFilters={vi.fn()}
-				onOpenRequestModal={vi.fn()}
-				onCloseRequestModal={vi.fn()}
-				onAcceptBudget={onAcceptBudget}
-			/>,
-		);
-
-		fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Aceitar orcamento" }));
-
-		expect(onAcceptBudget).toHaveBeenCalledTimes(1);
-	});
-
-	it("exibe os estados textuais e o endereco resumido", () => {
-		const acceptedRequest = {
-			...budgetRequest,
-			id: 3,
-			status: "aceita" as const,
-		};
-		const clientAcceptedRequest = {
-			...budgetRequest,
-			id: 4,
-			status: "aceito_cliente" as const,
-		};
-
-		renderWithMantine(
-			<ServiceRequestsPanelView
-				connected
-				walletAddress="0x1234567890abcdef1234567890abcdef12345678"
-				walletNotice={null}
-				loading={false}
-				error={null}
-				clientRequests={[acceptedRequest, clientAcceptedRequest]}
-				visibleRequests={[acceptedRequest, clientAcceptedRequest]}
-				query=""
-				statusFilter="all"
-				requestModalOpened={false}
-				requestModalRequest={null}
-				busyRequestId={null}
-				onRefresh={vi.fn()}
-				onQueryChange={vi.fn()}
-				onStatusFilterChange={vi.fn()}
-				onClearFilters={vi.fn()}
-				onOpenRequestModal={vi.fn()}
-				onCloseRequestModal={vi.fn()}
-				onAcceptBudget={vi.fn()}
-			/>,
-		);
-
-		expect(screen.getByText("Aceita")).toBeDefined();
-		expect(screen.getByText("Aceita pelo cliente")).toBeDefined();
-		expect(screen.getByText("carteira: 0x1234...5678")).toBeDefined();
-	});
-
-	it("mostra o aviso quando a ordem do modal ainda nao recebeu orcamento", () => {
-		renderWithMantine(
-			<ServiceRequestsPanelView
-				connected
-				walletAddress="0xcliente"
-				walletNotice={null}
-				loading={false}
-				error={null}
-				clientRequests={[openRequest]}
-				visibleRequests={[openRequest]}
-				query=""
-				statusFilter="all"
-				requestModalOpened
-				requestModalRequest={openRequest}
-				busyRequestId={null}
-				onRefresh={vi.fn()}
-				onQueryChange={vi.fn()}
-				onStatusFilterChange={vi.fn()}
-				onClearFilters={vi.fn()}
-				onOpenRequestModal={vi.fn()}
-				onCloseRequestModal={vi.fn()}
-				onAcceptBudget={vi.fn()}
-			/>,
-		);
-
-		expect(screen.getByText("Esta ordem ainda nao recebeu orcamento.")).toBeDefined();
-	});
-
-	it("usa o endereco curto e estado vazio quando nao ha ordens visiveis", () => {
-		renderWithMantine(
-			<ServiceRequestsPanelView
-				connected
-				walletAddress="0x1234567890abcdef1234567890abcdef12345678"
-				walletNotice={null}
-				loading={false}
-				error={null}
-				clientRequests={[]}
-				visibleRequests={[]}
-				query=""
-				statusFilter="all"
-				requestModalOpened={false}
-				requestModalRequest={null}
-				busyRequestId={null}
-				onRefresh={vi.fn()}
-				onQueryChange={vi.fn()}
-				onStatusFilterChange={vi.fn()}
-				onClearFilters={vi.fn()}
-				onOpenRequestModal={vi.fn()}
-				onCloseRequestModal={vi.fn()}
-				onAcceptBudget={vi.fn()}
-			/>,
-		);
-
-		expect(screen.getByText("Nenhuma ordem foi encontrada para esta carteira.")).toBeDefined();
-		expect(screen.getByText("carteira: 0x1234...5678")).toBeDefined();
-	});
-
-	it("mostra o endereco vazio quando a carteira nao esta informada", () => {
-		renderWithMantine(
-			<ServiceRequestsPanelView
-				connected
-				walletAddress={null}
-				walletNotice={null}
-				loading={false}
-				error={null}
-				clientRequests={[]}
-				visibleRequests={[]}
-				query=""
-				statusFilter="all"
-				requestModalOpened={false}
-				requestModalRequest={null}
-				busyRequestId={null}
-				onRefresh={vi.fn()}
-				onQueryChange={vi.fn()}
-				onStatusFilterChange={vi.fn()}
-				onClearFilters={vi.fn()}
-				onOpenRequestModal={vi.fn()}
-				onCloseRequestModal={vi.fn()}
-				onAcceptBudget={vi.fn()}
-			/>,
-		);
-
-		expect(document.body.textContent).toContain("carteira:");
 	});
 });

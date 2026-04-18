@@ -24,6 +24,7 @@ enum ServiceRequestStatus {
   ACEITA
   ORCADA
   ACEITO_CLIENTE
+  CONCLUIDA
 }
 
 model UserProfile {
@@ -69,6 +70,7 @@ model ServiceRequest {
   acceptedAt        DateTime?
   budgetSentAt      DateTime?
   clientAcceptedAt  DateTime?
+  completedAt       DateTime?
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
 

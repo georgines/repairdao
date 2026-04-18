@@ -6,6 +6,8 @@ describe("repairdaoBlockchain", () => {
     const gateway = {
       criarOrdem: vi.fn(),
       enviarOrcamento: vi.fn(),
+      concluirOrdem: vi.fn(),
+      avaliarServico: vi.fn(),
       abrirDisputa: vi.fn(),
       buscarOrdem: vi.fn(),
       buscarDisputa: vi.fn(),
@@ -24,14 +26,16 @@ describe("repairdaoBlockchain", () => {
     expect(gateway.criarOrdem).not.toHaveBeenCalled();
   });
 
-  it("bloqueia enviar orcamento e abrir disputa em contextos invalidos", async () => {
-    const gateway = {
-      criarOrdem: vi.fn(),
-      enviarOrcamento: vi.fn(),
-      abrirDisputa: vi.fn(),
-      buscarOrdem: vi.fn(),
-      buscarDisputa: vi.fn(),
-    };
+	it("bloqueia enviar orcamento e abrir disputa em contextos invalidos", async () => {
+		const gateway = {
+			criarOrdem: vi.fn(),
+			enviarOrcamento: vi.fn(),
+			concluirOrdem: vi.fn(),
+			avaliarServico: vi.fn(),
+			abrirDisputa: vi.fn(),
+			buscarOrdem: vi.fn(),
+			buscarDisputa: vi.fn(),
+		};
 
     const blockchain = criarRepairDAOBlockchain(gateway);
 
@@ -44,27 +48,30 @@ describe("repairdaoBlockchain", () => {
       }),
     ).rejects.toThrow(/nao e permitida/i);
 
-    await expect(
-      blockchain.abrirDisputa({
-        contexto: { papel: "outsider", depositoAtivo: true },
+		await expect(
+			blockchain.abrirDisputa({
+				contexto: { papel: "outsider", depositoAtivo: true },
         ordemId: 10,
         autor: "0xoutsider",
         motivo: "falha",
       }),
     ).rejects.toThrow(/nao e permitida/i);
 
-    expect(gateway.enviarOrcamento).not.toHaveBeenCalled();
-    expect(gateway.abrirDisputa).not.toHaveBeenCalled();
-  });
+		expect(gateway.enviarOrcamento).not.toHaveBeenCalled();
+		expect(gateway.concluirOrdem).not.toHaveBeenCalled();
+		expect(gateway.abrirDisputa).not.toHaveBeenCalled();
+	});
 
-  it("cria ordem e envia orcamento depois de validar regras", async () => {
-    const gateway = {
-      criarOrdem: vi.fn().mockResolvedValue({ hash: "0x1" }),
-      enviarOrcamento: vi.fn().mockResolvedValue({ hash: "0x2" }),
-      abrirDisputa: vi.fn(),
-      buscarOrdem: vi.fn(),
-      buscarDisputa: vi.fn(),
-    };
+	it("cria ordem e envia orcamento depois de validar regras", async () => {
+		const gateway = {
+			criarOrdem: vi.fn().mockResolvedValue({ hash: "0x1" }),
+			enviarOrcamento: vi.fn().mockResolvedValue({ hash: "0x2" }),
+			concluirOrdem: vi.fn().mockResolvedValue({ hash: "0x3" }),
+			avaliarServico: vi.fn(),
+			abrirDisputa: vi.fn(),
+			buscarOrdem: vi.fn(),
+			buscarDisputa: vi.fn(),
+		};
 
     const blockchain = criarRepairDAOBlockchain(gateway);
 
@@ -95,12 +102,27 @@ describe("repairdaoBlockchain", () => {
       tecnico: "0xtecnico",
       valor: 250,
     });
+
+    await expect(
+      blockchain.concluirOrdem({
+        contexto: { papel: "tecnico", depositoAtivo: true },
+        ordemId: 10,
+        tecnico: "0xtecnico",
+      }),
+    ).resolves.toEqual({ hash: "0x3" });
+
+    expect(gateway.concluirOrdem).toHaveBeenCalledWith({
+      ordemId: 10,
+      tecnico: "0xtecnico",
+    });
   });
 
   it("abre disputa e retorna nulo quando nao existe entidade no contrato", async () => {
     const gateway = {
       criarOrdem: vi.fn(),
       enviarOrcamento: vi.fn(),
+      concluirOrdem: vi.fn(),
+      avaliarServico: vi.fn(),
       abrirDisputa: vi.fn().mockResolvedValue({ hash: "0x3" }),
       buscarOrdem: vi.fn().mockResolvedValue(null),
       buscarDisputa: vi.fn().mockResolvedValue(null),
@@ -131,6 +153,8 @@ describe("repairdaoBlockchain", () => {
     const gateway = {
       criarOrdem: vi.fn(),
       enviarOrcamento: vi.fn(),
+      concluirOrdem: vi.fn(),
+      avaliarServico: vi.fn(),
       abrirDisputa: vi.fn(),
       buscarOrdem: vi.fn().mockResolvedValue({
         id: 4,

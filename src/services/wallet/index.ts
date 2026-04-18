@@ -3,6 +3,7 @@ export {
 	formatarEnderecoCurto,
 	formatarNumero,
 	formatarNumeroCompleto,
+	formatarRPT,
 	formatarUSD,
 	normalizarPrecoEthUsd,
 } from "@/services/wallet/formatters";

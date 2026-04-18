@@ -82,6 +82,22 @@ export function formatarUSD(valor: string) {
 	}).format(numero);
 }
 
+export function formatarRPT(valor: string | number, casasDecimais = 2) {
+	const numero = Number(valor);
+
+	if (!Number.isFinite(numero)) {
+		return `RPT ${new Intl.NumberFormat("pt-BR", {
+			minimumFractionDigits: casasDecimais,
+			maximumFractionDigits: casasDecimais,
+		}).format(0)}`;
+	}
+
+	return `RPT ${new Intl.NumberFormat("pt-BR", {
+		minimumFractionDigits: casasDecimais,
+		maximumFractionDigits: casasDecimais,
+	}).format(numero)}`;
+}
+
 export function normalizarPrecoEthUsd(valor: bigint | number | string) {
 	const numero = Number(valor);
 

@@ -7,6 +7,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { UserSummary } from "@/services/users";
 import { useTechnicianDiscoveryPanel } from "@/hooks/useTechnicianDiscoveryPanel";
 
+const accountProfile = vi.hoisted(() => ({
+	perfilAtivo: "cliente" as "cliente" | "tecnico" | null,
+}));
+
 const walletMocks = vi.hoisted(() => ({
 	state: {
 		connected: true,
@@ -17,6 +21,12 @@ const walletMocks = vi.hoisted(() => ({
 vi.mock("@/hooks/useWalletStatus", () => ({
 	useWalletStatus: () => ({
 		state: walletMocks.state,
+	}),
+}));
+
+vi.mock("@/hooks/useAccountProfile", () => ({
+	useAccountProfile: () => ({
+		perfilAtivo: accountProfile.perfilAtivo,
 	}),
 }));
 
@@ -37,9 +47,12 @@ const serviceMocks = vi.hoisted(() => ({
 		budgetAmount: null,
 		acceptedAt: null,
 		budgetSentAt: null,
+		clientAcceptedAt: null,
+		completedAt: null,
 		createdAt: "2026-04-17T10:00:00.000Z",
 		updatedAt: "2026-04-17T10:00:00.000Z",
 	}),
+	loadServiceRequests: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("@/services/serviceRequests/serviceRequestBlockchain", () => ({
@@ -48,6 +61,7 @@ vi.mock("@/services/serviceRequests/serviceRequestBlockchain", () => ({
 
 vi.mock("@/services/serviceRequests/serviceRequestClient", () => ({
 	createServiceRequest: serviceMocks.createServiceRequest,
+	loadServiceRequests: serviceMocks.loadServiceRequests,
 }));
 
 const initialTechnicians: UserSummary[] = [
@@ -101,7 +115,7 @@ describe("useTechnicianDiscoveryPanel", () => {
 		return capture.mock.calls.at(-1)?.[0];
 	}
 
-beforeEach(() => {
+	beforeEach(() => {
 		(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 		container = document.createElement("div");
 		document.body.appendChild(container);
@@ -111,6 +125,8 @@ beforeEach(() => {
 			connected: true,
 			address: "0xcliente",
 		};
+		accountProfile.perfilAtivo = "cliente";
+		serviceMocks.loadServiceRequests.mockResolvedValue([]);
 	});
 
 	afterEach(async () => {
@@ -131,6 +147,7 @@ beforeEach(() => {
 		expect(getLatest()?.filteredTechnicians).toHaveLength(2);
 		expect(getLatest()?.selectedTechnician?.name).toBe("Bruno Silva");
 		expect(getLatest()?.technicianModalOpened).toBe(false);
+		expect(getLatest()?.canHire).toBe(true);
 	});
 
 	it("filtra por texto e reputacao", async () => {
@@ -186,6 +203,8 @@ beforeEach(() => {
 		});
 
 		expect(getLatest()?.contractedTechnician?.address).toBe("0xaaa");
+		expect(getLatest()?.hasOpenOrder).toBe(true);
+		expect(getLatest()?.canHire).toBe(false);
 		expect(getLatest()?.technicianModalMode).toBeNull();
 		expect(getLatest()?.technicianModalOpened).toBe(false);
 		expect(getLatest()?.serviceDescription).toBe("");
@@ -226,6 +245,35 @@ beforeEach(() => {
 		expect(getLatest()?.selectedTechnician).toBeNull();
 		expect(getLatest()?.minReputation).toBe(0);
 		expect(getLatest()?.hasResults).toBe(false);
+	});
+
+	it("impede contratar quando o cliente ja possui uma ordem aberta", async () => {
+		serviceMocks.loadServiceRequests.mockResolvedValueOnce([
+			{
+				id: 99,
+				clientAddress: "0xcliente",
+				clientName: "Cliente",
+				technicianAddress: "0xbbb",
+				technicianName: "Bruno Silva",
+				description: "Ordem aberta",
+				status: "aberta",
+				budgetAmount: null,
+				acceptedAt: null,
+				budgetSentAt: null,
+				clientAcceptedAt: null,
+				completedAt: null,
+				createdAt: "2026-04-17T08:00:00.000Z",
+				updatedAt: "2026-04-17T08:00:00.000Z",
+			},
+		]);
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		expect(getLatest()?.hasOpenOrder).toBe(true);
+		expect(getLatest()?.canHire).toBe(false);
 	});
 
 	it("bloqueia a contratacao quando a carteira nao esta conectada", async () => {

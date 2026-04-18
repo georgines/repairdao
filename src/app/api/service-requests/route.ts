@@ -4,12 +4,14 @@ import {
 	acceptServiceBudget,
 	acceptServiceRequest,
 	createServiceRequest,
+	completeServiceRequest,
 	listServiceRequests,
 	sendServiceBudget,
 } from "@/services/serviceRequests/serviceRequestRepository";
 import type {
 	ServiceRequestClientAcceptanceInput,
 	ServiceRequestAcceptInput,
+	ServiceRequestCompletionInput,
 	ServiceRequestBudgetInput,
 	ServiceRequestCreateInput,
 } from "@/services/serviceRequests/serviceRequestTypes";
@@ -66,7 +68,8 @@ export async function PATCH(request: Request) {
 		const payload = (await request.json()) as
 			| (ServiceRequestAcceptInput & { action: "accept" })
 			| (ServiceRequestClientAcceptanceInput & { action: "accept_budget" })
-			| (ServiceRequestBudgetInput & { action: "budget" });
+			| (ServiceRequestBudgetInput & { action: "budget" })
+			| (ServiceRequestCompletionInput & { action: "complete" });
 
 		if (payload.action === "accept") {
 			const requestOrder = await acceptServiceRequest(payload);
@@ -75,6 +78,11 @@ export async function PATCH(request: Request) {
 
 		if (payload.action === "accept_budget") {
 			const requestOrder = await acceptServiceBudget(payload);
+			return NextResponse.json(requestOrder);
+		}
+
+		if (payload.action === "complete") {
+			const requestOrder = await completeServiceRequest(payload);
 			return NextResponse.json(requestOrder);
 		}
 

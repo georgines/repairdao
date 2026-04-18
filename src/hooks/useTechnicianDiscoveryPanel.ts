@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useAccountProfile } from "@/hooks/useAccountProfile";
 import { useWalletStatus } from "@/hooks/useWalletStatus";
 import { obterEthereumProvider } from "@/services/wallet/provider";
 import type { UserSearchFilters, UserSummary } from "@/services/users";
@@ -10,7 +11,7 @@ import {
 	searchUsers,
 	sortUsers,
 } from "@/services/users";
-import { createServiceRequest } from "@/services/serviceRequests/serviceRequestClient";
+import { createServiceRequest, loadServiceRequests, type ServiceRequestSummary } from "@/services/serviceRequests/serviceRequestClient";
 import { criarOrdemServicoNoContrato } from "@/services/serviceRequests/serviceRequestBlockchain";
 
 type UseTechnicianDiscoveryPanelProps = {
@@ -24,6 +25,8 @@ type UseTechnicianDiscoveryPanelResult = {
 	filteredTechnicians: UserSummary[];
 	selectedTechnician: UserSummary | null;
 	contractedTechnician: UserSummary | null;
+	hasOpenOrder: boolean;
+	canHire: boolean;
 	technicianModalMode: "details" | "hire" | null;
 	technicianModalOpened: boolean;
 	hasResults: boolean;
@@ -44,15 +47,16 @@ export function useTechnicianDiscoveryPanel({
 	initialTechnicians,
 }: UseTechnicianDiscoveryPanelProps): UseTechnicianDiscoveryPanelResult {
 	const { state } = useWalletStatus();
+	const { perfilAtivo } = useAccountProfile();
 	const ethereum = useMemo(() => obterEthereumProvider(), []);
 	const [query, setQuery] = useState("");
 	const [minReputation, setMinReputation] = useState(0);
 	const [selectedAddress, setSelectedAddress] = useState<string | null>(initialTechnicians.at(0)?.address ?? null);
-	const [contractedTechnicianAddress, setContractedTechnicianAddress] = useState<string | null>(null);
 	const [technicianModalMode, setTechnicianModalMode] = useState<"details" | "hire" | null>(null);
 	const [serviceDescription, setServiceDescription] = useState("");
 	const [submittingRequest, setSubmittingRequest] = useState(false);
 	const [requestError, setRequestError] = useState<string | null>(null);
+	const [serviceRequests, setServiceRequests] = useState<ServiceRequestSummary[]>([]);
 
 	const filtros = useMemo<UserSearchFilters>(
 		() => ({
@@ -77,6 +81,40 @@ export function useTechnicianDiscoveryPanel({
 		return findUserDetails(filteredTechnicians, selectedAddress) ?? findUserDetails(initialTechnicians, selectedAddress);
 	}, [filteredTechnicians, initialTechnicians, selectedAddress]);
 
+	useEffect(() => {
+		let ativo = true;
+
+		async function carregarOrdensAtivas() {
+			if (!state.connected || !state.address) {
+				setServiceRequests([]);
+				return;
+			}
+
+			try {
+				const requests = await loadServiceRequests({ clientAddress: state.address });
+
+				if (ativo) {
+					setServiceRequests(requests);
+				}
+			} catch {
+				if (ativo) {
+					setServiceRequests([]);
+				}
+			}
+		}
+
+		void carregarOrdensAtivas();
+
+		return () => {
+			ativo = false;
+		};
+	}, [state.address, state.connected]);
+
+	const activeRequest = useMemo(() => serviceRequests.find((request) => request.status !== "concluida") ?? null, [serviceRequests]);
+	const contractedTechnician = activeRequest ? findUserDetails(initialTechnicians, activeRequest.technicianAddress) : null;
+	const hasOpenOrder = activeRequest !== null;
+	const canHire = perfilAtivo === "cliente" && !hasOpenOrder;
+
 	function onQueryChange(value: string) {
 		setQuery(value);
 	}
@@ -92,6 +130,11 @@ export function useTechnicianDiscoveryPanel({
 	}
 
 	function onHireTechnician(address: string) {
+		if (!canHire) {
+			setRequestError(hasOpenOrder ? "Ja existe uma ordem aberta para esta carteira." : "Somente clientes podem contratar tecnicos.");
+			return;
+		}
+
 		setSelectedAddress(address);
 		setTechnicianModalMode("hire");
 		setRequestError(null);
@@ -113,19 +156,24 @@ export function useTechnicianDiscoveryPanel({
 			return;
 		}
 
+		if (!canHire) {
+			setRequestError(hasOpenOrder ? "Ja existe uma ordem aberta para esta carteira." : "Somente clientes podem contratar tecnicos.");
+			return;
+		}
+
 		setSubmittingRequest(true);
 		setRequestError(null);
 
 		try {
 			await criarOrdemServicoNoContrato(ethereum, serviceDescription);
-			await createServiceRequest({
+			const nextRequest = await createServiceRequest({
 				clientAddress: state.address,
 				clientName: state.address,
 				technicianAddress: selectedTechnician.address,
 				technicianName: selectedTechnician.name,
 				description: serviceDescription,
 			});
-			setContractedTechnicianAddress(selectedTechnician.address);
+			setServiceRequests((current) => [nextRequest, ...current.filter((request) => request.id !== nextRequest.id)]);
 			setTechnicianModalMode(null);
 			setServiceDescription("");
 		} catch (error) {
@@ -146,9 +194,9 @@ export function useTechnicianDiscoveryPanel({
 		totalTechnicians: initialTechnicians.length,
 		filteredTechnicians,
 		selectedTechnician,
-		contractedTechnician: contractedTechnicianAddress
-			? findUserDetails(initialTechnicians, contractedTechnicianAddress)
-			: null,
+		contractedTechnician,
+		hasOpenOrder,
+		canHire,
 		technicianModalMode,
 		technicianModalOpened: technicianModalMode !== null && selectedTechnician !== null,
 		hasResults: filteredTechnicians.length > 0,

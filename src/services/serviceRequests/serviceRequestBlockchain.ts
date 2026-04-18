@@ -23,7 +23,21 @@ export async function enviarOrcamentoNoContrato(
 	return aguardarTransacao(await contrato.writeContract({ functionName: "submitBudget", args: [ordemId, valor] }));
 }
 
+export async function avaliarServicoNoContrato(
+	ethereum: EthereumProvider,
+	ordemId: bigint | number | string,
+	nota: number,
+): Promise<unknown> {
+	const contrato = obterContrato(ethereum);
+	return aguardarTransacao(await contrato.writeContract({ functionName: "rateUser", args: [ordemId, nota] }));
+}
+
 export async function aceitarOrcamentoNoContrato(ethereum: EthereumProvider, ordemId: bigint | number | string): Promise<unknown> {
 	const contrato = obterContrato(ethereum);
 	return aguardarTransacao(await contrato.writeContract({ functionName: "acceptBudget", args: [ordemId] }));
+}
+
+export async function concluirOrdemNoContrato(ethereum: EthereumProvider, ordemId: bigint | number | string): Promise<unknown> {
+	const contrato = obterContrato(ethereum);
+	return aguardarTransacao(await contrato.writeContract({ functionName: "completeOrder", args: [ordemId] }));
 }

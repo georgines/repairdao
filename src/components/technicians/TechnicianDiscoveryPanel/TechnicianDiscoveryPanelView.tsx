@@ -25,6 +25,8 @@ export type TechnicianDiscoveryPanelViewProps = {
 	filteredTechnicians: UserSummary[];
 	selectedTechnician: UserSummary | null;
 	contractedTechnician: UserSummary | null;
+	hasOpenOrder: boolean;
+	canHire: boolean;
 	technicianModalMode: "details" | "hire" | null;
 	technicianModalOpened: boolean;
 	hasResults: boolean;
@@ -72,6 +74,8 @@ export function TechnicianDiscoveryPanelView({
 	filteredTechnicians,
 	selectedTechnician,
 	contractedTechnician,
+	hasOpenOrder,
+	canHire,
 	technicianModalMode,
 	technicianModalOpened,
 	hasResults,
@@ -112,7 +116,7 @@ export function TechnicianDiscoveryPanelView({
 						</Badge>
 						{contractedTechnician ? (
 							<Badge variant="light" color="teal">
-								contratado: {contractedTechnician.name}
+								{hasOpenOrder ? `ordem aberta: ${contractedTechnician.name}` : `contratado: ${contractedTechnician.name}`}
 							</Badge>
 						) : null}
 						<Button component={Link} href="/services" variant="light" size="xs">
@@ -194,9 +198,11 @@ export function TechnicianDiscoveryPanelView({
 												<Button size="xs" variant="light" onClick={() => onSelectTechnician(technician.address)}>
 													Detalhes
 												</Button>
-												<Button size="xs" onClick={() => onHireTechnician(technician.address)}>
-													Contratar
-												</Button>
+												{canHire ? (
+													<Button size="xs" onClick={() => onHireTechnician(technician.address)}>
+														Contratar
+													</Button>
+												) : null}
 											</Group>
 										</Table.Td>
 									</Table.Tr>

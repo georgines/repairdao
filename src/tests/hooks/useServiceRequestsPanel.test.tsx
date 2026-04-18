@@ -8,8 +8,17 @@ import { useServiceRequestsPanel } from "@/hooks/useServiceRequestsPanel";
 
 const serviceMocks = vi.hoisted(() => ({
 	loadServiceRequests: vi.fn(),
+	enviarOrcamentoNoContrato: vi.fn(),
 	acceptServiceBudget: vi.fn(),
 	aceitarOrcamentoNoContrato: vi.fn(),
+	completeServiceRequest: vi.fn(),
+	concluirOrdemNoContrato: vi.fn(),
+	avaliarServicoNoContrato: vi.fn(),
+	sendServiceBudget: vi.fn(),
+}));
+
+const profileState = vi.hoisted(() => ({
+	perfilAtivo: "cliente" as "cliente" | "tecnico" | null,
 }));
 
 const walletState = {
@@ -23,17 +32,28 @@ vi.mock("@/hooks/useWalletStatus", () => ({
 	}),
 }));
 
+vi.mock("@/hooks/useAccountProfile", () => ({
+	useAccountProfile: () => ({
+		perfilAtivo: profileState.perfilAtivo,
+	}),
+}));
+
 vi.mock("@/services/wallet/provider", () => ({
 	obterEthereumProvider: () => ({}),
 }));
 
 vi.mock("@/services/serviceRequests/serviceRequestBlockchain", () => ({
+	enviarOrcamentoNoContrato: serviceMocks.enviarOrcamentoNoContrato,
 	aceitarOrcamentoNoContrato: serviceMocks.aceitarOrcamentoNoContrato,
+	concluirOrdemNoContrato: serviceMocks.concluirOrdemNoContrato,
+	avaliarServicoNoContrato: serviceMocks.avaliarServicoNoContrato,
 }));
 
 vi.mock("@/services/serviceRequests/serviceRequestClient", () => ({
 	loadServiceRequests: serviceMocks.loadServiceRequests,
 	acceptServiceBudget: serviceMocks.acceptServiceBudget,
+	completeServiceRequest: serviceMocks.completeServiceRequest,
+	sendServiceBudget: serviceMocks.sendServiceBudget,
 }));
 
 const initialRequests: ServiceRequestSummary[] = [
@@ -64,6 +84,7 @@ const initialRequests: ServiceRequestSummary[] = [
 		acceptedAt: "2026-04-17T11:00:00.000Z",
 		budgetSentAt: "2026-04-17T12:00:00.000Z",
 		clientAcceptedAt: null,
+		completedAt: null,
 		createdAt: "2026-04-17T09:00:00.000Z",
 		updatedAt: "2026-04-17T12:00:00.000Z",
 	},
@@ -96,6 +117,7 @@ beforeEach(() => {
 		vi.clearAllMocks();
 		walletState.connected = true;
 		walletState.address = "0xcliente";
+		profileState.perfilAtivo = "cliente";
 		serviceMocks.loadServiceRequests.mockResolvedValue(initialRequests);
 		serviceMocks.acceptServiceBudget.mockResolvedValue({
 			...initialRequests[1],
@@ -122,27 +144,31 @@ beforeEach(() => {
 		expect(serviceMocks.loadServiceRequests).toHaveBeenCalledWith({
 			clientAddress: "0xcliente",
 		});
+		expect(serviceMocks.loadServiceRequests).toHaveBeenCalledWith({
+			technicianAddress: "0xcliente",
+		});
 		expect(getLatest()?.clientRequests).toHaveLength(2);
 		expect(getLatest()?.visibleRequests).toHaveLength(2);
 		expect(getLatest()?.walletAddress).toBe("0xcliente");
 	});
 
-	it("abre o modal da ordem e aceita o orcamento passando pelo contrato primeiro", async () => {
+	it("paga o orcamento passando pelo contrato primeiro", async () => {
 		await act(async () => {
 			root.render(<Probe />);
 			await flush();
 		});
 
 		await act(async () => {
-			getLatest()?.onOpenRequestModal(2);
+			getLatest()?.onOpenRequestModal(2, "pay");
 			await flush();
 		});
 
 		expect(getLatest()?.requestModalOpened).toBe(true);
+		expect(getLatest()?.requestModalAction).toBe("pay");
 		expect(getLatest()?.requestModalRequest?.id).toBe(2);
 
 		await act(async () => {
-			await getLatest()?.onAcceptBudget();
+			await getLatest()?.onPayBudget();
 			await flush();
 		});
 
@@ -153,6 +179,131 @@ beforeEach(() => {
 		});
 		expect(getLatest()?.requestModalOpened).toBe(false);
 		expect(getLatest()?.busyRequestId).toBeNull();
+	});
+
+	it("envia o orcamento passando pelo contrato primeiro", async () => {
+		walletState.address = "0xtec";
+		profileState.perfilAtivo = "tecnico";
+		serviceMocks.loadServiceRequests.mockResolvedValue([
+			{
+				...initialRequests[0],
+				technicianAddress: "0xtec",
+				status: "aberta",
+			},
+		]);
+		serviceMocks.sendServiceBudget.mockResolvedValue({
+			...initialRequests[0],
+			technicianAddress: "0xtec",
+			status: "orcada",
+			budgetAmount: 350,
+			acceptedAt: "2026-04-17T11:00:00.000Z",
+			budgetSentAt: "2026-04-17T12:00:00.000Z",
+			updatedAt: "2026-04-17T12:00:00.000Z",
+		});
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.onOpenRequestModal(1, "budget");
+			getLatest()?.onRequestModalBudgetChange(350);
+			await flush();
+		});
+
+		expect(getLatest()?.requestModalAction).toBe("budget");
+
+		await act(async () => {
+			await getLatest()?.onSubmitBudget();
+			await flush();
+		});
+
+		expect(serviceMocks.enviarOrcamentoNoContrato).toHaveBeenCalledWith({}, 1, 350);
+		expect(serviceMocks.sendServiceBudget).toHaveBeenCalledWith({
+			id: 1,
+			technicianAddress: "0xtec",
+			budgetAmount: 350,
+		});
+		expect(getLatest()?.requestModalOpened).toBe(false);
+	});
+
+	it("conclui a ordem pelo tecnico passando pelo contrato primeiro", async () => {
+		walletState.address = "0xtec";
+		profileState.perfilAtivo = "tecnico";
+		serviceMocks.loadServiceRequests.mockResolvedValue([
+			{
+				...initialRequests[1],
+				technicianAddress: "0xtec",
+				status: "aceito_cliente",
+				clientAcceptedAt: "2026-04-17T13:00:00.000Z",
+			},
+		]);
+		serviceMocks.completeServiceRequest.mockResolvedValue({
+			...initialRequests[1],
+			technicianAddress: "0xtec",
+			status: "concluida",
+			clientAcceptedAt: "2026-04-17T13:00:00.000Z",
+			completedAt: "2026-04-17T14:00:00.000Z",
+			updatedAt: "2026-04-17T14:00:00.000Z",
+		});
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.onOpenRequestModal(2, "complete");
+			await flush();
+		});
+
+		expect(getLatest()?.requestModalAction).toBe("complete");
+
+		await act(async () => {
+			await getLatest()?.onCompleteOrder();
+			await flush();
+		});
+
+		expect(serviceMocks.concluirOrdemNoContrato).toHaveBeenCalledWith({}, 2);
+		expect(serviceMocks.completeServiceRequest).toHaveBeenCalledWith({
+			id: 2,
+			technicianAddress: "0xtec",
+		});
+		expect(getLatest()?.requestModalOpened).toBe(false);
+		expect(getLatest()?.busyRequestId).toBeNull();
+	});
+
+	it("avalia a ordem concluida passando pelo contrato primeiro", async () => {
+		walletState.address = "0xcliente";
+		profileState.perfilAtivo = "cliente";
+		serviceMocks.loadServiceRequests.mockResolvedValue([
+			{
+				...initialRequests[1],
+				status: "concluida",
+				completedAt: "2026-04-17T14:00:00.000Z",
+				updatedAt: "2026-04-17T14:00:00.000Z",
+			},
+		]);
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.onOpenRequestModal(2, "rate");
+			getLatest()?.onRequestModalRatingChange(4);
+			await flush();
+		});
+
+		await act(async () => {
+			await getLatest()?.onRateService();
+			await flush();
+		});
+
+		expect(serviceMocks.avaliarServicoNoContrato).toHaveBeenCalledWith({}, 2, 4);
+		expect(getLatest()?.requestModalOpened).toBe(false);
 	});
 
 	it("aplica filtros locais de busca e status", async () => {
@@ -181,11 +332,11 @@ beforeEach(() => {
 		});
 
 		await act(async () => {
-			await getLatest()?.onAcceptBudget();
+			await getLatest()?.onPayBudget();
 			await flush();
 		});
 
-		expect(getLatest()?.error).toBe("Conecte a carteira para aceitar o orcamento.");
+		expect(getLatest()?.error).toBe("Conecte a carteira para pagar o orcamento.");
 	});
 
 	it("mantem walletAddress nulo quando a carteira esta conectada mas sem endereco", async () => {
@@ -208,16 +359,16 @@ beforeEach(() => {
 		});
 
 		await act(async () => {
-			getLatest()?.onOpenRequestModal(1);
+			getLatest()?.onOpenRequestModal(1, "pay");
 			await flush();
 		});
 
 		await act(async () => {
-			await getLatest()?.onAcceptBudget();
+			await getLatest()?.onPayBudget();
 			await flush();
 		});
 
-		expect(getLatest()?.error).toBe("A ordem precisa ter um orcamento enviado antes da aceitacao.");
+		expect(getLatest()?.error).toBe("A ordem precisa ter um orcamento enviado antes do pagamento.");
 	});
 
 	it("bloqueia a aceitacao quando nenhuma ordem esta selecionada", async () => {
@@ -232,11 +383,11 @@ beforeEach(() => {
 		});
 
 		await act(async () => {
-			await getLatest()?.onAcceptBudget();
+			await getLatest()?.onPayBudget();
 			await flush();
 		});
 
-		expect(getLatest()?.error).toBe("Selecione uma ordem de servico para aceitar o orcamento.");
+		expect(getLatest()?.error).toBe("Selecione uma ordem de servico para pagar o orcamento.");
 	});
 
 	it("limpa os filtros locais", async () => {
@@ -286,7 +437,7 @@ beforeEach(() => {
 
 		await act(async () => {
 			getLatest()?.onStatusFilterChange(null);
-			getLatest()?.onOpenRequestModal(999);
+			getLatest()?.onOpenRequestModal(999, "details");
 			await flush();
 		});
 
@@ -294,8 +445,8 @@ beforeEach(() => {
 		expect(getLatest()?.requestModalRequest).toBeNull();
 	});
 
-	it("usa a mensagem do erro quando o aceite falha com Error", async () => {
-		serviceMocks.acceptServiceBudget.mockRejectedValueOnce(new Error("falha de aceite"));
+	it("usa a mensagem do erro quando o pagamento falha com Error", async () => {
+		serviceMocks.acceptServiceBudget.mockRejectedValueOnce(new Error("falha de pagamento"));
 
 		await act(async () => {
 			root.render(<Probe />);
@@ -303,19 +454,19 @@ beforeEach(() => {
 		});
 
 		await act(async () => {
-			getLatest()?.onOpenRequestModal(2);
+			getLatest()?.onOpenRequestModal(2, "pay");
 			await flush();
 		});
 
 		await act(async () => {
-			await getLatest()?.onAcceptBudget();
+			await getLatest()?.onPayBudget();
 			await flush();
 		});
 
-		expect(getLatest()?.error).toBe("falha de aceite");
+		expect(getLatest()?.error).toBe("falha de pagamento");
 	});
 
-	it("usa a mensagem padrao quando o aceite falha com valor nao tipado", async () => {
+	it("usa a mensagem padrao quando o pagamento falha com valor nao tipado", async () => {
 		serviceMocks.aceitarOrcamentoNoContrato.mockRejectedValue("falha bruta");
 		await act(async () => {
 			root.render(<Probe />);
@@ -323,22 +474,41 @@ beforeEach(() => {
 		});
 
 		await act(async () => {
-			getLatest()?.onOpenRequestModal(2);
+			getLatest()?.onOpenRequestModal(2, "pay");
 			await flush();
 		});
 
 		await act(async () => {
-			await getLatest()?.onAcceptBudget();
+			await getLatest()?.onPayBudget();
 			await flush();
 		});
 
-		expect(getLatest()?.error).toBe("Nao foi possivel aceitar o orcamento.");
+		expect(getLatest()?.error).toBe("Nao foi possivel pagar o orcamento.");
 	});
 
 	it("atualiza as ordens no intervalo", async () => {
 		vi.useFakeTimers();
 		serviceMocks.loadServiceRequests
 			.mockResolvedValueOnce(initialRequests)
+			.mockResolvedValueOnce(initialRequests)
+			.mockResolvedValueOnce([
+				...initialRequests,
+				{
+					id: 3,
+					clientAddress: "0xcliente",
+					clientName: "Cliente",
+					technicianAddress: "0xtec2",
+					technicianName: "Tecnico 2",
+					description: "Nova ordem",
+					status: "aberta",
+					budgetAmount: null,
+					acceptedAt: null,
+					budgetSentAt: null,
+					clientAcceptedAt: null,
+					createdAt: "2026-04-17T14:00:00.000Z",
+					updatedAt: "2026-04-17T14:00:00.000Z",
+				},
+			])
 			.mockResolvedValueOnce([
 				...initialRequests,
 				{
@@ -363,14 +533,14 @@ beforeEach(() => {
 			await flush();
 		});
 
-		expect(serviceMocks.loadServiceRequests).toHaveBeenCalledTimes(1);
+		expect(serviceMocks.loadServiceRequests).toHaveBeenCalledTimes(2);
 
 		await act(async () => {
 			vi.advanceTimersByTime(15000);
 			await flush();
 		});
 
-		expect(serviceMocks.loadServiceRequests).toHaveBeenCalledTimes(2);
+		expect(serviceMocks.loadServiceRequests).toHaveBeenCalledTimes(4);
 		expect(getLatest()?.clientRequests).toHaveLength(3);
 	});
 });

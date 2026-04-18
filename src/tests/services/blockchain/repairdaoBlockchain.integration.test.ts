@@ -46,5 +46,20 @@ describe("repairdaoBlockchain + ethersRepairDAOGateway", () => {
         args: ["revisao do motor"],
       }),
     );
+
+    await expect(
+      blockchain.concluirOrdem({
+        contexto: { papel: "tecnico", depositoAtivo: true },
+        ordemId: 4,
+        tecnico: "0xtec",
+      }),
+    ).resolves.toBe("0xhash");
+
+    expect(contractClient.writeContract).toHaveBeenCalledWith(
+      expect.objectContaining({
+        functionName: "completeOrder",
+        args: [4],
+      }),
+    );
   });
 });

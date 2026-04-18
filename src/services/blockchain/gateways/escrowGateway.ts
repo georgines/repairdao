@@ -105,6 +105,28 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
       });
     },
 
+    async concluirOrdem(input) {
+      garantirEscritaDisponivel(contractClient);
+
+      return contractClient.writeContract({
+        address: REPAIRDAO_CONTRACTOS.escrow.address,
+        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        functionName: "completeOrder",
+        args: [input.ordemId],
+      });
+    },
+
+    async avaliarServico(input) {
+      garantirEscritaDisponivel(contractClient);
+
+      return contractClient.writeContract({
+        address: REPAIRDAO_CONTRACTOS.escrow.address,
+        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        functionName: "rateUser",
+        args: [input.ordemId, input.nota],
+      });
+    },
+
     async abrirDisputa(input) {
       garantirEscritaDisponivel(contractClient);
 

@@ -5,9 +5,16 @@ import { AppShell as MantineAppShell, MantineProvider } from "@mantine/core";
 import { NavBar } from "@/components/ui/NavBar/NavBar";
 
 const pathnameState = vi.hoisted(() => ({ value: "/" }));
+const profileState = vi.hoisted(() => ({ perfilAtivo: "cliente" as "cliente" | "tecnico" | null }));
 
 vi.mock("next/navigation", () => ({
 	usePathname: () => pathnameState.value,
+}));
+
+vi.mock("@/hooks/useAccountProfile", () => ({
+	useAccountProfile: () => ({
+		perfilAtivo: profileState.perfilAtivo,
+	}),
 }));
 
 function renderWithMantine(node: ReactElement) {
@@ -17,6 +24,7 @@ function renderWithMantine(node: ReactElement) {
 describe("components/ui/NavBar/NavBar", () => {
 	it("destaca a rota ativa na navbar", () => {
 		pathnameState.value = "/account";
+		profileState.perfilAtivo = "cliente";
 
 		const markup = renderWithMantine(
 			<MantineAppShell header={{ height: 4 }} navbar={{ width: 280, breakpoint: 0 }}>
@@ -30,12 +38,13 @@ describe("components/ui/NavBar/NavBar", () => {
 		expect(markup).toContain("Minha conta");
 		expect(markup).toContain("Loja");
 		expect(markup).toContain("Elegibilidade");
-		expect(markup).toContain("Servicos");
 		expect(markup).toContain("Tecnicos");
+		expect(markup).not.toContain("Servicos");
 	});
 
 	it("mantem a rota pai ativa em subrotas", () => {
 		pathnameState.value = "/store/orders";
+		profileState.perfilAtivo = "tecnico";
 
 		const markup = renderWithMantine(
 			<MantineAppShell header={{ height: 4 }} navbar={{ width: 280, breakpoint: 0 }}>
@@ -47,5 +56,7 @@ describe("components/ui/NavBar/NavBar", () => {
 
 		expect(markup).toContain('href="/store"');
 		expect(markup).toContain('data-active="true"');
+		expect(markup).toContain("Servicos");
+		expect(markup).not.toContain("Tecnicos");
 	});
 });

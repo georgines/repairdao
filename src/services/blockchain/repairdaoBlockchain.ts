@@ -1,5 +1,5 @@
 import { RepairDAODominioError } from "@/erros/errors";
-import { clientePodeCriarOrdem, papelPodeAbrirDisputa, tecnicoPodeEnviarOrcamento } from "@/services/papeis";
+import { clientePodeCriarOrdem, papelPodeAbrirDisputa, tecnicoPodeConcluirOrdem, tecnicoPodeEnviarOrcamento } from "@/services/papeis";
 import { garantirOrdemPodeSerCriada } from "@/services/ordens";
 import { garantirTextoNaoVazio, garantirNumeroMaiorQueZero } from "@/services/validacoes";
 import type { ContextoPapelRepairDAO } from "@/types";
@@ -8,6 +8,8 @@ import { mapearDisputaDoContrato, mapearOrdemDoContrato, type DisputaContratoBru
 export interface RepairDAOBlockchainGateway {
   criarOrdem(input: { descricao: string; cliente: string }): Promise<unknown>;
   enviarOrcamento(input: { ordemId: bigint | number | string; tecnico: string; valor: number }): Promise<unknown>;
+  concluirOrdem(input: { ordemId: bigint | number | string; tecnico: string }): Promise<unknown>;
+  avaliarServico(input: { ordemId: bigint | number | string; nota: number }): Promise<unknown>;
   abrirDisputa(input: { ordemId: bigint | number | string; autor: string; motivo: string }): Promise<unknown>;
   buscarOrdem(ordemId: bigint | number | string): Promise<OrdemContratoBruta | null>;
   buscarDisputa(disputaId: bigint | number | string): Promise<DisputaContratoBruta | null>;
@@ -26,6 +28,12 @@ export interface EnviarOrcamentoBlockchainInput {
   valor: number;
 }
 
+export interface ConcluirOrdemBlockchainInput {
+  contexto: ContextoPapelRepairDAO;
+  ordemId: bigint | number | string;
+  tecnico: string;
+}
+
 export interface AbrirDisputaBlockchainInput {
   contexto: ContextoPapelRepairDAO;
   ordemId: bigint | number | string;
@@ -36,6 +44,7 @@ export interface AbrirDisputaBlockchainInput {
 export interface RepairDAOBlockchain {
   criarOrdem(input: CriarOrdemBlockchainInput): Promise<unknown>;
   enviarOrcamento(input: EnviarOrcamentoBlockchainInput): Promise<unknown>;
+  concluirOrdem(input: ConcluirOrdemBlockchainInput): Promise<unknown>;
   abrirDisputa(input: AbrirDisputaBlockchainInput): Promise<unknown>;
   buscarOrdem(ordemId: bigint | number | string): Promise<OrdemContratoDominio | null>;
   buscarDisputa(disputaId: bigint | number | string): Promise<DisputaContratoDominio | null>;
@@ -67,6 +76,17 @@ export function criarRepairDAOBlockchain(gateway: RepairDAOBlockchainGateway): R
         ordemId: input.ordemId,
         tecnico: input.tecnico,
         valor,
+      });
+    },
+
+    async concluirOrdem(input) {
+      if (!tecnicoPodeConcluirOrdem(input.contexto)) {
+        throw criarErroDePermissao("concluir ordem");
+      }
+
+      return gateway.concluirOrdem({
+        ordemId: input.ordemId,
+        tecnico: input.tecnico,
       });
     },
 

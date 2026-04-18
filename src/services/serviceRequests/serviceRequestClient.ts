@@ -1,6 +1,7 @@
 import type {
 	ServiceRequestClientAcceptanceInput,
 	ServiceRequestAcceptInput,
+	ServiceRequestCompletionInput,
 	ServiceRequestBudgetInput,
 	ServiceRequestCreateInput,
 	ServiceRequestFilters,
@@ -110,6 +111,23 @@ export async function acceptServiceBudget(payload: ServiceRequestClientAcceptanc
 
 	if (!response.ok) {
 		throw new Error(await readErrorMessage(response, "Nao foi possivel aceitar o orcamento."));
+	}
+
+	return (await response.json()) as ServiceRequestSummary;
+}
+
+export async function completeServiceRequest(payload: ServiceRequestCompletionInput): Promise<ServiceRequestSummary> {
+	const response = await fetch("/api/service-requests", {
+		method: "PATCH",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({ action: "complete", ...payload }),
+		cache: "no-store",
+	});
+
+	if (!response.ok) {
+		throw new Error(await readErrorMessage(response, "Nao foi possivel concluir a ordem de servico."));
 	}
 
 	return (await response.json()) as ServiceRequestSummary;
