@@ -8,6 +8,7 @@ import {
 	aceitarOrcamentoNoContrato,
 	avaliarServicoNoContrato,
 	concluirOrdemNoContrato,
+	autorizarPagamentoNoContrato,
 	enviarOrcamentoNoContrato,
 } from "@/services/serviceRequests/serviceRequestBlockchain";
 import {
@@ -269,6 +270,7 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 		setError(null);
 
 		try {
+			await autorizarPagamentoNoContrato(ethereum, requestModalRequest.budgetAmount);
 			await aceitarOrcamentoNoContrato(ethereum, requestModalRequest.id);
 			const nextRequest = await acceptServiceBudget({
 				id: requestModalRequest.id,
@@ -277,7 +279,7 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 			updateRequest(nextRequest);
 			onCloseRequestModal();
 		} catch (requestError) {
-			setError(requestError instanceof Error ? requestError.message : "Nao foi possivel pagar o orcamento.");
+			setError(requestError instanceof Error ? requestError.message : "Nao foi possivel pagar o orcamento em RPT.");
 		} finally {
 			setBusyRequestId(null);
 		}

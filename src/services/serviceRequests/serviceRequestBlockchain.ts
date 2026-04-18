@@ -1,5 +1,7 @@
-import { BrowserProvider } from "ethers";
+import { BrowserProvider, parseUnits } from "ethers";
 import { criarRepairDAOBrowserContractClient } from "@/services/blockchain/browserContractClient";
+import { criarRepairTokenGateway } from "@/services/blockchain/gateways/tokenGateway";
+import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
 import { criarRepairEscrowGateway } from "@/services/blockchain/gateways/escrowGateway";
 import type { EthereumProvider } from "@/services/wallet/provider";
 import { aguardarTransacao } from "@/services/wallet/transaction";
@@ -7,6 +9,11 @@ import { aguardarTransacao } from "@/services/wallet/transaction";
 function obterContrato(ethereum: EthereumProvider) {
 	const provider = new BrowserProvider(ethereum as never);
 	return criarRepairEscrowGateway(criarRepairDAOBrowserContractClient(provider));
+}
+
+function obterContratoToken(ethereum: EthereumProvider) {
+	const provider = new BrowserProvider(ethereum as never);
+	return criarRepairTokenGateway(criarRepairDAOBrowserContractClient(provider));
 }
 
 export async function criarOrdemServicoNoContrato(ethereum: EthereumProvider, descricao: string): Promise<unknown> {
@@ -20,7 +27,9 @@ export async function enviarOrcamentoNoContrato(
 	valor: number,
 ): Promise<unknown> {
 	const contrato = obterContrato(ethereum);
-	return aguardarTransacao(await contrato.writeContract({ functionName: "submitBudget", args: [ordemId, valor] }));
+	return aguardarTransacao(
+		await contrato.writeContract({ functionName: "submitBudget", args: [ordemId, parseUnits(String(valor), 18)] }),
+	);
 }
 
 export async function avaliarServicoNoContrato(
@@ -35,6 +44,16 @@ export async function avaliarServicoNoContrato(
 export async function aceitarOrcamentoNoContrato(ethereum: EthereumProvider, ordemId: bigint | number | string): Promise<unknown> {
 	const contrato = obterContrato(ethereum);
 	return aguardarTransacao(await contrato.writeContract({ functionName: "acceptBudget", args: [ordemId] }));
+}
+
+export async function autorizarPagamentoNoContrato(ethereum: EthereumProvider, valor: number): Promise<unknown> {
+	const contrato = obterContratoToken(ethereum);
+	return aguardarTransacao(
+		await contrato.writeContract({
+			functionName: "approve",
+			args: [REPAIRDAO_CONTRACTOS.escrow.address, parseUnits(String(valor), 18)],
+		}),
+	);
 }
 
 export async function concluirOrdemNoContrato(ethereum: EthereumProvider, ordemId: bigint | number | string): Promise<unknown> {

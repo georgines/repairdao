@@ -9,6 +9,7 @@ import { useServiceRequestsPanel } from "@/hooks/useServiceRequestsPanel";
 const serviceMocks = vi.hoisted(() => ({
 	loadServiceRequests: vi.fn(),
 	enviarOrcamentoNoContrato: vi.fn(),
+	autorizarPagamentoNoContrato: vi.fn(),
 	acceptServiceBudget: vi.fn(),
 	aceitarOrcamentoNoContrato: vi.fn(),
 	completeServiceRequest: vi.fn(),
@@ -44,6 +45,7 @@ vi.mock("@/services/wallet/provider", () => ({
 
 vi.mock("@/services/serviceRequests/serviceRequestBlockchain", () => ({
 	enviarOrcamentoNoContrato: serviceMocks.enviarOrcamentoNoContrato,
+	autorizarPagamentoNoContrato: serviceMocks.autorizarPagamentoNoContrato,
 	aceitarOrcamentoNoContrato: serviceMocks.aceitarOrcamentoNoContrato,
 	concluirOrdemNoContrato: serviceMocks.concluirOrdemNoContrato,
 	avaliarServicoNoContrato: serviceMocks.avaliarServicoNoContrato,
@@ -172,6 +174,7 @@ beforeEach(() => {
 			await flush();
 		});
 
+		expect(serviceMocks.autorizarPagamentoNoContrato).toHaveBeenCalledWith({}, 240);
 		expect(serviceMocks.aceitarOrcamentoNoContrato).toHaveBeenCalledWith({}, 2);
 		expect(serviceMocks.acceptServiceBudget).toHaveBeenCalledWith({
 			id: 2,
@@ -483,7 +486,7 @@ beforeEach(() => {
 			await flush();
 		});
 
-		expect(getLatest()?.error).toBe("Nao foi possivel pagar o orcamento.");
+		expect(getLatest()?.error).toBe("Nao foi possivel pagar o orcamento em RPT.");
 	});
 
 	it("atualiza as ordens no intervalo", async () => {
