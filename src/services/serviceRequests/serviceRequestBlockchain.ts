@@ -1,5 +1,6 @@
 import { BrowserProvider, parseUnits } from "ethers";
 import { criarRepairDAOBrowserContractClient } from "@/services/blockchain/browserContractClient";
+import { mapearOrdemDoContrato } from "@/services/blockchain/adapters";
 import { criarRepairTokenGateway } from "@/services/blockchain/gateways/tokenGateway";
 import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
 import { criarRepairEscrowGateway } from "@/services/blockchain/gateways/escrowGateway";
@@ -59,4 +60,23 @@ export async function autorizarPagamentoNoContrato(ethereum: EthereumProvider, v
 export async function concluirOrdemNoContrato(ethereum: EthereumProvider, ordemId: bigint | number | string): Promise<unknown> {
 	const contrato = obterContrato(ethereum);
 	return aguardarTransacao(await contrato.writeContract({ functionName: "completeOrder", args: [ordemId] }));
+}
+
+export async function carregarEstadoAvaliacaoNoContrato(
+	ethereum: EthereumProvider,
+	ordemId: bigint | number | string,
+): Promise<{ clientRated: boolean; technicianRated: boolean } | null> {
+	const contrato = obterContrato(ethereum);
+	const ordem = await contrato.buscarOrdem(ordemId);
+
+	if (!ordem) {
+		return null;
+	}
+
+	const ordemDominio = mapearOrdemDoContrato(ordem);
+
+	return {
+		clientRated: Boolean(ordemDominio.clientRated),
+		technicianRated: Boolean(ordemDominio.technicianRated),
+	};
 }

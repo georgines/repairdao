@@ -41,6 +41,8 @@ export interface OrdemContratoBruta {
   cliente: string;
   tecnico?: string | null;
   valorOrcamento?: bigint | number | string | null;
+  clientRated?: boolean | null;
+  technicianRated?: boolean | null;
 }
 
 export interface OrdemContratoDominio {
@@ -50,6 +52,8 @@ export interface OrdemContratoDominio {
   cliente: string;
   tecnico?: string;
   valorOrcamento?: number;
+  clientRated?: boolean;
+  technicianRated?: boolean;
 }
 
 export interface DisputaContratoBruta {
@@ -151,6 +155,8 @@ export function mapearOrdemDoContrato(ordem: OrdemContratoBruta): OrdemContratoD
     valorOrcamento: ordem.valorOrcamento === undefined || ordem.valorOrcamento === null
       ? undefined
       : normalizarNumero(ordem.valorOrcamento, "valor do orcamento"),
+    clientRated: ordem.clientRated === undefined || ordem.clientRated === null ? undefined : Boolean(ordem.clientRated),
+    technicianRated: ordem.technicianRated === undefined || ordem.technicianRated === null ? undefined : Boolean(ordem.technicianRated),
   };
 }
 

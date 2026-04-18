@@ -121,6 +121,53 @@ describe("components/services/ServiceRequestsPanelView", () => {
 		expect(screen.getByRole("button", { name: "Avaliar" })).toBeDefined();
 	});
 
+	it("esconde o botao de avaliacao para quem ja avaliou", () => {
+		renderWithMantine(
+			<ServiceRequestsPanelView
+				connected
+				walletAddress="0xcliente"
+				walletNotice={null}
+				perfilAtivo="cliente"
+				loading={false}
+				error={null}
+				clientRequests={[
+					{
+						...concludedRequest,
+						clientRated: true,
+					},
+				]}
+				visibleRequests={[
+					{
+						...concludedRequest,
+						clientRated: true,
+					},
+				]}
+				query=""
+				statusFilter="all"
+				requestModalOpened={false}
+				requestModalRequest={null}
+				requestModalAction={null}
+				requestModalBudget={null}
+				requestModalRating={5}
+				busyRequestId={null}
+				onRefresh={vi.fn()}
+				onQueryChange={vi.fn()}
+				onStatusFilterChange={vi.fn()}
+				onClearFilters={vi.fn()}
+				onOpenRequestModal={vi.fn()}
+				onCloseRequestModal={vi.fn()}
+				onRequestModalBudgetChange={vi.fn()}
+				onRequestModalRatingChange={vi.fn()}
+				onSubmitBudget={vi.fn()}
+				onPayBudget={vi.fn()}
+				onCompleteOrder={vi.fn()}
+				onRateService={vi.fn()}
+			/>,
+		);
+
+		expect(screen.queryByRole("button", { name: "Avaliar" })).toBeNull();
+	});
+
 	it("mostra o modal de orcamento para o tecnico", () => {
 		const onSubmitBudget = vi.fn();
 
@@ -207,6 +254,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 
 	it("mostra o modal de avaliacao", () => {
 		const onRateService = vi.fn();
+		const onRequestModalRatingChange = vi.fn();
 
 		renderWithMantine(
 			<ServiceRequestsPanelView
@@ -233,7 +281,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onOpenRequestModal={vi.fn()}
 				onCloseRequestModal={vi.fn()}
 				onRequestModalBudgetChange={vi.fn()}
-				onRequestModalRatingChange={vi.fn()}
+				onRequestModalRatingChange={onRequestModalRatingChange}
 				onSubmitBudget={vi.fn()}
 				onPayBudget={vi.fn()}
 				onCompleteOrder={vi.fn()}
@@ -242,6 +290,10 @@ describe("components/services/ServiceRequestsPanelView", () => {
 		);
 
 		expect(screen.getByText("Avaliar servico")).toBeDefined();
+		expect(screen.getByText("5 de 5")).toBeDefined();
+		const starInput = within(screen.getByRole("dialog")).getByLabelText("Avaliar com 4 estrelas");
+		fireEvent.click(starInput.nextElementSibling as Element);
+		expect(onRequestModalRatingChange).toHaveBeenCalledWith(4);
 		fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Avaliar" }));
 		expect(onRateService).toHaveBeenCalledTimes(1);
 	});

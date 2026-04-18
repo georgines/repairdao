@@ -13,6 +13,8 @@ export type ServiceRequestSummary = {
 	budgetSentAt: string | null;
 	clientAcceptedAt: string | null;
 	completedAt?: string | null;
+	clientRated?: boolean;
+	technicianRated?: boolean;
 	createdAt: string;
 	updatedAt: string;
 };

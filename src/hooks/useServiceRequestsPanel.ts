@@ -7,6 +7,7 @@ import { obterEthereumProvider } from "@/services/wallet/provider";
 import {
 	aceitarOrcamentoNoContrato,
 	avaliarServicoNoContrato,
+	carregarEstadoAvaliacaoNoContrato,
 	concluirOrdemNoContrato,
 	autorizarPagamentoNoContrato,
 	enviarOrcamentoNoContrato,
@@ -90,15 +91,25 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 				requestsById.set(request.id, request);
 			}
 
-			setClientRequests(
-				Array.from(requestsById.values()).sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || right.id - left.id),
+			const requestsWithRatings = await Promise.all(
+				Array.from(requestsById.values()).map(async (request) => {
+					if (request.status !== "concluida") {
+						return request;
+					}
+
+					const estadoAvaliacao = await carregarEstadoAvaliacaoNoContrato(ethereum, request.id);
+
+					return estadoAvaliacao ? { ...request, ...estadoAvaliacao } : request;
+				}),
 			);
+
+			setClientRequests(requestsWithRatings.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || right.id - left.id));
 		} catch (requestError) {
 			setError(requestError instanceof Error ? requestError.message : "Nao foi possivel carregar as ordens de servico.");
 		} finally {
 			setLoading(false);
 		}
-	}, [walletAddress]);
+	}, [ethereum, walletAddress]);
 
 	useEffect(() => {
 		void onRefresh();
@@ -365,6 +376,10 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 
 		try {
 			await avaliarServicoNoContrato(ethereum, requestModalRequest.id, nota);
+			const estadoAvaliacao = await carregarEstadoAvaliacaoNoContrato(ethereum, requestModalRequest.id);
+			if (estadoAvaliacao) {
+				updateRequest({ ...requestModalRequest, ...estadoAvaliacao });
+			}
 			onCloseRequestModal();
 		} catch (requestError) {
 			setError(requestError instanceof Error ? requestError.message : "Nao foi possivel avaliar o servico.");

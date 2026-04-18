@@ -60,6 +60,8 @@ function normalizarOrdemContrato(registro: Record<string, unknown>): OrdemContra
     cliente: obterTextoDeContrato(registro, ["client", "cliente"]),
     tecnico: normalizarEndereco(registro.technician ?? registro.tecnico, "tecnico da ordem"),
     valorOrcamento: valorOrcamentoNormalizado === 0 ? null : (valorOrcamentoNormalizado as OrdemContratoBruta["valorOrcamento"]),
+    clientRated: typeof registro.clientRated === "boolean" ? registro.clientRated : undefined,
+    technicianRated: typeof registro.technicianRated === "boolean" ? registro.technicianRated : undefined,
   };
 }
 

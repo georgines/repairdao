@@ -6,6 +6,7 @@ import {
 	Group,
 	Modal,
 	NumberInput,
+	Rating,
 	Select,
 	SimpleGrid,
 	Stack,
@@ -123,7 +124,11 @@ function obterAcaoPrincipal(
 	const ehCliente = perfilAtivo === "cliente" && request.clientAddress === walletAddress;
 	const ehTecnico = perfilAtivo === "tecnico" && request.technicianAddress === walletAddress;
 
-	if (request.status === "concluida" && (ehCliente || ehTecnico)) {
+	if (request.status === "concluida" && ehCliente && !request.clientRated) {
+		return { label: "Avaliar", action: "rate" as const };
+	}
+
+	if (request.status === "concluida" && ehTecnico && !request.technicianRated) {
 		return { label: "Avaliar", action: "rate" as const };
 	}
 
@@ -385,16 +390,23 @@ export function ServiceRequestsPanelView({
 						) : null}
 
 						{modalAction === "rate" ? (
-							<NumberInput
-								label="Nota"
-								description="Escolha uma nota entre 1 e 5."
-								placeholder="5"
-								min={1}
-								max={5}
-								clampBehavior="strict"
-								value={requestModalRating}
-								onChange={(value) => onRequestModalRatingChange(typeof value === "number" ? value : 5)}
-							/>
+							<Stack gap={6}>
+								<Text size="sm" fw={500}>
+									Nota
+								</Text>
+								<Group gap="sm" align="center">
+									<Rating
+										value={requestModalRating}
+										onChange={onRequestModalRatingChange}
+										count={5}
+										allowClear={false}
+										getSymbolLabel={(value) => `Avaliar com ${value} estrela${value === 1 ? "" : "s"}`}
+									/>
+									<Text size="sm" c="dimmed">
+										{requestModalRating} de 5
+									</Text>
+								</Group>
+							</Stack>
 						) : null}
 
 						{modalAction === "pay" && requestModalRequest.status !== "orcada" ? (

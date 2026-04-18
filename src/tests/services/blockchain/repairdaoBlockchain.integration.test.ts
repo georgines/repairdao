@@ -38,6 +38,8 @@ describe("repairdaoBlockchain + ethersRepairDAOGateway", () => {
       cliente: "0xcliente",
       tecnico: undefined,
       valorOrcamento: 220,
+      clientRated: false,
+      technicianRated: false,
     });
 
     expect(contractClient.writeContract).toHaveBeenCalledWith(

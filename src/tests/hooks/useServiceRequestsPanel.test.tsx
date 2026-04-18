@@ -15,6 +15,7 @@ const serviceMocks = vi.hoisted(() => ({
 	completeServiceRequest: vi.fn(),
 	concluirOrdemNoContrato: vi.fn(),
 	avaliarServicoNoContrato: vi.fn(),
+	carregarEstadoAvaliacaoNoContrato: vi.fn(),
 	sendServiceBudget: vi.fn(),
 }));
 
@@ -49,6 +50,7 @@ vi.mock("@/services/serviceRequests/serviceRequestBlockchain", () => ({
 	aceitarOrcamentoNoContrato: serviceMocks.aceitarOrcamentoNoContrato,
 	concluirOrdemNoContrato: serviceMocks.concluirOrdemNoContrato,
 	avaliarServicoNoContrato: serviceMocks.avaliarServicoNoContrato,
+	carregarEstadoAvaliacaoNoContrato: serviceMocks.carregarEstadoAvaliacaoNoContrato,
 }));
 
 vi.mock("@/services/serviceRequests/serviceRequestClient", () => ({
@@ -121,6 +123,7 @@ beforeEach(() => {
 		walletState.address = "0xcliente";
 		profileState.perfilAtivo = "cliente";
 		serviceMocks.loadServiceRequests.mockResolvedValue(initialRequests);
+		serviceMocks.carregarEstadoAvaliacaoNoContrato.mockResolvedValue(null);
 		serviceMocks.acceptServiceBudget.mockResolvedValue({
 			...initialRequests[1],
 			status: "aceito_cliente",
@@ -306,7 +309,31 @@ beforeEach(() => {
 		});
 
 		expect(serviceMocks.avaliarServicoNoContrato).toHaveBeenCalledWith({}, 2, 4);
+		expect(serviceMocks.carregarEstadoAvaliacaoNoContrato).toHaveBeenCalledWith({}, 2);
 		expect(getLatest()?.requestModalOpened).toBe(false);
+	});
+
+	it("mescla o estado de avaliacao vindo do contrato", async () => {
+		serviceMocks.loadServiceRequests.mockResolvedValue([
+			{
+				...initialRequests[1],
+				status: "concluida",
+				completedAt: "2026-04-17T14:00:00.000Z",
+				updatedAt: "2026-04-17T14:00:00.000Z",
+			},
+		]);
+		serviceMocks.carregarEstadoAvaliacaoNoContrato.mockResolvedValue({
+			clientRated: true,
+			technicianRated: false,
+		});
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		expect(getLatest()?.clientRequests[0]?.clientRated).toBe(true);
+		expect(serviceMocks.carregarEstadoAvaliacaoNoContrato).toHaveBeenCalledWith({}, 2);
 	});
 
 	it("aplica filtros locais de busca e status", async () => {

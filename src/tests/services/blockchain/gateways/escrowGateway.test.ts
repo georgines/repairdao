@@ -44,6 +44,8 @@ describe("escrowGateway", () => {
       cliente: "0xcliente",
       tecnico: "0xtec",
       valorOrcamento: 120,
+      clientRated: false,
+      technicianRated: false,
     });
     await expect(gateway.buscarDisputa(2)).resolves.toEqual({
       id: 2,
@@ -137,6 +139,8 @@ describe("escrowGateway", () => {
       cliente: "0xcliente",
       tecnico: "0xtec",
       valorOrcamento: null,
+      clientRated: undefined,
+      technicianRated: undefined,
     });
     await expect(gateway.buscarOrdem(8)).resolves.toEqual({
       id: 8,
@@ -145,6 +149,8 @@ describe("escrowGateway", () => {
       cliente: "0xcliente",
       tecnico: "0xtec",
       valorOrcamento: null,
+      clientRated: undefined,
+      technicianRated: undefined,
     });
     await expect(gateway.buscarDisputa(9)).resolves.toEqual({
       id: 9,
