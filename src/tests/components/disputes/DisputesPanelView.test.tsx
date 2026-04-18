@@ -52,6 +52,19 @@ const disputeEvidence: EvidenciaContratoDominio[] = [
 	},
 ];
 
+const pairedEvidence: EvidenciaContratoDominio[] = [
+	{
+		submittedBy: "0xcliente",
+		content: "Fotos do defeito",
+		timestamp: "2026-04-17T15:00:00.000Z",
+	},
+	{
+		submittedBy: "0xtec",
+		content: "Resposta do tecnico",
+		timestamp: "2026-04-17T16:00:00.000Z",
+	},
+];
+
 describe("components/disputes/DisputesPanelView", () => {
 	beforeEach(() => {
 		(globalThis as typeof globalThis & { ResizeObserver?: typeof ResizeObserver }).ResizeObserver = class {
@@ -118,6 +131,43 @@ describe("components/disputes/DisputesPanelView", () => {
 
 		fireEvent.click(screen.getByRole("button", { name: "Enviar evidência" }));
 		expect(onSubmitEvidence).toHaveBeenCalledTimes(1);
+	});
+
+	it("posiciona a evidência do autor à esquerda e a outra parte à direita", () => {
+		renderWithMantine(
+			<DisputesPanelView
+				connected
+				walletAddress="0xcliente"
+				walletNotice={null}
+				perfilAtivo="cliente"
+				hasVotingTokens
+				loading={false}
+				error={null}
+				disputes={[{ request: disputeRequest, contract: disputeContract }]}
+				visibleDisputes={[{ request: disputeRequest, contract: disputeContract }]}
+				selectedDisputeId={21}
+				selectedDispute={{ request: disputeRequest, contract: disputeContract }}
+				selectedEvidence={pairedEvidence}
+				evidenceDraft="Nova prova"
+				voteSupportOpener
+				busyDisputeId={null}
+				votedDisputeIds={[]}
+				evidenceSubmittedDisputeIds={[]}
+				onRefresh={vi.fn()}
+				onSelectDispute={vi.fn()}
+				onCloseDispute={vi.fn()}
+				onEvidenceDraftChange={vi.fn()}
+				onVoteSupportChange={vi.fn()}
+				onSubmitEvidence={vi.fn()}
+				onSubmitVote={vi.fn()}
+				onResolveDispute={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByText("Quem abriu")).toBeDefined();
+		expect(screen.getByText("Outra parte")).toBeDefined();
+		expect(screen.getByText("Fotos do defeito").closest('[data-evidence-side="left"]')).not.toBeNull();
+		expect(screen.getByText("Resposta do tecnico").closest('[data-evidence-side="right"]')).not.toBeNull();
 	});
 
 	it("mostra o voto para quem nao participa", () => {

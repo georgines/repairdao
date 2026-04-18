@@ -1,0 +1,95 @@
+.timeline {
+	position: relative;
+}
+
+.timelineList {
+	position: relative;
+	z-index: 1;
+}
+
+.timelineTrack {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 50%;
+	width: 2px;
+	transform: translateX(-50%);
+	background: var(--mantine-color-gray-3);
+}
+
+.timelineRow {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr);
+	align-items: start;
+}
+
+.timelineEntry {
+	min-width: 0;
+}
+
+.timelineRow[data-evidence-side="left"] .timelineEntry {
+	grid-column: 1;
+	justify-self: end;
+	padding-inline-end: 16px;
+}
+
+.timelineRow[data-evidence-side="right"] .timelineEntry {
+	grid-column: 3;
+	justify-self: start;
+	padding-inline-start: 16px;
+}
+
+.timelineMarker {
+	grid-column: 2;
+	display: flex;
+	justify-content: center;
+	position: relative;
+}
+
+.timelineDot {
+	width: 14px;
+	height: 14px;
+	margin-top: 20px;
+	border-radius: 999px;
+	background: var(--mantine-color-teal-6);
+	box-shadow: 0 0 0 5px var(--mantine-color-teal-1);
+}
+
+.timelineCard {
+	width: 100%;
+	max-width: 100%;
+}
+
+.timelineContent {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	line-height: 1.55;
+}
+
+@media (max-width: 48em) {
+	.timelineTrack {
+		left: 12px;
+		transform: none;
+	}
+
+	.timelineRow {
+		grid-template-columns: 24px minmax(0, 1fr);
+		column-gap: 12px;
+	}
+
+	.timelineEntry {
+		grid-column: 2;
+		padding-inline: 0;
+		justify-self: stretch;
+	}
+
+	.timelineMarker {
+		grid-column: 1;
+		grid-row: 1;
+	}
+
+	.timelineRow[data-evidence-side="right"] .timelineEntry,
+	.timelineRow[data-evidence-side="left"] .timelineEntry {
+		grid-column: 2;
+	}
+}

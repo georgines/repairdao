@@ -1,8 +1,9 @@
 import { formatUnits } from "ethers";
-import { Badge, Box, Button, Card, Divider, Group, Modal, ScrollArea, SegmentedControl, Stack, Text, Textarea, Timeline, Title } from "@mantine/core";
+import { Badge, Box, Button, Card, Divider, Group, Modal, ScrollArea, SegmentedControl, Stack, Text, Textarea, Title } from "@mantine/core";
 import type { DisputaContratoDominio, EvidenciaContratoDominio } from "@/services/blockchain/adapters";
 import { formatarEnderecoCurto } from "@/services/wallet/formatters";
 import type { ServiceRequestSummary } from "@/services/serviceRequests";
+import styles from "./DisputesPanelView.module.css";
 
 type DisputeItem = {
 	request: ServiceRequestSummary;
@@ -80,6 +81,95 @@ function renderEmptyState(message: string) {
 		<Text size="sm" c="dimmed">
 			{message}
 		</Text>
+	);
+}
+
+function normalizeAddress(value?: string) {
+	return value?.trim().toLowerCase() ?? "";
+}
+
+function getEvidenceSide(
+	evidence: EvidenciaContratoDominio,
+	dispute: DisputeItem | null,
+	index: number,
+): "left" | "right" {
+	const openedBy = normalizeAddress(dispute?.contract?.openedBy);
+	const opposingParty = normalizeAddress(dispute?.contract?.opposingParty);
+	const author = normalizeAddress(evidence.submittedBy);
+
+	if (openedBy && author === openedBy) {
+		return "left";
+	}
+
+	if (opposingParty && author === opposingParty) {
+		return "right";
+	}
+
+	return index % 2 === 0 ? "left" : "right";
+}
+
+function getEvidenceSideLabel(side: "left" | "right") {
+	return side === "left" ? "Quem abriu" : "Outra parte";
+}
+
+function getEvidenceSideColor(side: "left" | "right") {
+	return side === "left" ? "teal" : "indigo";
+}
+
+type EvidenceTimelineProps = {
+	dispute: DisputeItem | null;
+	evidence: EvidenciaContratoDominio[];
+};
+
+function EvidenceTimeline({ dispute, evidence }: EvidenceTimelineProps) {
+	return (
+		<Box className={styles.timeline}>
+			<Box className={styles.timelineTrack} aria-hidden="true" />
+
+			<Stack gap="md" className={styles.timelineList}>
+				{evidence.map((item, index) => {
+					const side = getEvidenceSide(item, dispute, index);
+
+					return (
+						<Box key={`${item.timestamp}-${index}`} className={styles.timelineRow} data-evidence-side={side}>
+							<Box className={styles.timelineEntry}>
+								<Card withBorder radius="md" shadow="none" padding="md" className={styles.timelineCard}>
+									<Stack gap={8}>
+										<Group justify="space-between" align="flex-start" wrap="nowrap">
+											<Stack gap={2}>
+												<Group gap={6} wrap="nowrap" align="center">
+													<Text size="sm" fw={700}>
+														{formatarEnderecoCurto(item.submittedBy)}
+													</Text>
+													<Text size="xs" c="dimmed">
+														#{index + 1}
+													</Text>
+												</Group>
+												<Text size="xs" c="dimmed">
+													{formatDateTime(item.timestamp)}
+												</Text>
+											</Stack>
+
+											<Badge variant="light" color={getEvidenceSideColor(side)}>
+												{getEvidenceSideLabel(side)}
+											</Badge>
+										</Group>
+
+										<Text size="sm" className={styles.timelineContent}>
+											{item.content}
+										</Text>
+									</Stack>
+								</Card>
+							</Box>
+
+							<Box className={styles.timelineMarker} aria-hidden="true">
+								<Box className={styles.timelineDot} />
+							</Box>
+						</Box>
+					);
+				})}
+			</Stack>
+		</Box>
 	);
 }
 
@@ -311,44 +401,7 @@ export function DisputesPanelView({
 								</Group>
 
 								{selectedEvidence.length > 0 ? (
-									<Timeline active={selectedEvidence.length - 1} align="left" bulletSize={14} lineWidth={3} color="teal">
-										{selectedEvidence.map((evidence, index) => (
-											<Timeline.Item
-												key={`${evidence.timestamp}-${index}`}
-												title={
-													<Stack gap={2}>
-														<Group gap={6} wrap="nowrap" align="center">
-															<Text size="sm" fw={700}>
-																{formatarEnderecoCurto(evidence.submittedBy)}
-															</Text>
-															<Text size="xs" c="dimmed">
-																#{index + 1}
-															</Text>
-														</Group>
-														<Text size="xs" c="dimmed">
-															{formatDateTime(evidence.timestamp)}
-														</Text>
-													</Stack>
-												}
-												bullet={
-													<Box
-														w={10}
-														h={10}
-														style={{
-															borderRadius: 9999,
-															backgroundColor: "var(--mantine-color-teal-6)",
-															boxShadow: "0 0 0 4px var(--mantine-color-teal-1)",
-														}}
-													/>
-												}
-												lineVariant="solid"
-											>
-												<Text size="sm" mt={4}>
-													{evidence.content}
-												</Text>
-											</Timeline.Item>
-										))}
-									</Timeline>
+									<EvidenceTimeline dispute={selectedDispute} evidence={selectedEvidence} />
 								) : (
 									renderEmptyState("Ainda nao ha evidencias registradas no contrato.")
 								)}
