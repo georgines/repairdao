@@ -3,13 +3,45 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import type { ReactElement } from "react";
+import type { ComponentProps, ReactElement } from "react";
 import { DisputesPanelView } from "@/components/disputes/DisputesPanel/DisputesPanelView";
 import type { DisputaContratoDominio, EvidenciaContratoDominio } from "@/services/blockchain/adapters";
 import type { ServiceRequestSummary } from "@/services/serviceRequests";
 
 function renderWithMantine(node: ReactElement) {
 	return render(<MantineProvider>{node}</MantineProvider>);
+}
+
+function baseProps(overrides: Partial<ComponentProps<typeof DisputesPanelView>> = {}) {
+	return {
+		connected: true,
+		walletAddress: "0xvotante",
+		walletNotice: null,
+		perfilAtivo: null as const,
+		hasVotingTokens: true,
+		loading: false,
+		error: null,
+		disputes: [{ request: disputeRequest, contract: disputeContract }],
+		visibleDisputes: [{ request: disputeRequest, contract: disputeContract }],
+		selectedDisputeId: 21,
+		selectedDispute: { request: disputeRequest, contract: disputeContract },
+		selectedEvidence: disputeEvidence,
+		evidenceDraft: "",
+		voteSupportOpener: true,
+		busyDisputeId: null,
+		votedDisputeIds: [],
+		votedDisputeChoices: {},
+		evidenceSubmittedDisputeIds: [],
+		onRefresh: vi.fn(),
+		onSelectDispute: vi.fn(),
+		onCloseDispute: vi.fn(),
+		onEvidenceDraftChange: vi.fn(),
+		onVoteSupportChange: vi.fn(),
+		onSubmitEvidence: vi.fn(),
+		onSubmitVote: vi.fn(),
+		onResolveDispute: vi.fn(),
+		...overrides,
+	};
 }
 
 const disputeRequest: ServiceRequestSummary = {
@@ -176,6 +208,38 @@ describe("components/disputes/DisputesPanelView", () => {
 		expect(onSubmitEvidence).toHaveBeenCalledTimes(1);
 	});
 
+	it("identifica quem abriu e a outra parte nos botoes de voto", () => {
+		const onVoteSupportChange = vi.fn();
+		const onSubmitVote = vi.fn();
+
+		renderWithMantine(
+			<DisputesPanelView
+				{...baseProps({
+					walletAddress: "0xvotante",
+					perfilAtivo: null,
+					selectedDispute: { request: disputeRequest, contract: disputeContract },
+					selectedDisputeId: 21,
+					selectedEvidence: disputeEvidence,
+					evidenceDraft: "",
+					voteSupportOpener: true,
+					hasVotingTokens: true,
+					votedDisputeIds: [],
+					votedDisputeChoices: {},
+					onVoteSupportChange,
+					onSubmitVote,
+				})}
+			/>,
+		);
+
+		expect(screen.getByRole("heading", { name: "Votar na disputa" })).toBeDefined();
+		expect(screen.getByRole("radio", { name: "Apoiar quem abriu (Cliente)" })).toBeDefined();
+		expect(screen.getByRole("radio", { name: "Apoiar a outra parte (Tecnico)" })).toBeDefined();
+		fireEvent.click(screen.getByRole("radio", { name: "Apoiar a outra parte (Tecnico)" }));
+		expect(onVoteSupportChange).toHaveBeenCalledWith(false);
+		fireEvent.click(screen.getByRole("button", { name: "Registrar voto" }));
+		expect(onSubmitVote).toHaveBeenCalledTimes(1);
+	});
+
 	it("filtra a lista por busca e status", () => {
 		const onQueryChange = vi.fn();
 		const onClearFilters = vi.fn();
@@ -263,8 +327,8 @@ describe("components/disputes/DisputesPanelView", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Quem abriu")).toBeDefined();
-		expect(screen.getByText("Outra parte")).toBeDefined();
+		expect(screen.getByText("Cliente")).toBeDefined();
+		expect(screen.getAllByText("Tecnico").length).toBeGreaterThan(1);
 		expect(screen.getByText("Fotos do defeito").closest('[data-evidence-side="left"]')).not.toBeNull();
 		expect(screen.getByText("Resposta do tecnico").closest('[data-evidence-side="right"]')).not.toBeNull();
 	});
@@ -305,7 +369,7 @@ describe("components/disputes/DisputesPanelView", () => {
 		);
 
 		expect(screen.getByText("Votar na disputa")).toBeDefined();
-		fireEvent.click(screen.getByRole("radio", { name: "Apoiar a outra parte" }));
+		fireEvent.click(screen.getByRole("radio", { name: "Apoiar a outra parte (Tecnico)" }));
 		expect(onVoteSupportChange).toHaveBeenCalledWith(false);
 		fireEvent.click(screen.getByRole("button", { name: "Registrar voto" }));
 		expect(onSubmitVote).toHaveBeenCalledTimes(1);
@@ -381,8 +445,8 @@ describe("components/disputes/DisputesPanelView", () => {
 		);
 
 		expect(screen.getByRole("heading", { name: "Votar na disputa" })).toBeDefined();
-		expect((screen.getByRole("radio", { name: "Apoiar quem abriu" }) as HTMLInputElement).checked).toBe(true);
-		expect((screen.getByRole("radio", { name: "Apoiar a outra parte" }) as HTMLInputElement).disabled).toBe(true);
+		expect((screen.getByRole("radio", { name: "Apoiar quem abriu (Cliente)" }) as HTMLInputElement).checked).toBe(true);
+		expect((screen.getByRole("radio", { name: "Apoiar a outra parte (Tecnico)" }) as HTMLInputElement).disabled).toBe(true);
 		expect((screen.getByRole("button", { name: "Registrar voto" }) as HTMLButtonElement).disabled).toBe(true);
 	});
 

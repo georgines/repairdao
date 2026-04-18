@@ -193,6 +193,48 @@ function getEvidenceSideLabel(side: "left" | "right") {
 	return side === "left" ? "Quem abriu" : "Outra parte";
 }
 
+function getEvidenceRoleLabel(evidence: EvidenciaContratoDominio, dispute: DisputeItem | null) {
+	const author = normalizarEnderecoComparacao(evidence.submittedBy);
+	const client = normalizarEnderecoComparacao(dispute?.request.clientAddress);
+	const technician = normalizarEnderecoComparacao(dispute?.request.technicianAddress);
+
+	if (author && author === client) {
+		return "Cliente";
+	}
+
+	if (author && author === technician) {
+		return "Tecnico";
+	}
+
+	return null;
+}
+
+function getDisputeParticipantRoleLabel(address: string | null | undefined, dispute: DisputeItem | null) {
+	const normalizedAddress = normalizarEnderecoComparacao(address);
+	const client = normalizarEnderecoComparacao(dispute?.request.clientAddress);
+	const technician = normalizarEnderecoComparacao(dispute?.request.technicianAddress);
+
+	if (normalizedAddress && normalizedAddress === client) {
+		return "Cliente";
+	}
+
+	if (normalizedAddress && normalizedAddress === technician) {
+		return "Tecnico";
+	}
+
+	return null;
+}
+
+function getVoteOptionLabels(dispute: DisputeItem | null) {
+	const openerRole = getDisputeParticipantRoleLabel(dispute?.contract?.openedBy, dispute);
+	const opposingRole = openerRole === "Cliente" ? "Tecnico" : openerRole === "Tecnico" ? "Cliente" : null;
+
+	return {
+		openerLabel: openerRole ? `Apoiar quem abriu (${openerRole})` : "Apoiar quem abriu",
+		opposingLabel: opposingRole ? `Apoiar a outra parte (${opposingRole})` : "Apoiar a outra parte",
+	};
+}
+
 function getEvidenceSideColor(side: "left" | "right") {
 	return side === "left" ? "teal" : "indigo";
 }
@@ -232,7 +274,7 @@ function EvidenceTimeline({ dispute, evidence }: EvidenceTimelineProps) {
 											</Stack>
 
 											<Badge variant="light" color={getEvidenceSideColor(side)}>
-												{getEvidenceSideLabel(side)}
+												{getEvidenceRoleLabel(item, dispute) ?? getEvidenceSideLabel(side)}
 											</Badge>
 										</Group>
 
@@ -333,6 +375,7 @@ export function DisputesPanelView({
 	const selectedCanSendEvidence = connected && selectedVotingWindow && selectedIsParticipant && !selectedEvidenceAlreadySubmitted;
 	const selectedCanVote = connected && selectedVotingWindow && !selectedIsParticipant;
 	const selectedCanResolve = connected && selectedEncerrada;
+	const voteOptionLabels = getVoteOptionLabels(selectedDispute);
 	const totalOpen = visibleDisputes.length;
 	const disputeTitle = selectedDispute?.request.description ?? "Disputa";
 	const disputeSubtitle = selectedDispute
@@ -617,12 +660,12 @@ export function DisputesPanelView({
 									disabled={selectedVoteLocked}
 									data={[
 										{
-											label: "Apoiar quem abriu",
+											label: voteOptionLabels.openerLabel,
 											value: "apoio_opener",
 											disabled: selectedVoteLocked && selectedVoteSupportOpener === false,
 										},
 										{
-											label: "Apoiar a outra parte",
+											label: voteOptionLabels.opposingLabel,
 											value: "apoio_opposing",
 											disabled: selectedVoteLocked && selectedVoteSupportOpener === true,
 										},
