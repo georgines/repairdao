@@ -1,6 +1,3 @@
--- CreateEnum
-CREATE TYPE "ServiceRequestStatus" AS ENUM ('ABERTA', 'ACEITA', 'ORCADA');
-
 -- CreateTable
 CREATE TABLE "ServiceRequest" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -9,7 +6,7 @@ CREATE TABLE "ServiceRequest" (
     "technicianAddress" TEXT NOT NULL,
     "technicianName" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    "status" "ServiceRequestStatus" NOT NULL DEFAULT 'ABERTA',
+    "status" TEXT NOT NULL DEFAULT 'ABERTA',
     "budgetAmount" INTEGER,
     "acceptedAt" DATETIME,
     "budgetSentAt" DATETIME,
