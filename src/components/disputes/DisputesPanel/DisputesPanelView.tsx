@@ -1,5 +1,23 @@
 import { formatUnits } from "ethers";
-import { Badge, Box, Button, Card, Divider, Group, Modal, ScrollArea, SegmentedControl, Stack, Text, Textarea, Title } from "@mantine/core";
+import {
+	Badge,
+	Box,
+	Button,
+	Card,
+	Divider,
+	Group,
+	Modal,
+	ScrollArea,
+	Select,
+	SegmentedControl,
+	SimpleGrid,
+	Stack,
+	Table,
+	Text,
+	Textarea,
+	TextInput,
+	Title,
+} from "@mantine/core";
 import type { DisputaContratoDominio, EvidenciaContratoDominio } from "@/services/blockchain/adapters";
 import { formatarEnderecoCurto } from "@/services/wallet/formatters";
 import type { ServiceRequestSummary } from "@/services/serviceRequests";
@@ -20,6 +38,8 @@ export type DisputesPanelViewProps = {
 	error: string | null;
 	disputes: DisputeItem[];
 	visibleDisputes: DisputeItem[];
+	query?: string;
+	statusFilter?: "all" | DisputaContratoDominio["estado"];
 	selectedDisputeId: number | null;
 	selectedDispute: DisputeItem | null;
 	selectedEvidence: EvidenciaContratoDominio[];
@@ -30,6 +50,9 @@ export type DisputesPanelViewProps = {
 	votedDisputeChoices: Record<number, boolean>;
 	evidenceSubmittedDisputeIds: number[];
 	onRefresh: () => void;
+	onQueryChange?: (value: string) => void;
+	onStatusFilterChange?: (value: string | null) => void;
+	onClearFilters?: () => void;
 	onSelectDispute: (disputeId: number) => Promise<void>;
 	onCloseDispute: () => void;
 	onEvidenceDraftChange: (value: string) => void;
@@ -85,8 +108,69 @@ function renderEmptyState(message: string) {
 	);
 }
 
+const STATUS_FILTER_OPTIONS = [
+	{ value: "all", label: "Todas" },
+	{ value: "aberta", label: "Aberta" },
+	{ value: "janela_votacao", label: "Janela de votação" },
+	{ value: "encerrada", label: "Encerrada" },
+	{ value: "resolvida", label: "Resolvida" },
+] as const;
+
+function formatBudget(value?: number | null) {
+	if (value === null || value === undefined) {
+		return "-";
+	}
+
+	return `RPT ${new Intl.NumberFormat("pt-BR", {
+		minimumFractionDigits: 0,
+		maximumFractionDigits: 0,
+	}).format(value)}`;
+}
+
+function shortAddress(address: string) {
+	if (address.length <= 12) {
+		return address;
+	}
+
+	return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
 function normalizeAddress(value?: string) {
 	return value?.trim().toLowerCase() ?? "";
+}
+
+function secondaryActionLabel(status?: DisputaContratoDominio["estado"]) {
+	switch (status) {
+		case "aberta":
+			return "Acompanhar";
+		case "janela_votacao":
+			return "Votar";
+		case "encerrada":
+			return "Resolver";
+		case "resolvida":
+			return "Finalizada";
+		default:
+			return "Detalhes";
+	}
+}
+
+function secondaryActionColor(status?: DisputaContratoDominio["estado"]) {
+	switch (status) {
+		case "aberta":
+			return "teal";
+		case "janela_votacao":
+			return "yellow";
+		case "encerrada":
+			return "red";
+		case "resolvida":
+			return "gray";
+		default:
+			return "blue";
+	}
+}
+
+function secondaryActionDisabled(status?: DisputaContratoDominio["estado"]) {
+	return status === "resolvida";
 }
 
 function getEvidenceSide(
@@ -214,6 +298,8 @@ export function DisputesPanelView({
 	error,
 	disputes,
 	visibleDisputes,
+	query = "",
+	statusFilter = "all",
 	selectedDisputeId,
 	selectedDispute,
 	selectedEvidence,
@@ -224,6 +310,9 @@ export function DisputesPanelView({
 	votedDisputeChoices,
 	evidenceSubmittedDisputeIds,
 	onRefresh,
+	onQueryChange = () => {},
+	onStatusFilterChange = () => {},
+	onClearFilters = () => {},
 	onSelectDispute,
 	onCloseDispute,
 	onEvidenceDraftChange,
@@ -259,15 +348,15 @@ export function DisputesPanelView({
 						<Text size="xs" tt="uppercase" fw={700} c="dimmed">
 							Disputas
 						</Text>
-						<Title order={1}>Acesse disputas em um único modal vertical</Title>
+						<Title order={1}>Acompanhe as disputas em uma lista unica</Title>
 						<Text size="sm" c="dimmed">
-							O contrato define o estado real. A tela só organiza leitura, timeline e ação disponível.
+							O contrato define o estado real. A tela organiza leitura, filtros e acoes disponiveis.
 						</Text>
 					</Stack>
 
 					<Group gap="sm">
 						<Badge variant="light">{countLabel(disputes.length, "registrada", "registradas")}</Badge>
-						<Badge variant="light">{countLabel(totalOpen, "aberta", "abertas")}</Badge>
+						<Badge variant="light">{countLabel(totalOpen, "visivel", "visiveis")}</Badge>
 						{perfilAtivo ? <Badge variant="light">{perfilAtivo}</Badge> : null}
 						<Badge variant="light" color={connected ? "teal" : "gray"}>
 							{connected ? `carteira: ${formatarEnderecoCurto(walletAddress ?? "")}` : "carteira desconectada"}
@@ -296,48 +385,107 @@ export function DisputesPanelView({
 
 			<Card withBorder radius="sm" shadow="none" padding="lg">
 				<Stack gap="md">
-					<Stack gap={2}>
-						<Title order={3}>Disputas abertas</Title>
+					<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+						<TextInput
+							label="Buscar ordem"
+							description="Pesquise por tecnico, descricao, status ou valor."
+							placeholder="Ex.: troca de tomadas, 0xtec, aberta"
+							value={query}
+							onChange={(event) => onQueryChange(event.currentTarget.value)}
+						/>
+
+						<Select
+							label="Status"
+							description="Filtra disputas pelo andamento atual."
+							placeholder="Selecione um status"
+							data={STATUS_FILTER_OPTIONS}
+							value={statusFilter}
+							onChange={onStatusFilterChange}
+							clearable={false}
+						/>
+					</SimpleGrid>
+
+					<Group justify="space-between" align="center" wrap="nowrap">
 						<Text size="sm" c="dimmed">
-							{visibleDisputes.length > 0 ? "Escolha uma disputa para abrir o modal vertical." : "Nenhuma disputa aberta no momento."}
+							{visibleDisputes.length > 0
+								? "Use a lista para acompanhar suas disputas."
+								: query.trim().length > 0 || statusFilter !== "all"
+									? "Nenhuma disputa encontrou este criterio."
+									: "Nenhuma disputa aberta no momento."}
 						</Text>
-					</Stack>
+
+						<Button variant="light" onClick={onClearFilters}>
+							Limpar
+						</Button>
+					</Group>
 
 					{visibleDisputes.length > 0 ? (
-						<Stack gap="sm">
-							{visibleDisputes.map((dispute) => {
-								const active = dispute.request.id === selectedDisputeId;
+						<Box style={{ overflowX: "auto" }}>
+							<Table withTableBorder withColumnBorders highlightOnHover miw={920}>
+								<Table.Thead>
+									<Table.Tr>
+										<Table.Th>Tecnico</Table.Th>
+										<Table.Th>Descricao</Table.Th>
+										<Table.Th>Status</Table.Th>
+										<Table.Th>Orcamento (RPT)</Table.Th>
+										<Table.Th>Acoes</Table.Th>
+									</Table.Tr>
+								</Table.Thead>
+								<Table.Tbody>
+									{visibleDisputes.map((dispute) => {
+										const active = dispute.request.id === selectedDisputeId;
+										const estado = dispute.contract?.estado;
+										const secondaryLabel = secondaryActionLabel(estado);
+										const secondaryDisabled = secondaryActionDisabled(estado);
 
-								return (
-									<Button
-										key={dispute.request.id}
-										variant={active ? "filled" : "light"}
-										color={active ? "teal" : "gray"}
-										fullWidth
-										onClick={() => onSelectDispute(dispute.request.id)}
-									>
-										<Stack gap={6} w="100%" align="stretch">
-											<Group justify="space-between" align="flex-start" wrap="nowrap">
-												<Stack gap={2} align="flex-start">
-													<Text fw={700} lineClamp={2} ta="left">
-														{dispute.request.description}
-													</Text>
-													<Text size="xs" c={active ? "white" : "dimmed"} ta="left">
-														{dispute.request.clientName} x {dispute.request.technicianName}
-													</Text>
-												</Stack>
-												<Badge variant="light" color={statusColor(dispute.contract?.estado)}>
-													{statusLabel(dispute.contract?.estado)}
-												</Badge>
-											</Group>
-											<Text size="xs" c={active ? "white" : "dimmed"} ta="left">
-												{dispute.request.disputeReason ?? "Sem motivo espelhado no banco"} · Ordem {dispute.request.id}
-											</Text>
-										</Stack>
-									</Button>
-								);
-							})}
-						</Stack>
+										return (
+											<Table.Tr key={dispute.request.id} data-selected={active || undefined}>
+												<Table.Td>
+													<Stack gap={0}>
+														<Text fw={600}>{dispute.request.technicianName}</Text>
+														<Text size="xs" c="dimmed">
+															{shortAddress(dispute.request.technicianAddress)}
+														</Text>
+													</Stack>
+												</Table.Td>
+												<Table.Td>
+													<Stack gap={0}>
+														<Text fw={500} lineClamp={2}>
+															{dispute.request.description}
+														</Text>
+														<Text size="xs" c="dimmed">
+															{dispute.request.clientName}
+														</Text>
+													</Stack>
+												</Table.Td>
+												<Table.Td>
+													<Badge variant="light" color={statusColor(estado)}>
+														{statusLabel(estado)}
+													</Badge>
+												</Table.Td>
+												<Table.Td>{formatBudget(dispute.request.budgetAmount)}</Table.Td>
+												<Table.Td>
+													<Group gap="xs" wrap="nowrap">
+														<Button size="xs" variant="light" onClick={() => void onSelectDispute(dispute.request.id)}>
+															Detalhes
+														</Button>
+														<Button
+															size="xs"
+															variant="light"
+															color={secondaryActionColor(estado)}
+															disabled={secondaryDisabled}
+															onClick={() => void onSelectDispute(dispute.request.id)}
+														>
+															{secondaryLabel}
+														</Button>
+													</Group>
+												</Table.Td>
+											</Table.Tr>
+										);
+									})}
+								</Table.Tbody>
+							</Table>
+						</Box>
 					) : (
 						renderEmptyState("Sem disputas para exibir.")
 					)}

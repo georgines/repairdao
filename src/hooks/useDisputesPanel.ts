@@ -15,6 +15,7 @@ import {
 	votarNaDisputaNoContrato,
 } from "@/services/disputes/disputeBlockchain";
 import type { ContextoPapelRepairDAO } from "@/types";
+import type { EstadoDisputaRepairDAO } from "@/types";
 
 type DisputeItem = {
 	request: ServiceRequestSummary;
@@ -31,6 +32,8 @@ type UseDisputesPanelResult = {
 	error: string | null;
 	disputes: DisputeItem[];
 	visibleDisputes: DisputeItem[];
+	query: string;
+	statusFilter: EstadoDisputaRepairDAO | "all";
 	selectedDisputeId: number | null;
 	selectedDispute: DisputeItem | null;
 	selectedEvidence: EvidenciaContratoDominio[];
@@ -41,6 +44,9 @@ type UseDisputesPanelResult = {
 	votedDisputeChoices: Record<number, boolean>;
 	evidenceSubmittedDisputeIds: number[];
 	onRefresh: () => Promise<void>;
+	onQueryChange: (value: string) => void;
+	onStatusFilterChange: (value: string | null) => void;
+	onClearFilters: () => void;
 	onSelectDispute: (disputeId: number) => Promise<void>;
 	onCloseDispute: () => void;
 	onEvidenceDraftChange: (value: string) => void;
@@ -66,6 +72,25 @@ function ehDisputaAtiva(contract: DisputaContratoDominio | null) {
 	return contract === null || contract.resolved !== true && contract.estado !== "resolvida";
 }
 
+function normalizarTexto(valor: string) {
+	return valor.trim().toLowerCase();
+}
+
+function formatarStatusContrato(status: DisputaContratoDominio["estado"] | null) {
+	switch (status) {
+		case "aberta":
+			return "Aberta";
+		case "janela_votacao":
+			return "Janela de votacao";
+		case "encerrada":
+			return "Encerrada";
+		case "resolvida":
+			return "Resolvida";
+		default:
+			return "Em disputa";
+	}
+}
+
 export function useDisputesPanel(): UseDisputesPanelResult {
 	const { state } = useWalletStatus();
 	const ethereum = useMemo(() => obterEthereumProvider(), []);
@@ -73,6 +98,8 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 	const [error, setError] = useState<string | null>(null);
 	const [metrics, setMetrics] = useState<EligibilityMetrics>(EMPTY_METRICS);
 	const [disputes, setDisputes] = useState<DisputeItem[]>([]);
+	const [query, setQuery] = useState("");
+	const [statusFilter, setStatusFilter] = useState<EstadoDisputaRepairDAO | "all">("all");
 	const [selectedDisputeId, setSelectedDisputeId] = useState<number | null>(null);
 	const [selectedEvidence, setSelectedEvidence] = useState<EvidenciaContratoDominio[]>([]);
 	const [evidenceDraft, setEvidenceDraft] = useState("");
@@ -193,8 +220,38 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 	}, [disputes, selectedDisputeId]);
 
 	const visibleDisputes = useMemo(
-		() => disputes.filter((dispute) => ehDisputaAtiva(dispute.contract)),
-		[disputes],
+		() =>
+			disputes.filter((dispute) => {
+				if (!ehDisputaAtiva(dispute.contract)) {
+					return false;
+				}
+
+				if (statusFilter !== "all" && dispute.contract?.estado !== statusFilter) {
+					return false;
+				}
+
+				if (!query.trim()) {
+					return true;
+				}
+
+				const searchable = normalizarTexto(
+					[
+						dispute.request.technicianName,
+						dispute.request.technicianAddress,
+						dispute.request.clientName,
+						dispute.request.clientAddress,
+						dispute.request.description,
+						dispute.request.disputeReason ?? "",
+						formatarStatusContrato(dispute.contract?.estado ?? null),
+						dispute.contract?.motivo ?? "",
+						dispute.request.budgetAmount?.toString() ?? "",
+						dispute.request.id.toString(),
+					].join(" "),
+				);
+
+				return searchable.includes(normalizarTexto(query));
+			}),
+		[disputes, query, statusFilter],
 	);
 
 	const selectedDispute = useMemo(
@@ -251,6 +308,26 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 		setEvidenceDraft("");
 		setVoteSupportOpener(true);
 		setError(null);
+	}
+
+	function onQueryChange(value: string) {
+		setQuery(value);
+	}
+
+	function onStatusFilterChange(value: string | null) {
+		if (value === null || value === "all") {
+			setStatusFilter("all");
+			return;
+		}
+
+		if (value === "aberta" || value === "janela_votacao" || value === "encerrada" || value === "resolvida") {
+			setStatusFilter(value);
+		}
+	}
+
+	function onClearFilters() {
+		setQuery("");
+		setStatusFilter("all");
 	}
 
 	function onEvidenceDraftChange(value: string) {
@@ -421,6 +498,8 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 		error,
 		disputes,
 		visibleDisputes,
+		query,
+		statusFilter,
 		selectedDisputeId,
 		selectedDispute,
 		selectedEvidence,
@@ -431,6 +510,9 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 		votedDisputeChoices,
 		evidenceSubmittedDisputeIds,
 		onRefresh,
+		onQueryChange,
+		onStatusFilterChange,
+		onClearFilters,
 		onSelectDispute,
 		onCloseDispute,
 		onEvidenceDraftChange,

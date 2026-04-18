@@ -125,13 +125,70 @@ describe("components/disputes/DisputesPanelView", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Acesse disputas em um único modal vertical")).toBeDefined();
+		expect(screen.getByText("Acompanhe as disputas em uma lista unica")).toBeDefined();
+		expect(screen.getByRole("textbox", { name: "Buscar ordem" })).toBeDefined();
+		expect(screen.getByRole("columnheader", { name: "Tecnico" })).toBeDefined();
 		expect(screen.getByRole("heading", { name: "Enviar evidência" })).toBeDefined();
 		expect(screen.queryByText("Votar na disputa")).toBeNull();
 		expect(screen.getByText("Fotos do defeito")).toBeDefined();
 
 		fireEvent.click(screen.getByRole("button", { name: "Enviar evidência" }));
 		expect(onSubmitEvidence).toHaveBeenCalledTimes(1);
+	});
+
+	it("filtra a lista por busca e status", () => {
+		const onQueryChange = vi.fn();
+		const onClearFilters = vi.fn();
+
+		renderWithMantine(
+			<DisputesPanelView
+				connected
+				walletAddress="0xcliente"
+				walletNotice={null}
+				perfilAtivo="cliente"
+				hasVotingTokens
+				loading={false}
+				error={null}
+				disputes={[{ request: disputeRequest, contract: disputeContract }]}
+				visibleDisputes={[{ request: disputeRequest, contract: disputeContract }]}
+				query=""
+				statusFilter="janela_votacao"
+				selectedDisputeId={null}
+				selectedDispute={null}
+				selectedEvidence={[]}
+				evidenceDraft=""
+				voteSupportOpener
+				busyDisputeId={null}
+				votedDisputeIds={[]}
+				votedDisputeChoices={{}}
+				evidenceSubmittedDisputeIds={[]}
+				onRefresh={vi.fn()}
+				onQueryChange={onQueryChange}
+				onStatusFilterChange={vi.fn()}
+				onClearFilters={onClearFilters}
+				onSelectDispute={vi.fn()}
+				onCloseDispute={vi.fn()}
+				onEvidenceDraftChange={vi.fn()}
+				onVoteSupportChange={vi.fn()}
+				onSubmitEvidence={vi.fn()}
+				onSubmitVote={vi.fn()}
+				onResolveDispute={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByRole("textbox", { name: "Buscar ordem" })).toBeDefined();
+		expect(screen.getByRole("combobox", { name: "Status" })).toBeDefined();
+		expect(screen.getByRole("button", { name: "Limpar" })).toBeDefined();
+		expect(screen.getByRole("columnheader", { name: "Descricao" })).toBeDefined();
+		expect(screen.getByRole("button", { name: "Detalhes" })).toBeDefined();
+
+		fireEvent.change(screen.getByRole("textbox", { name: "Buscar ordem" }), {
+			target: { value: "tomadas" },
+		});
+		expect(onQueryChange).toHaveBeenCalledWith("tomadas");
+
+		fireEvent.click(screen.getByRole("button", { name: "Limpar" }));
+		expect(onClearFilters).toHaveBeenCalledTimes(1);
 	});
 
 	it("posiciona a evidência do autor à esquerda e a outra parte à direita", () => {

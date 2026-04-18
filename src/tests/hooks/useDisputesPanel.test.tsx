@@ -261,6 +261,43 @@ describe("useDisputesPanel", () => {
 		expect(getLatest()?.voteSupportOpener).toBe(false);
 	});
 
+	it("filtra disputas por busca e status", async () => {
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+			await flush();
+		});
+
+		expect(getLatest()?.query).toBe("");
+		expect(getLatest()?.statusFilter).toBe("all");
+		expect(getLatest()?.visibleDisputes).toHaveLength(1);
+
+		await act(async () => {
+			getLatest()?.onQueryChange("tomadas");
+			await flush();
+		});
+
+		expect(getLatest()?.query).toBe("tomadas");
+		expect(getLatest()?.visibleDisputes).toHaveLength(1);
+
+		await act(async () => {
+			getLatest()?.onStatusFilterChange("encerrada");
+			await flush();
+		});
+
+		expect(getLatest()?.statusFilter).toBe("encerrada");
+		expect(getLatest()?.visibleDisputes).toHaveLength(0);
+
+		await act(async () => {
+			getLatest()?.onClearFilters();
+			await flush();
+		});
+
+		expect(getLatest()?.query).toBe("");
+		expect(getLatest()?.statusFilter).toBe("all");
+		expect(getLatest()?.visibleDisputes).toHaveLength(1);
+	});
+
 	it("permite resolver a disputa quando o prazo termina", async () => {
 		serviceMocks.carregarDisputaNoContrato.mockResolvedValue({
 			...disputeContract,
