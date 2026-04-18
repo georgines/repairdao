@@ -6,6 +6,7 @@ import { obterEthereumProvider } from "@/services/wallet/provider";
 import { carregarMetricasElegibilidade, type EligibilityMetrics } from "@/services/eligibility/eligibilityMetrics";
 import { loadServiceRequests, type ServiceRequestSummary } from "@/services/serviceRequests/serviceRequestClient";
 import type { DisputaContratoDominio, EvidenciaContratoDominio } from "@/services/blockchain/adapters";
+import { normalizarEnderecoComparacao } from "@/services/wallet/formatters";
 import {
 	carregarDisputaNoContrato,
 	carregarEvidenciasDaDisputaNoContrato,
@@ -347,6 +348,17 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 		};
 	}
 
+	function pertenceADisputa(endereco: string | null | undefined, disputa: DisputeItem | null) {
+		if (!endereco || !disputa) {
+			return false;
+		}
+
+		const enderecoNormalizado = normalizarEnderecoComparacao(endereco);
+
+		return enderecoNormalizado === normalizarEnderecoComparacao(disputa.request.clientAddress)
+			|| enderecoNormalizado === normalizarEnderecoComparacao(disputa.request.technicianAddress);
+	}
+
 	async function onSubmitEvidence() {
 		if (!ethereum) {
 			setError("Conecte a carteira para enviar evidencia.");
@@ -368,7 +380,7 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 			return;
 		}
 
-		if (walletAddress !== selectedDispute.request.clientAddress && walletAddress !== selectedDispute.request.technicianAddress) {
+		if (!pertenceADisputa(walletAddress, selectedDispute)) {
 			setError("Apenas cliente ou tecnico da ordem podem enviar evidencia.");
 			return;
 		}
@@ -383,7 +395,9 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 		setError(null);
 
 		try {
-			const papel = walletAddress === selectedDispute.request.clientAddress ? "cliente" : "tecnico";
+			const papel = normalizarEnderecoComparacao(walletAddress) === normalizarEnderecoComparacao(selectedDispute.request.clientAddress)
+				? "cliente"
+				: "tecnico";
 			await enviarEvidenciaNaDisputaNoContrato(
 				ethereum,
 				criarContextoDisputa(papel, true),
@@ -422,7 +436,7 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 			return;
 		}
 
-		const isParticipant = walletAddress === selectedDispute.request.clientAddress || walletAddress === selectedDispute.request.technicianAddress;
+		const isParticipant = pertenceADisputa(walletAddress, selectedDispute);
 		if (isParticipant) {
 			setError("Quem participa da disputa nao pode votar nela.");
 			return;

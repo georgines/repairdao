@@ -17,6 +17,10 @@ export function formatarEnderecoCurto(address?: string | null) {
 	return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+export function normalizarEnderecoComparacao(address?: string | null) {
+	return address?.trim().toLowerCase() ?? "";
+}
+
 export function formatarBlockchain(chainId?: bigint | number | null) {
 	if (chainId === undefined || chainId === null) {
 		return "Sem rede";

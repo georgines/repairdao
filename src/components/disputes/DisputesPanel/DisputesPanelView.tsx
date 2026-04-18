@@ -19,7 +19,7 @@ import {
 	Title,
 } from "@mantine/core";
 import type { DisputaContratoDominio, EvidenciaContratoDominio } from "@/services/blockchain/adapters";
-import { formatarEnderecoCurto } from "@/services/wallet/formatters";
+import { formatarEnderecoCurto, normalizarEnderecoComparacao } from "@/services/wallet/formatters";
 import type { ServiceRequestSummary } from "@/services/serviceRequests";
 import styles from "./DisputesPanelView.module.css";
 
@@ -135,10 +135,6 @@ function shortAddress(address: string) {
 	return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-function normalizeAddress(value?: string) {
-	return value?.trim().toLowerCase() ?? "";
-}
-
 function secondaryActionLabel(status?: DisputaContratoDominio["estado"]) {
 	switch (status) {
 		case "aberta":
@@ -178,9 +174,9 @@ function getEvidenceSide(
 	dispute: DisputeItem | null,
 	index: number,
 ): "left" | "right" {
-	const openedBy = normalizeAddress(dispute?.contract?.openedBy);
-	const opposingParty = normalizeAddress(dispute?.contract?.opposingParty);
-	const author = normalizeAddress(evidence.submittedBy);
+	const openedBy = normalizarEnderecoComparacao(dispute?.contract?.openedBy);
+	const opposingParty = normalizarEnderecoComparacao(dispute?.contract?.opposingParty);
+	const author = normalizarEnderecoComparacao(evidence.submittedBy);
 
 	if (openedBy && author === openedBy) {
 		return "left";
@@ -263,7 +259,10 @@ function isParticipant(walletAddress: string | null, dispute: DisputeItem | null
 		return false;
 	}
 
-	return walletAddress === dispute.request.clientAddress || walletAddress === dispute.request.technicianAddress;
+	const normalizedWallet = normalizarEnderecoComparacao(walletAddress);
+
+	return normalizedWallet === normalizarEnderecoComparacao(dispute.request.clientAddress)
+		|| normalizedWallet === normalizarEnderecoComparacao(dispute.request.technicianAddress);
 }
 
 function countLabel(count: number, singular: string, plural: string) {

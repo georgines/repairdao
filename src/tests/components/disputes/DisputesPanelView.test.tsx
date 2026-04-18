@@ -97,7 +97,7 @@ describe("components/disputes/DisputesPanelView", () => {
 		renderWithMantine(
 			<DisputesPanelView
 				connected
-				walletAddress="0xcliente"
+				walletAddress="0xCLIENTE"
 				walletNotice={null}
 				perfilAtivo="cliente"
 				hasVotingTokens
@@ -132,6 +132,46 @@ describe("components/disputes/DisputesPanelView", () => {
 		expect(screen.queryByText("Votar na disputa")).toBeNull();
 		expect(screen.getByText("Fotos do defeito")).toBeDefined();
 
+		fireEvent.click(screen.getByRole("button", { name: "Enviar evidência" }));
+		expect(onSubmitEvidence).toHaveBeenCalledTimes(1);
+	});
+
+	it("mostra o formulario de evidencia para a outra parte da disputa", () => {
+		const onSubmitEvidence = vi.fn();
+
+		renderWithMantine(
+			<DisputesPanelView
+				connected
+				walletAddress="0xTEC"
+				walletNotice={null}
+				perfilAtivo="tecnico"
+				hasVotingTokens
+				loading={false}
+				error={null}
+				disputes={[{ request: disputeRequest, contract: disputeContract }]}
+				visibleDisputes={[{ request: disputeRequest, contract: disputeContract }]}
+				selectedDisputeId={21}
+				selectedDispute={{ request: disputeRequest, contract: disputeContract }}
+				selectedEvidence={disputeEvidence}
+				evidenceDraft="Resposta do tecnico"
+				voteSupportOpener
+				busyDisputeId={null}
+				votedDisputeIds={[]}
+				votedDisputeChoices={{}}
+				evidenceSubmittedDisputeIds={[]}
+				onRefresh={vi.fn()}
+				onSelectDispute={vi.fn()}
+				onCloseDispute={vi.fn()}
+				onEvidenceDraftChange={vi.fn()}
+				onVoteSupportChange={vi.fn()}
+				onSubmitEvidence={onSubmitEvidence}
+				onSubmitVote={vi.fn()}
+				onResolveDispute={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByRole("heading", { name: "Enviar evidência" })).toBeDefined();
+		expect(screen.queryByText("Votar na disputa")).toBeNull();
 		fireEvent.click(screen.getByRole("button", { name: "Enviar evidência" }));
 		expect(onSubmitEvidence).toHaveBeenCalledTimes(1);
 	});
@@ -378,7 +418,7 @@ describe("components/disputes/DisputesPanelView", () => {
 			/>,
 		);
 
-		expect(screen.queryByRole("heading", { name: "Enviar evidencia" })).toBeNull();
+		expect(screen.queryByRole("heading", { name: "Enviar evidência" })).toBeNull();
 		expect(screen.queryByText("Sua evidencia ja foi registrada nesta sessao. O card de envio foi ocultado.")).toBeNull();
 	});
 });

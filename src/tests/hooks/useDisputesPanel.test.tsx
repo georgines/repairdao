@@ -105,7 +105,7 @@ describe("useDisputesPanel", () => {
 		serviceMocks.useWalletStatus.mockReturnValue({
 			state: {
 				connected: true,
-				address: "0xcliente",
+				address: "0xCLIENTE",
 			},
 		});
 		serviceMocks.obterEthereumProvider.mockReturnValue({});
@@ -181,11 +181,65 @@ describe("useDisputesPanel", () => {
 				envolvidoEmDisputa: true,
 			},
 			21,
-			"0xcliente",
+			"0xCLIENTE",
 			"nova evidencia",
 		);
 		expect(serviceMocks.carregarEvidenciasDaDisputaNoContrato).toHaveBeenCalledWith({}, 21);
 		expect(getLatest()?.evidenceSubmittedDisputeIds).toContain(21);
+	});
+
+	it("permite ao tecnico enviar evidencia quando os enderecos usam casing diferente", async () => {
+		serviceMocks.useWalletStatus.mockReturnValue({
+			state: {
+				connected: true,
+				address: "0xTEC",
+			},
+		});
+		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
+			rptBalanceRaw: 5000000000000000000n,
+			rptBalance: "5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
+			badgeLevel: "bronze",
+			isActive: true,
+			perfilAtivo: "tecnico",
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
+		});
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+			await flush();
+		});
+
+		await act(async () => {
+			await getLatest()?.onSelectDispute(21);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.onEvidenceDraftChange("resposta do tecnico");
+			await flush();
+		});
+
+		await act(async () => {
+			await getLatest()?.onSubmitEvidence();
+			await flush();
+		});
+
+		expect(serviceMocks.enviarEvidenciaNaDisputaNoContrato).toHaveBeenCalledWith(
+			{},
+			{
+				papel: "tecnico",
+				depositoAtivo: true,
+				tokens: 1,
+				envolvidoEmDisputa: true,
+			},
+			21,
+			"0xTEC",
+			"resposta do tecnico",
+		);
 	});
 
 	it("permite votar quando nao faz parte da disputa", async () => {
