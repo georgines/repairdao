@@ -148,6 +148,12 @@ describe("useDisputesPanel", () => {
 		});
 
 		expect(getLatest()?.visibleDisputes).toHaveLength(1);
+
+		await act(async () => {
+			getLatest()?.onSelectDispute(21);
+			await flush();
+		});
+
 		expect(getLatest()?.selectedDisputeId).toBe(21);
 
 		await act(async () => {
@@ -202,6 +208,11 @@ describe("useDisputesPanel", () => {
 		});
 
 		await act(async () => {
+			getLatest()?.onSelectDispute(21);
+			await flush();
+		});
+
+		await act(async () => {
 			getLatest()?.onVoteSupportChange(false);
 			await flush();
 		});
@@ -235,6 +246,11 @@ describe("useDisputesPanel", () => {
 		await act(async () => {
 			root.render(<Probe />);
 			await flush();
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.onSelectDispute(21);
 			await flush();
 		});
 

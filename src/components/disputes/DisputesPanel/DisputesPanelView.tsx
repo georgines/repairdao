@@ -1,6 +1,7 @@
-import { Badge, Button, Card, Divider, Group, SegmentedControl, SimpleGrid, Stack, Text, Textarea, Title } from "@mantine/core";
-import { formatarEnderecoCurto } from "@/services/wallet/formatters";
+import { formatUnits } from "ethers";
+import { Badge, Box, Button, Card, Divider, Group, Modal, ScrollArea, SegmentedControl, Stack, Text, Textarea, Timeline, Title } from "@mantine/core";
 import type { DisputaContratoDominio, EvidenciaContratoDominio } from "@/services/blockchain/adapters";
+import { formatarEnderecoCurto } from "@/services/wallet/formatters";
 import type { ServiceRequestSummary } from "@/services/serviceRequests";
 
 type DisputeItem = {
@@ -28,6 +29,7 @@ export type DisputesPanelViewProps = {
 	evidenceSubmittedDisputeIds: number[];
 	onRefresh: () => void;
 	onSelectDispute: (disputeId: number) => void;
+	onCloseDispute: () => void;
 	onEvidenceDraftChange: (value: string) => void;
 	onVoteSupportChange: (value: boolean) => void;
 	onSubmitEvidence: () => Promise<void>;
@@ -40,7 +42,7 @@ function statusLabel(status?: DisputaContratoDominio["estado"]) {
 		case "aberta":
 			return "Aberta";
 		case "janela_votacao":
-			return "Janela de votacao";
+			return "Janela de votação";
 		case "encerrada":
 			return "Encerrada";
 		case "resolvida":
@@ -93,6 +95,24 @@ function countLabel(count: number, singular: string, plural: string) {
 	return `${count} ${count === 1 ? singular : plural}`;
 }
 
+function formatVoteValue(value?: bigint) {
+	if (value === undefined) {
+		return "0";
+	}
+
+	const rawValue = formatUnits(value, 18);
+	const [integerPart, fractionPart] = rawValue.split(".");
+	const formattedInteger = new Intl.NumberFormat("pt-BR").format(BigInt(integerPart));
+
+	if (!fractionPart) {
+		return formattedInteger;
+	}
+
+	const trimmedFraction = fractionPart.replace(/0+$/, "");
+
+	return trimmedFraction.length > 0 ? `${formattedInteger},${trimmedFraction}` : formattedInteger;
+}
+
 export function DisputesPanelView({
 	connected,
 	walletAddress,
@@ -113,6 +133,7 @@ export function DisputesPanelView({
 	evidenceSubmittedDisputeIds,
 	onRefresh,
 	onSelectDispute,
+	onCloseDispute,
 	onEvidenceDraftChange,
 	onVoteSupportChange,
 	onSubmitEvidence,
@@ -126,12 +147,14 @@ export function DisputesPanelView({
 	const selectedEncerrada = selectedState === "encerrada";
 	const selectedVoteAlreadySubmitted = selectedDispute ? votedDisputeIds.includes(selectedDispute.request.id) : false;
 	const selectedEvidenceAlreadySubmitted = selectedDispute ? evidenceSubmittedDisputeIds.includes(selectedDispute.request.id) : false;
-	const selectedCanSendEvidence = connected && selectedVotingWindow && selectedIsParticipant;
-	const selectedCanVote = connected && selectedVotingWindow && !selectedIsParticipant;
+	const selectedCanSendEvidence = connected && selectedVotingWindow && selectedIsParticipant && !selectedEvidenceAlreadySubmitted;
+	const selectedCanVote = connected && selectedVotingWindow && !selectedIsParticipant && !selectedVoteAlreadySubmitted;
 	const selectedCanResolve = connected && selectedEncerrada;
 	const totalOpen = visibleDisputes.length;
-	const voteSegmentValue = voteSupportOpener ? "apoio_opener" : "apoio_opposing";
-	const selectedActionLocked = selectedEvidenceAlreadySubmitted || selectedVoteAlreadySubmitted;
+	const disputeTitle = selectedDispute?.request.description ?? "Disputa";
+	const disputeSubtitle = selectedDispute
+		? `Ordem ${selectedDispute.request.id} · ${selectedDispute.request.clientName} x ${selectedDispute.request.technicianName}`
+		: "";
 
 	return (
 		<Stack gap="lg">
@@ -141,9 +164,9 @@ export function DisputesPanelView({
 						<Text size="xs" tt="uppercase" fw={700} c="dimmed">
 							Disputas
 						</Text>
-						<Title order={1}>Acompanhe, leia e participe da disputa no contrato</Title>
+						<Title order={1}>Acesse disputas em um único modal vertical</Title>
 						<Text size="sm" c="dimmed">
-							O contrato decide o estado real. O banco apenas espelha as ordens abertas para navegação.
+							O contrato define o estado real. A tela só organiza leitura, timeline e ação disponível.
 						</Text>
 					</Stack>
 
@@ -151,11 +174,6 @@ export function DisputesPanelView({
 						<Badge variant="light">{countLabel(disputes.length, "registrada", "registradas")}</Badge>
 						<Badge variant="light">{countLabel(totalOpen, "aberta", "abertas")}</Badge>
 						{perfilAtivo ? <Badge variant="light">{perfilAtivo}</Badge> : null}
-						{selectedState ? (
-							<Badge variant="light" color={statusColor(selectedState)}>
-								{statusLabel(selectedState)}
-							</Badge>
-						) : null}
 						<Badge variant="light" color={connected ? "teal" : "gray"}>
 							{connected ? `carteira: ${formatarEnderecoCurto(walletAddress ?? "")}` : "carteira desconectada"}
 						</Badge>
@@ -163,7 +181,7 @@ export function DisputesPanelView({
 
 					<Group justify="space-between" align="center" wrap="nowrap">
 						<Text size="sm" c="dimmed">
-							{walletNotice ?? "Escolha uma disputa para ver o resumo, as evidencias e a acao disponivel."}
+							{walletNotice ?? "Selecione uma disputa para abrir o modal e interagir."}
 						</Text>
 
 						<Button type="button" variant="light" onClick={onRefresh} loading={loading}>
@@ -181,298 +199,253 @@ export function DisputesPanelView({
 				</Card>
 			) : null}
 
-			<SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
-				<Card withBorder radius="sm" shadow="none" padding="lg">
-					<Stack gap="md">
-						<Stack gap={2}>
-							<Title order={3}>Disputas abertas</Title>
+			<Card withBorder radius="sm" shadow="none" padding="lg">
+				<Stack gap="md">
+					<Stack gap={2}>
+						<Title order={3}>Disputas abertas</Title>
+						<Text size="sm" c="dimmed">
+							{visibleDisputes.length > 0 ? "Escolha uma disputa para abrir o modal vertical." : "Nenhuma disputa aberta no momento."}
+						</Text>
+					</Stack>
+
+					{visibleDisputes.length > 0 ? (
+						<Stack gap="sm">
+							{visibleDisputes.map((dispute) => {
+								const active = dispute.request.id === selectedDisputeId;
+
+								return (
+									<Button
+										key={dispute.request.id}
+										variant={active ? "filled" : "light"}
+										color={active ? "teal" : "gray"}
+										fullWidth
+										onClick={() => onSelectDispute(dispute.request.id)}
+									>
+										<Stack gap={6} w="100%" align="stretch">
+											<Group justify="space-between" align="flex-start" wrap="nowrap">
+												<Stack gap={2} align="flex-start">
+													<Text fw={700} lineClamp={2} ta="left">
+														{dispute.request.description}
+													</Text>
+													<Text size="xs" c={active ? "white" : "dimmed"} ta="left">
+														{dispute.request.clientName} x {dispute.request.technicianName}
+													</Text>
+												</Stack>
+												<Badge variant="light" color={statusColor(dispute.contract?.estado)}>
+													{statusLabel(dispute.contract?.estado)}
+												</Badge>
+											</Group>
+											<Text size="xs" c={active ? "white" : "dimmed"} ta="left">
+												{dispute.request.disputeReason ?? "Sem motivo espelhado no banco"} · Ordem {dispute.request.id}
+											</Text>
+										</Stack>
+									</Button>
+								);
+							})}
+						</Stack>
+					) : (
+						renderEmptyState("Sem disputas para exibir.")
+					)}
+				</Stack>
+			</Card>
+
+			<Modal
+				opened={selectedDispute !== null}
+				onClose={onCloseDispute}
+				title={disputeTitle}
+				size="xl"
+				centered={false}
+				fullScreen={false}
+				scrollAreaComponent={ScrollArea.Autosize}
+				transitionProps={{ transition: "fade", duration: 150 }}
+				overlayProps={{ opacity: 0.55, blur: 3 }}
+			>
+				{selectedDispute ? (
+					<Stack gap="lg">
+						<Stack gap={4}>
 							<Text size="sm" c="dimmed">
-								{visibleDisputes.length > 0 ? "Selecione uma disputa para ler o contrato e interagir." : "Nenhuma disputa aberta no momento."}
+								{disputeSubtitle}
 							</Text>
+							<Group justify="space-between" align="flex-start">
+								<Badge variant="light" color={statusColor(selectedState)}>
+									{statusLabel(selectedState)}
+								</Badge>
+								<Text size="sm" c="dimmed">
+									{selectedResolved
+										? "Resolvida"
+										: selectedEncerrada
+											? "Janela encerrada"
+											: selectedVotingWindow
+												? "Janela de votação aberta"
+												: "Aguardando janela"}
+								</Text>
+							</Group>
 						</Stack>
 
-						{visibleDisputes.length > 0 ? (
+						<Stack gap={6}>
+							<Text size="sm">
+								Cliente: {selectedDispute.request.clientName} ({selectedDispute.request.clientAddress})
+							</Text>
+							<Text size="sm">
+								Tecnico: {selectedDispute.request.technicianName} ({selectedDispute.request.technicianAddress})
+							</Text>
+							<Text size="sm">Motivo: {selectedDispute.request.disputeReason ?? selectedDispute.contract?.motivo ?? "-"}</Text>
+							<Text size="sm">
+								Votos a favor de quem abriu: {formatVoteValue(selectedDispute.contract?.votesForOpener)}
+							</Text>
+							<Text size="sm">
+								Votos a favor da outra parte: {formatVoteValue(selectedDispute.contract?.votesForOpposing)}
+							</Text>
+							<Text size="sm">Prazo: {formatDateTime(selectedDispute.contract?.deadline)}</Text>
+						</Stack>
+
+						<Divider />
+
+						<Card withBorder radius="md" shadow="none" padding="md" bg="var(--mantine-color-gray-0)">
 							<Stack gap="sm">
-								{visibleDisputes.map((dispute) => {
-									const active = dispute.request.id === selectedDisputeId;
-									const stateLabel = statusLabel(dispute.contract?.estado);
-
-									return (
-										<Button
-											key={dispute.request.id}
-											variant={active ? "filled" : "light"}
-											color={active ? "teal" : "gray"}
-											fullWidth
-											onClick={() => onSelectDispute(dispute.request.id)}
-										>
-											<Stack gap={6} w="100%" align="stretch">
-												<Group justify="space-between" align="flex-start" wrap="nowrap">
-													<Stack gap={2} align="flex-start">
-														<Text fw={700} lineClamp={2} ta="left">
-															{dispute.request.description}
-														</Text>
-														<Text size="xs" c={active ? "white" : "dimmed"} ta="left">
-															{dispute.request.clientName} x {dispute.request.technicianName}
-														</Text>
-													</Stack>
-													<Badge variant="light" color={statusColor(dispute.contract?.estado)}>
-														{stateLabel}
-													</Badge>
-												</Group>
-												<Text size="xs" c={active ? "white" : "dimmed"} ta="left">
-													{dispute.request.disputeReason ?? "Sem motivo espelhado no banco"} · Ordem {dispute.request.id}
-												</Text>
-											</Stack>
-										</Button>
-									);
-								})}
-							</Stack>
-						) : (
-							renderEmptyState("Sem disputas para exibir.")
-						)}
-					</Stack>
-				</Card>
-
-				<Card withBorder radius="sm" shadow="none" padding="lg">
-					{selectedDispute ? (
-						<Stack gap="md">
-							<Stack gap={4}>
-								<Group justify="space-between" align="flex-start">
-									<Stack gap={0}>
-										<Title order={3} lineClamp={2}>
-											{selectedDispute.request.description}
-										</Title>
-										<Text size="sm" c="dimmed">
-											Ordem {selectedDispute.request.id}
-										</Text>
-									</Stack>
-									<Badge variant="light" color={statusColor(selectedState)}>
-										{statusLabel(selectedState)}
-									</Badge>
-								</Group>
-
-								<Text size="sm" c="dimmed">
-									Cliente: {selectedDispute.request.clientName} ({selectedDispute.request.clientAddress})
-								</Text>
-								<Text size="sm" c="dimmed">
-									Tecnico: {selectedDispute.request.technicianName} ({selectedDispute.request.technicianAddress})
-								</Text>
-								<Text size="sm" c="dimmed">
-									Motivo: {selectedDispute.request.disputeReason ?? selectedDispute.contract?.motivo ?? "-"}
-								</Text>
-							</Stack>
-
-							<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-								<Card withBorder radius="md" padding="md" shadow="none">
-									<Stack gap={4}>
-										<Text size="xs" tt="uppercase" fw={700} c="dimmed">
-											Status do contrato
-										</Text>
-										<Text fw={700}>{statusLabel(selectedState)}</Text>
-										<Text size="sm" c="dimmed">
-											{selectedVotingWindow
-												? "Janela aberta para votos e evidencias."
-												: selectedEncerrada
-													? "Janela encerrada. A disputa pode ser resolvida."
-													: selectedResolved
-														? "Disputa resolvida no contrato."
-														: "Estado espelhado indisponivel no momento."}
-										</Text>
-									</Stack>
-								</Card>
-
-								<Card withBorder radius="md" padding="md" shadow="none">
-									<Stack gap={4}>
-										<Text size="xs" tt="uppercase" fw={700} c="dimmed">
-											Partes
-										</Text>
-										<Text size="sm">Quem abriu: {selectedDispute.contract?.openedBy ?? "-"}</Text>
-										<Text size="sm">Parte oposta: {selectedDispute.contract?.opposingParty ?? "-"}</Text>
-										<Text size="sm">
-											Sua funcao: {selectedIsParticipant ? "parte da disputa" : "observador com voto"}
-										</Text>
-									</Stack>
-								</Card>
-
-								<Card withBorder radius="md" padding="md" shadow="none">
-									<Stack gap={4}>
-										<Text size="xs" tt="uppercase" fw={700} c="dimmed">
-											Votacao
-										</Text>
-										<Text size="sm">
-											Favor de quem abriu: {selectedDispute.contract?.votesForOpener ?? 0}
-										</Text>
-										<Text size="sm">
-											Favor da outra parte: {selectedDispute.contract?.votesForOpposing ?? 0}
-										</Text>
-									</Stack>
-								</Card>
-
-								<Card withBorder radius="md" padding="md" shadow="none">
-									<Stack gap={4}>
-										<Text size="xs" tt="uppercase" fw={700} c="dimmed">
-											Prazo
-										</Text>
-										<Text size="sm">{formatDateTime(selectedDispute.contract?.deadline)}</Text>
-										<Text size="sm" c="dimmed">
-											{selectedEncerrada
-												? "A janela terminou."
-												: "Enquanto o prazo estiver aberto, evidencias e votos ainda podem ser registrados."}
-										</Text>
-									</Stack>
-								</Card>
-							</SimpleGrid>
-
-							<Divider />
-
-							<Stack gap={6}>
 								<Group justify="space-between" align="center">
-									<Title order={4}>Interacoes registradas no contrato</Title>
+									<Title order={4}>Linha do tempo das evidências</Title>
 									<Text size="sm" c="dimmed">
 										{selectedEvidence.length} registros
 									</Text>
 								</Group>
 
 								{selectedEvidence.length > 0 ? (
-									<Stack gap="sm">
+									<Timeline active={selectedEvidence.length - 1} align="left" bulletSize={14} lineWidth={3} color="teal">
 										{selectedEvidence.map((evidence, index) => (
-											<Card key={`${evidence.timestamp}-${index}`} withBorder radius="md" padding="md" shadow="none">
-												<Stack gap={4}>
-													<Group justify="space-between" wrap="nowrap">
-														<Text fw={600}>{formatarEnderecoCurto(evidence.submittedBy)}</Text>
+											<Timeline.Item
+												key={`${evidence.timestamp}-${index}`}
+												title={
+													<Stack gap={2}>
+														<Group gap={6} wrap="nowrap" align="center">
+															<Text size="sm" fw={700}>
+																{formatarEnderecoCurto(evidence.submittedBy)}
+															</Text>
+															<Text size="xs" c="dimmed">
+																#{index + 1}
+															</Text>
+														</Group>
 														<Text size="xs" c="dimmed">
 															{formatDateTime(evidence.timestamp)}
 														</Text>
-													</Group>
-													<Text size="sm">{evidence.content}</Text>
-												</Stack>
-											</Card>
+													</Stack>
+												}
+												bullet={
+													<Box
+														w={10}
+														h={10}
+														style={{
+															borderRadius: 9999,
+															backgroundColor: "var(--mantine-color-teal-6)",
+															boxShadow: "0 0 0 4px var(--mantine-color-teal-1)",
+														}}
+													/>
+												}
+												lineVariant="solid"
+											>
+												<Text size="sm" mt={4}>
+													{evidence.content}
+												</Text>
+											</Timeline.Item>
 										))}
-									</Stack>
+									</Timeline>
 								) : (
-									renderEmptyState("Ainda nao ha interacoes registradas no contrato.")
+									renderEmptyState("Ainda nao ha evidencias registradas no contrato.")
 								)}
 							</Stack>
+						</Card>
 
-							<Divider />
+						<Divider />
 
-							{!connected ? (
-								<Card withBorder radius="md" padding="md" shadow="none">
+						{!connected ? (
+							<Text size="sm" c="dimmed">
+								Conecte a carteira para interagir com o contrato.
+							</Text>
+						) : selectedResolved ? (
+							<Text size="sm" c="dimmed">
+								Esta disputa ja foi resolvida no contrato. O modal fica apenas em leitura.
+							</Text>
+						) : selectedCanSendEvidence ? (
+							<Stack gap="md">
+								<Stack gap={2}>
+									<Title order={4}>Enviar evidência</Title>
 									<Text size="sm" c="dimmed">
-										Conecte a carteira para enviar evidencia, votar ou resolver a disputa.
+										Apenas cliente ou tecnico da ordem podem registrar evidencia enquanto a janela estiver aberta.
 									</Text>
-								</Card>
-							) : selectedResolved ? (
-								<Card withBorder radius="md" padding="md" shadow="none">
+								</Stack>
+
+								<Textarea
+									label="Nova evidência"
+									description="Escreva o que precisa ficar gravado no contrato."
+									minRows={5}
+									value={evidenceDraft}
+									onChange={(event) => onEvidenceDraftChange(event.currentTarget.value)}
+								/>
+
+								<Group justify="flex-end">
+									<Button
+										type="button"
+										onClick={() => void onSubmitEvidence()}
+										loading={busyDisputeId === selectedDispute.request.id}
+										disabled={evidenceDraft.trim().length === 0}
+									>
+										Enviar evidência
+									</Button>
+								</Group>
+							</Stack>
+						) : selectedCanVote ? (
+							<Stack gap="md">
+								<Stack gap={2}>
+									<Title order={4}>Votar na disputa</Title>
 									<Text size="sm" c="dimmed">
-										Esta disputa ja foi resolvida no contrato. O painel fica apenas em leitura.
+										Quem nao participa da ordem pode votar enquanto a janela estiver aberta.
 									</Text>
-								</Card>
-							) : selectedActionLocked ? null : selectedCanSendEvidence ? (
-								<Card withBorder radius="md" padding="md" shadow="none">
-									<Stack gap="md">
-										<Stack gap={2}>
-											<Title order={4}>Enviar evidencia</Title>
-											<Text size="sm" c="dimmed">
-												Apenas cliente ou tecnico da ordem podem registrar evidencia enquanto a janela esta aberta.
-											</Text>
-										</Stack>
+								</Stack>
 
-										<Textarea
-											label="Nova evidencia"
-											description="Escreva o que precisa ficar gravado no contrato."
-											minRows={4}
-											value={evidenceDraft}
-											onChange={(event) => onEvidenceDraftChange(event.currentTarget.value)}
-										/>
+								<SegmentedControl
+									value={voteSupportOpener ? "apoio_opener" : "apoio_opposing"}
+									onChange={(value) => onVoteSupportChange(value === "apoio_opener")}
+									data={[
+										{ label: "Apoiar quem abriu", value: "apoio_opener" },
+										{ label: "Apoiar a outra parte", value: "apoio_opposing" },
+									]}
+								/>
 
-										<Text size="sm" c="dimmed">
-											Seu texto sera enviado ao contrato e ficara disponivel para leitura.
-										</Text>
+								<Text size="sm" c={hasVotingTokens ? "dimmed" : "red"}>
+									{hasVotingTokens
+										? "Seu voto sera enviado ao contrato e contabilizado de acordo com a posicao escolhida."
+										: "Voce precisa ter RPT para votar."}
+								</Text>
 
-										<Group justify="flex-end">
-											<Button
-												type="button"
-												onClick={() => void onSubmitEvidence()}
-												loading={busyDisputeId === selectedDispute.request.id}
-												disabled={evidenceDraft.trim().length === 0}
-											>
-												Enviar evidencia
-											</Button>
-										</Group>
-									</Stack>
-								</Card>
-							) : selectedCanVote ? (
-								<Card withBorder radius="md" padding="md" shadow="none">
-									<Stack gap="md">
-										<Stack gap={2}>
-											<Title order={4}>Votar na disputa</Title>
-											<Text size="sm" c="dimmed">
-												Quem nao participa da ordem pode votar enquanto a janela estiver aberta.
-											</Text>
-										</Stack>
-
-										<SegmentedControl
-											value={voteSegmentValue}
-											onChange={(value) => onVoteSupportChange(value === "apoio_opener")}
-											data={[
-												{ label: "Apoiar quem abriu", value: "apoio_opener" },
-												{ label: "Apoiar a outra parte", value: "apoio_opposing" },
-											]}
-										/>
-
-										<Text size="sm" c={hasVotingTokens ? "dimmed" : "red"}>
-											{hasVotingTokens
-												? "Seu voto sera enviado ao contrato e contabilizado de acordo com a posicao escolhida."
-												: "Voce precisa ter RPT para votar."}
-										</Text>
-
-										<Group justify="flex-end">
-											<Button
-												type="button"
-												onClick={() => void onSubmitVote()}
-												loading={busyDisputeId === selectedDispute.request.id}
-												disabled={!hasVotingTokens}
-											>
-												Registrar voto
-											</Button>
-										</Group>
-									</Stack>
-								</Card>
-							) : selectedCanResolve ? (
-								<Card withBorder radius="md" padding="md" shadow="none">
-									<Stack gap="md">
-										<Stack gap={2}>
-											<Title order={4}>Resolver disputa</Title>
-											<Text size="sm" c="dimmed">
-												O prazo terminou. Qualquer conta conectada pode pedir a resolucao do contrato.
-											</Text>
-										</Stack>
-
-										<Group justify="flex-end">
-											<Button
-												type="button"
-												onClick={() => void onResolveDispute()}
-												loading={busyDisputeId === selectedDispute.request.id}
-											>
-												Resolver disputa
-											</Button>
-										</Group>
-									</Stack>
-								</Card>
-							) : !selectedActionLocked ? (
-								<Card withBorder radius="md" padding="md" shadow="none">
-									<Text size="sm" c="dimmed">
-										A disputa ainda nao esta em uma janela valida para interacoes.
-									</Text>
-								</Card>
-							) : null}
-						</Stack>
-					) : (
-						renderEmptyState("Selecione uma disputa para ver os detalhes.")
-					)}
-				</Card>
-			</SimpleGrid>
+								<Group justify="flex-end">
+									<Button
+										type="button"
+										onClick={() => void onSubmitVote()}
+										loading={busyDisputeId === selectedDispute.request.id}
+										disabled={!hasVotingTokens}
+									>
+										Registrar voto
+									</Button>
+								</Group>
+							</Stack>
+						) : selectedCanResolve ? (
+							<Group justify="flex-end">
+								<Button
+									type="button"
+									onClick={() => void onResolveDispute()}
+									loading={busyDisputeId === selectedDispute.request.id}
+								>
+									Resolver disputa
+								</Button>
+							</Group>
+						) : (
+							<Text size="sm" c="dimmed">
+								A disputa ainda nao esta em uma janela valida para interacoes.
+							</Text>
+						)}
+					</Stack>
+				) : null}
+			</Modal>
 		</Stack>
 	);
 }

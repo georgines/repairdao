@@ -40,6 +40,7 @@ type UseDisputesPanelResult = {
 	evidenceSubmittedDisputeIds: number[];
 	onRefresh: () => Promise<void>;
 	onSelectDispute: (disputeId: number) => void;
+	onCloseDispute: () => void;
 	onEvidenceDraftChange: (value: string) => void;
 	onVoteSupportChange: (value: boolean) => void;
 	onSubmitEvidence: () => Promise<void>;
@@ -179,12 +180,13 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 	}, [carregarEvidencias, disputes, selectedDisputeId]);
 
 	useEffect(() => {
-		if (selectedDisputeId !== null && disputes.some((dispute) => dispute.request.id === selectedDisputeId)) {
+		if (selectedDisputeId === null) {
 			return;
 		}
 
-		const nextSelected = disputes.find((dispute) => ehDisputaAtiva(dispute.contract)) ?? disputes[0] ?? null;
-		setSelectedDisputeId(nextSelected ? nextSelected.request.id : null);
+		if (!disputes.some((dispute) => dispute.request.id === selectedDisputeId)) {
+			setSelectedDisputeId(null);
+		}
 	}, [disputes, selectedDisputeId]);
 
 	const visibleDisputes = useMemo(
@@ -199,6 +201,13 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 
 	function onSelectDispute(disputeId: number) {
 		setSelectedDisputeId(disputeId);
+		setEvidenceDraft("");
+		setVoteSupportOpener(true);
+		setError(null);
+	}
+
+	function onCloseDispute() {
+		setSelectedDisputeId(null);
 		setEvidenceDraft("");
 		setVoteSupportOpener(true);
 		setError(null);
@@ -378,6 +387,7 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 		evidenceSubmittedDisputeIds,
 		onRefresh,
 		onSelectDispute,
+		onCloseDispute,
 		onEvidenceDraftChange,
 		onVoteSupportChange,
 		onSubmitEvidence,

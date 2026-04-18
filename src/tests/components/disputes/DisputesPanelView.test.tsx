@@ -102,6 +102,7 @@ describe("components/disputes/DisputesPanelView", () => {
 				evidenceSubmittedDisputeIds={[]}
 				onRefresh={vi.fn()}
 				onSelectDispute={vi.fn()}
+				onCloseDispute={vi.fn()}
 				onEvidenceDraftChange={vi.fn()}
 				onVoteSupportChange={vi.fn()}
 				onSubmitEvidence={onSubmitEvidence}
@@ -110,12 +111,12 @@ describe("components/disputes/DisputesPanelView", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Acompanhe, leia e participe da disputa no contrato")).toBeDefined();
-		expect(screen.getByRole("heading", { name: "Enviar evidencia" })).toBeDefined();
+		expect(screen.getByText("Acesse disputas em um único modal vertical")).toBeDefined();
+		expect(screen.getByRole("heading", { name: "Enviar evidência" })).toBeDefined();
 		expect(screen.queryByText("Votar na disputa")).toBeNull();
 		expect(screen.getByText("Fotos do defeito")).toBeDefined();
 
-		fireEvent.click(screen.getByRole("button", { name: "Enviar evidencia" }));
+		fireEvent.click(screen.getByRole("button", { name: "Enviar evidência" }));
 		expect(onSubmitEvidence).toHaveBeenCalledTimes(1);
 	});
 
@@ -144,6 +145,7 @@ describe("components/disputes/DisputesPanelView", () => {
 				evidenceSubmittedDisputeIds={[]}
 				onRefresh={vi.fn()}
 				onSelectDispute={vi.fn()}
+				onCloseDispute={vi.fn()}
 				onEvidenceDraftChange={vi.fn()}
 				onVoteSupportChange={onVoteSupportChange}
 				onSubmitEvidence={vi.fn()}
@@ -181,6 +183,7 @@ describe("components/disputes/DisputesPanelView", () => {
 				evidenceSubmittedDisputeIds={[]}
 				onRefresh={vi.fn()}
 				onSelectDispute={vi.fn()}
+				onCloseDispute={vi.fn()}
 				onEvidenceDraftChange={vi.fn()}
 				onVoteSupportChange={vi.fn()}
 				onSubmitEvidence={vi.fn()}
@@ -216,6 +219,7 @@ describe("components/disputes/DisputesPanelView", () => {
 				evidenceSubmittedDisputeIds={[]}
 				onRefresh={vi.fn()}
 				onSelectDispute={vi.fn()}
+				onCloseDispute={vi.fn()}
 				onEvidenceDraftChange={vi.fn()}
 				onVoteSupportChange={vi.fn()}
 				onSubmitEvidence={vi.fn()}
@@ -250,6 +254,7 @@ describe("components/disputes/DisputesPanelView", () => {
 				evidenceSubmittedDisputeIds={[21]}
 				onRefresh={vi.fn()}
 				onSelectDispute={vi.fn()}
+				onCloseDispute={vi.fn()}
 				onEvidenceDraftChange={vi.fn()}
 				onVoteSupportChange={vi.fn()}
 				onSubmitEvidence={vi.fn()}

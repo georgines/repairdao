@@ -76,8 +76,8 @@ export interface DisputaContratoDominio {
   motivo?: string;
   openedBy?: string;
   opposingParty?: string;
-  votesForOpener?: number;
-  votesForOpposing?: number;
+  votesForOpener?: bigint;
+  votesForOpposing?: bigint;
   deadline?: string;
   resolved?: boolean;
 }
@@ -184,6 +184,25 @@ export function mapearOrdemDoContrato(ordem: OrdemContratoBruta): OrdemContratoD
   };
 }
 
+function normalizarBigInt(valor: unknown, campo: string): bigint {
+  if (typeof valor === "bigint") {
+    return valor;
+  }
+
+  if (typeof valor === "number" && Number.isInteger(valor)) {
+    return BigInt(valor);
+  }
+
+  if (typeof valor === "string" && /^\d+$/.test(valor)) {
+    return BigInt(valor);
+  }
+
+  throw new RepairDAODominioError("valor_contrato_invalido", `O campo ${campo} precisa ser um inteiro valido.`, {
+    campo,
+    valor,
+  });
+}
+
 export function mapearDisputaDoContrato(disputa: DisputaContratoBruta): DisputaContratoDominio {
   return {
     id: String(disputa.id),
@@ -195,11 +214,11 @@ export function mapearDisputaDoContrato(disputa: DisputaContratoBruta): DisputaC
     votesForOpener:
       disputa.votesForOpener === undefined || disputa.votesForOpener === null
         ? undefined
-        : normalizarNumero(disputa.votesForOpener, "votos a favor de quem abriu a disputa"),
+        : normalizarBigInt(disputa.votesForOpener, "votos a favor de quem abriu a disputa"),
     votesForOpposing:
       disputa.votesForOpposing === undefined || disputa.votesForOpposing === null
         ? undefined
-        : normalizarNumero(disputa.votesForOpposing, "votos a favor da outra parte"),
+        : normalizarBigInt(disputa.votesForOpposing, "votos a favor da outra parte"),
     deadline:
       disputa.deadline === undefined || disputa.deadline === null
         ? undefined
