@@ -12,7 +12,7 @@ const menuItems = [
 	{ label: "Elegibilidade", href: "/eligibility" },
 	{ label: "Servicos", href: "/services" },
 	{ label: "Disputas", href: "/disputes" },
-	{ label: "Tecnicos", href: "/technicians", visibleFor: "cliente" },
+	{ label: "Tecnicos disponiveis", href: "/technicians", visibleFor: "cliente" },
 ];
 
 type NavBarProps = {

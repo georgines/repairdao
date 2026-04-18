@@ -40,7 +40,7 @@ describe("components/ui/NavBar/NavBar", () => {
 		expect(markup).toContain("Elegibilidade");
 		expect(markup).toContain("Servicos");
 		expect(markup).toContain("Disputas");
-		expect(markup).toContain("Tecnicos");
+		expect(markup).toContain("Tecnicos disponiveis");
 	});
 
 	it("mantem a rota pai ativa em subrotas", () => {
@@ -57,8 +57,8 @@ describe("components/ui/NavBar/NavBar", () => {
 
 		expect(markup).toContain('href="/store"');
 		expect(markup).toContain('data-active="true"');
-		expect(markup).toContain("Servicos");
+		expect(markup).toContain("Tecnicos disponiveis");
 		expect(markup).toContain("Disputas");
-		expect(markup).not.toContain("Tecnicos");
+		expect(markup).not.toContain('href="/technicians"');
 	});
 });
