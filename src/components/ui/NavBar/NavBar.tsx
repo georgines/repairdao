@@ -10,7 +10,7 @@ const menuItems = [
   { label: "Minha conta", href: "/account" },
 	{ label: "Loja", href: "/store" },
 	{ label: "Elegibilidade", href: "/eligibility" },
-	{ label: "Servicos", href: "/services", visibleFor: "tecnico" },
+	{ label: "Servicos", href: "/services" },
 	{ label: "Disputas", href: "/disputes" },
 	{ label: "Tecnicos", href: "/technicians", visibleFor: "cliente" },
 ];

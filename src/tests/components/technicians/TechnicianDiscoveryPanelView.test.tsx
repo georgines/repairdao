@@ -79,6 +79,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 		expect(screen.getByText("Bruno Silva")).toBeDefined();
 		expect(screen.getByRole("button", { name: "Detalhes" })).toBeDefined();
 		expect(screen.getByRole("button", { name: "Contratar" })).toBeDefined();
+		expect(screen.queryByRole("button", { name: "Servicos" })).toBeNull();
 	});
 
 	it("esconde o botao de contratar quando existe ordem aberta", () => {

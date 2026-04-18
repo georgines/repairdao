@@ -38,9 +38,9 @@ describe("components/ui/NavBar/NavBar", () => {
 		expect(markup).toContain("Minha conta");
 		expect(markup).toContain("Loja");
 		expect(markup).toContain("Elegibilidade");
+		expect(markup).toContain("Servicos");
 		expect(markup).toContain("Disputas");
 		expect(markup).toContain("Tecnicos");
-		expect(markup).not.toContain("Servicos");
 	});
 
 	it("mantem a rota pai ativa em subrotas", () => {

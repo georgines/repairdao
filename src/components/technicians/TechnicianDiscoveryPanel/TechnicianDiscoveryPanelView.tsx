@@ -15,7 +15,6 @@ import {
 	Textarea,
 	Title,
 } from "@mantine/core";
-import Link from "next/link";
 import type { UserSummary } from "@/services/users";
 
 export type TechnicianDiscoveryPanelViewProps = {
@@ -119,9 +118,6 @@ export function TechnicianDiscoveryPanelView({
 								{hasOpenOrder ? `ordem aberta: ${contractedTechnician.name}` : `contratado: ${contractedTechnician.name}`}
 							</Badge>
 						) : null}
-						<Button component={Link} href="/services" variant="light" size="xs">
-							Servicos
-						</Button>
 					</Group>
 				</Stack>
 			</Card>
