@@ -22,6 +22,14 @@ export async function carregarEvidenciasDaDisputaNoContrato(ethereum: EthereumPr
 	return evidencias.map((evidencia) => mapearEvidenciaDoContrato(evidencia));
 }
 
+export async function carregarStatusVotoDaDisputaNoContrato(
+	ethereum: EthereumProvider,
+	ordemId: bigint | number | string,
+	votante: string,
+) {
+	return obterGateway(ethereum).verificarVotoDaDisputa(ordemId, votante);
+}
+
 export async function enviarEvidenciaNaDisputaNoContrato(
 	ethereum: EthereumProvider,
 	contexto: ContextoPapelRepairDAO,

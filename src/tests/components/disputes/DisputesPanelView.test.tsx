@@ -112,6 +112,7 @@ describe("components/disputes/DisputesPanelView", () => {
 				voteSupportOpener
 				busyDisputeId={null}
 				votedDisputeIds={[]}
+				votedDisputeChoices={{}}
 				evidenceSubmittedDisputeIds={[]}
 				onRefresh={vi.fn()}
 				onSelectDispute={vi.fn()}
@@ -152,6 +153,7 @@ describe("components/disputes/DisputesPanelView", () => {
 				voteSupportOpener
 				busyDisputeId={null}
 				votedDisputeIds={[]}
+				votedDisputeChoices={{}}
 				evidenceSubmittedDisputeIds={[]}
 				onRefresh={vi.fn()}
 				onSelectDispute={vi.fn()}
@@ -192,6 +194,7 @@ describe("components/disputes/DisputesPanelView", () => {
 				voteSupportOpener={true}
 				busyDisputeId={null}
 				votedDisputeIds={[]}
+				votedDisputeChoices={{}}
 				evidenceSubmittedDisputeIds={[]}
 				onRefresh={vi.fn()}
 				onSelectDispute={vi.fn()}
@@ -230,6 +233,7 @@ describe("components/disputes/DisputesPanelView", () => {
 				voteSupportOpener={true}
 				busyDisputeId={null}
 				votedDisputeIds={[]}
+				votedDisputeChoices={{ 21: true }}
 				evidenceSubmittedDisputeIds={[]}
 				onRefresh={vi.fn()}
 				onSelectDispute={vi.fn()}
@@ -247,7 +251,7 @@ describe("components/disputes/DisputesPanelView", () => {
 		expect(screen.queryByText("Enviar evidencia")).toBeNull();
 	});
 
-	it("mantem o card de voto visivel apos registrar o voto", () => {
+	it("bloqueia o voto ja registrado e preserva o lado escolhido", () => {
 		renderWithMantine(
 			<DisputesPanelView
 				connected
@@ -266,6 +270,7 @@ describe("components/disputes/DisputesPanelView", () => {
 				voteSupportOpener={true}
 				busyDisputeId={null}
 				votedDisputeIds={[21]}
+				votedDisputeChoices={{ 21: true }}
 				evidenceSubmittedDisputeIds={[]}
 				onRefresh={vi.fn()}
 				onSelectDispute={vi.fn()}
@@ -278,8 +283,10 @@ describe("components/disputes/DisputesPanelView", () => {
 			/>,
 		);
 
-		expect(screen.queryByRole("heading", { name: "Votar na disputa" })).toBeNull();
-		expect(screen.queryByText("Seu voto ja foi registrado nesta sessao. O card de votacao foi ocultado.")).toBeNull();
+		expect(screen.getByRole("heading", { name: "Votar na disputa" })).toBeDefined();
+		expect((screen.getByRole("radio", { name: "Apoiar quem abriu" }) as HTMLInputElement).checked).toBe(true);
+		expect((screen.getByRole("radio", { name: "Apoiar a outra parte" }) as HTMLInputElement).disabled).toBe(true);
+		expect((screen.getByRole("button", { name: "Registrar voto" }) as HTMLButtonElement).disabled).toBe(true);
 	});
 
 	it("oculta o card de evidencia apos registrar a evidencia", () => {
@@ -301,6 +308,7 @@ describe("components/disputes/DisputesPanelView", () => {
 				voteSupportOpener={true}
 				busyDisputeId={null}
 				votedDisputeIds={[]}
+				votedDisputeChoices={{}}
 				evidenceSubmittedDisputeIds={[21]}
 				onRefresh={vi.fn()}
 				onSelectDispute={vi.fn()}

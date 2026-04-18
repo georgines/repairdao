@@ -13,6 +13,7 @@ const serviceMocks = vi.hoisted(() => ({
 	useWalletStatus: vi.fn(),
 	carregarDisputaNoContrato: vi.fn(),
 	carregarEvidenciasDaDisputaNoContrato: vi.fn(),
+	carregarStatusVotoDaDisputaNoContrato: vi.fn(),
 	enviarEvidenciaNaDisputaNoContrato: vi.fn(),
 	votarNaDisputaNoContrato: vi.fn(),
 	resolverDisputaNoContrato: vi.fn(),
@@ -37,6 +38,7 @@ vi.mock("@/services/serviceRequests/serviceRequestClient", () => ({
 vi.mock("@/services/disputes/disputeBlockchain", () => ({
 	carregarDisputaNoContrato: serviceMocks.carregarDisputaNoContrato,
 	carregarEvidenciasDaDisputaNoContrato: serviceMocks.carregarEvidenciasDaDisputaNoContrato,
+	carregarStatusVotoDaDisputaNoContrato: serviceMocks.carregarStatusVotoDaDisputaNoContrato,
 	enviarEvidenciaNaDisputaNoContrato: serviceMocks.enviarEvidenciaNaDisputaNoContrato,
 	votarNaDisputaNoContrato: serviceMocks.votarNaDisputaNoContrato,
 	resolverDisputaNoContrato: serviceMocks.resolverDisputaNoContrato,
@@ -127,6 +129,10 @@ describe("useDisputesPanel", () => {
 				timestamp: "2026-04-17T15:00:00.000Z",
 			},
 		]);
+		serviceMocks.carregarStatusVotoDaDisputaNoContrato.mockResolvedValue({
+			hasVoted: false,
+			supportOpener: null,
+		});
 		serviceMocks.enviarEvidenciaNaDisputaNoContrato.mockResolvedValue("ok");
 		serviceMocks.votarNaDisputaNoContrato.mockResolvedValue("ok");
 		serviceMocks.resolverDisputaNoContrato.mockResolvedValue("ok");
@@ -150,7 +156,7 @@ describe("useDisputesPanel", () => {
 		expect(getLatest()?.visibleDisputes).toHaveLength(1);
 
 		await act(async () => {
-			getLatest()?.onSelectDispute(21);
+			await getLatest()?.onSelectDispute(21);
 			await flush();
 		});
 
@@ -208,7 +214,7 @@ describe("useDisputesPanel", () => {
 		});
 
 		await act(async () => {
-			getLatest()?.onSelectDispute(21);
+			await getLatest()?.onSelectDispute(21);
 			await flush();
 		});
 
@@ -235,6 +241,24 @@ describe("useDisputesPanel", () => {
 			false,
 		);
 		expect(getLatest()?.votedDisputeIds).toContain(21);
+		expect(getLatest()?.votedDisputeChoices[21]).toBe(false);
+
+		await act(async () => {
+			getLatest()?.onCloseDispute();
+			await flush();
+		});
+
+		serviceMocks.carregarStatusVotoDaDisputaNoContrato.mockResolvedValueOnce({
+			hasVoted: true,
+			supportOpener: false,
+		});
+
+		await act(async () => {
+			await getLatest()?.onSelectDispute(21);
+			await flush();
+		});
+
+		expect(getLatest()?.voteSupportOpener).toBe(false);
 	});
 
 	it("permite resolver a disputa quando o prazo termina", async () => {

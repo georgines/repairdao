@@ -14,6 +14,10 @@ export interface RepairEscrowGateway extends GatewayContratoBase {
   resolverDisputa(input: { ordemId: bigint | number | string }): Promise<unknown>;
   buscarOrdem(ordemId: bigint | number | string): Promise<OrdemContratoBruta | null>;
   buscarDisputa(disputaId: bigint | number | string): Promise<DisputaContratoBruta | null>;
+  verificarVotoDaDisputa(
+    disputaId: bigint | number | string,
+    votante: string,
+  ): Promise<{ hasVoted: boolean; supportOpener: boolean | null }>;
   buscarEvidencias(ordemId: bigint | number | string): Promise<EvidenciaContratoBruta[]>;
 }
 
@@ -104,6 +108,8 @@ function normalizarDisputaContrato(registro: Record<string, unknown>): DisputaCo
   const opposingParty = normalizarEndereco(registro.opposingParty ?? registro.opposing_party, "parte oposta da disputa");
   const votesForOpener = registro.votesForOpener ?? registro.votes_for_opener ?? undefined;
   const votesForOpposing = registro.votesForOpposing ?? registro.votes_for_opposing ?? undefined;
+  const deadline = registro.deadline === undefined || registro.deadline === null ? undefined : registro.deadline as DisputaContratoBruta["deadline"];
+  const resolved = typeof registro.resolved === "boolean" ? registro.resolved : undefined;
 
   return {
     id: ordemId as DisputaContratoBruta["id"],
@@ -112,10 +118,14 @@ function normalizarDisputaContrato(registro: Record<string, unknown>): DisputaCo
     motivo: normalizarTextoOpcional(registro.reason ?? registro.motivo),
     ...(openedBy ? { openedBy } : {}),
     ...(opposingParty ? { opposingParty } : {}),
-    ...(votesForOpener !== undefined && votesForOpener !== null ? { votesForOpener } : {}),
-    ...(votesForOpposing !== undefined && votesForOpposing !== null ? { votesForOpposing } : {}),
-    ...(registro.deadline !== undefined && registro.deadline !== null ? { deadline: registro.deadline } : {}),
-    ...(typeof registro.resolved === "boolean" ? { resolved: registro.resolved } : {}),
+    ...(votesForOpener !== undefined && votesForOpener !== null
+      ? { votesForOpener: votesForOpener as DisputaContratoBruta["votesForOpener"] }
+      : {}),
+    ...(votesForOpposing !== undefined && votesForOpposing !== null
+      ? { votesForOpposing: votesForOpposing as DisputaContratoBruta["votesForOpposing"] }
+      : {}),
+    ...(deadline !== undefined ? { deadline } : {}),
+    ...(resolved !== undefined ? { resolved } : {}),
   };
 }
 
@@ -214,8 +224,6 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
 
     async buscarOrdem(ordemId) {
       const ordem = await base.readContract({
-        address: REPAIRDAO_CONTRACTOS.escrow.address,
-        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
         functionName: "getOrder",
         args: [ordemId],
       });
@@ -225,8 +233,6 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
 
     async buscarDisputa(disputaId) {
       const disputa = await base.readContract({
-        address: REPAIRDAO_CONTRACTOS.escrow.address,
-        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
         functionName: "getDispute",
         args: [disputaId],
       });
@@ -234,10 +240,26 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
       return disputa ? normalizarDisputaContrato(disputa as Record<string, unknown>) : null;
     },
 
+    async verificarVotoDaDisputa(disputaId, votante) {
+      const hasVoted = await base.readContract<boolean>({
+        functionName: "hasVoted",
+        args: [disputaId, votante],
+      });
+
+      if (!hasVoted) {
+        return { hasVoted: false, supportOpener: null };
+      }
+
+      const supportOpener = await base.readContract<boolean>({
+        functionName: "voteSide",
+        args: [disputaId, votante],
+      });
+
+      return { hasVoted: true, supportOpener };
+    },
+
     async buscarEvidencias(ordemId) {
       const evidencias = await base.readContract({
-        address: REPAIRDAO_CONTRACTOS.escrow.address,
-        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
         functionName: "getEvidences",
         args: [ordemId],
       });

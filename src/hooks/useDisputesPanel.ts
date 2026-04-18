@@ -9,6 +9,7 @@ import type { DisputaContratoDominio, EvidenciaContratoDominio } from "@/service
 import {
 	carregarDisputaNoContrato,
 	carregarEvidenciasDaDisputaNoContrato,
+	carregarStatusVotoDaDisputaNoContrato,
 	enviarEvidenciaNaDisputaNoContrato,
 	resolverDisputaNoContrato,
 	votarNaDisputaNoContrato,
@@ -37,9 +38,10 @@ type UseDisputesPanelResult = {
 	voteSupportOpener: boolean;
 	busyDisputeId: number | null;
 	votedDisputeIds: number[];
+	votedDisputeChoices: Record<number, boolean>;
 	evidenceSubmittedDisputeIds: number[];
 	onRefresh: () => Promise<void>;
-	onSelectDispute: (disputeId: number) => void;
+	onSelectDispute: (disputeId: number) => Promise<void>;
 	onCloseDispute: () => void;
 	onEvidenceDraftChange: (value: string) => void;
 	onVoteSupportChange: (value: boolean) => void;
@@ -76,6 +78,7 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 	const [evidenceDraft, setEvidenceDraft] = useState("");
 	const [voteSupportOpener, setVoteSupportOpener] = useState(true);
 	const [votedDisputeIds, setVotedDisputeIds] = useState<number[]>([]);
+	const [votedDisputeChoices, setVotedDisputeChoices] = useState<Record<number, boolean>>({});
 	const [evidenceSubmittedDisputeIds, setEvidenceSubmittedDisputeIds] = useState<number[]>([]);
 	const [busyDisputeId, setBusyDisputeId] = useState<number | null>(null);
 
@@ -199,11 +202,48 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 		[disputes, selectedDisputeId],
 	);
 
-	function onSelectDispute(disputeId: number) {
-		setSelectedDisputeId(disputeId);
+	async function carregarStatusVotoDisputa(disputeId: number) {
+		if (!ethereum || !walletAddress) {
+			return { hasVoted: false, supportOpener: null as boolean | null };
+		}
+
+		return carregarStatusVotoDaDisputaNoContrato(ethereum, disputeId, walletAddress);
+	}
+
+	async function onSelectDispute(disputeId: number) {
 		setEvidenceDraft("");
-		setVoteSupportOpener(true);
 		setError(null);
+
+		if (!ethereum || !walletAddress) {
+			setSelectedDisputeId(disputeId);
+			setVoteSupportOpener(true);
+			return;
+		}
+
+		try {
+			const statusVoto = await carregarStatusVotoDisputa(disputeId);
+
+			if (statusVoto.hasVoted) {
+				setVotedDisputeIds((current) => (current.includes(disputeId) ? current : [...current, disputeId]));
+				setVotedDisputeChoices((current) => ({
+					...current,
+					[disputeId]: statusVoto.supportOpener ?? true,
+				}));
+				setVoteSupportOpener(statusVoto.supportOpener ?? true);
+			} else {
+				setVotedDisputeIds((current) => current.filter((value) => value !== disputeId));
+				setVotedDisputeChoices((current) => {
+					const next = { ...current };
+					delete next[disputeId];
+					return next;
+				});
+				setVoteSupportOpener(true);
+			}
+
+			setSelectedDisputeId(disputeId);
+		} catch (requestError) {
+			setError(requestError instanceof Error ? requestError.message : "Nao foi possivel verificar o voto da disputa.");
+		}
 	}
 
 	function onCloseDispute() {
@@ -328,6 +368,10 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 				voteSupportOpener,
 			);
 			setVotedDisputeIds((current) => (current.includes(selectedDispute.request.id) ? current : [...current, selectedDispute.request.id]));
+			setVotedDisputeChoices((current) => ({
+				...current,
+				[selectedDispute.request.id]: voteSupportOpener,
+			}));
 			await carregarDisputas();
 			await carregarEvidencias(selectedDispute.request.id);
 		} catch (requestError) {
@@ -384,6 +428,7 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 		voteSupportOpener,
 		busyDisputeId,
 		votedDisputeIds,
+		votedDisputeChoices,
 		evidenceSubmittedDisputeIds,
 		onRefresh,
 		onSelectDispute,

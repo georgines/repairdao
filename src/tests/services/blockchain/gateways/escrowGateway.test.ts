@@ -33,7 +33,9 @@ describe("escrowGateway", () => {
             content: "fotos anexadas",
             timestamp: Math.floor(Date.now() / 1000),
           },
-        ]),
+        ])
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(true),
       writeContract: vi.fn().mockResolvedValue("0xdef"),
     };
 
@@ -82,9 +84,13 @@ describe("escrowGateway", () => {
         timestamp: expect.any(Number),
       },
     ]);
+    await expect(gateway.verificarVotoDaDisputa(2, "0xvotante")).resolves.toEqual({
+      hasVoted: true,
+      supportOpener: true,
+    });
 
     expect(contractClient.writeContract).toHaveBeenCalledTimes(8);
-    expect(contractClient.readContract).toHaveBeenCalledTimes(3);
+    expect(contractClient.readContract).toHaveBeenCalledTimes(5);
   });
 
   it("normaliza registros vazios, resolvidos e expirados", async () => {
@@ -207,6 +213,26 @@ describe("escrowGateway", () => {
 
     await expect(gateway.buscarOrdem(99)).resolves.toBeNull();
     await expect(gateway.buscarDisputa(100)).resolves.toBeNull();
+  });
+
+  it("retorna o status de voto on-chain", async () => {
+    const contractClient = {
+      readContract: vi.fn().mockResolvedValueOnce(false),
+      writeContract: vi.fn(),
+    };
+
+    const gateway = criarRepairEscrowGateway(contractClient);
+
+    await expect(gateway.verificarVotoDaDisputa(10, "0xvotante")).resolves.toEqual({
+      hasVoted: false,
+      supportOpener: null,
+    });
+    expect(contractClient.readContract).toHaveBeenCalledWith(
+      expect.objectContaining({
+        functionName: "hasVoted",
+        args: [10, "0xvotante"],
+      }),
+    );
   });
 
   it("mantem o alias legado para compatibilidade", async () => {

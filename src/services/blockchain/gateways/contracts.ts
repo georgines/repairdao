@@ -181,6 +181,8 @@ export const REPAIR_ESCROW_ABI = [
   { type: "function", name: "submitEvidence", stateMutability: "nonpayable", inputs: [{ name: "orderId", type: "uint256" }, { name: "content", type: "string" }], outputs: [] },
   { type: "function", name: "voteOnDispute", stateMutability: "nonpayable", inputs: [{ name: "orderId", type: "uint256" }, { name: "supportOpener", type: "bool" }], outputs: [] },
   { type: "function", name: "resolveDispute", stateMutability: "nonpayable", inputs: [{ name: "orderId", type: "uint256" }], outputs: [] },
+  { type: "function", name: "hasVoted", stateMutability: "view", inputs: [{ name: "orderId", type: "uint256" }, { name: "voter", type: "address" }], outputs: [{ name: "voted", type: "bool" }] },
+  { type: "function", name: "voteSide", stateMutability: "view", inputs: [{ name: "orderId", type: "uint256" }, { name: "voter", type: "address" }], outputs: [{ name: "supportOpener", type: "bool" }] },
   { type: "function", name: "getEvidences", stateMutability: "view", inputs: [{ name: "orderId", type: "uint256" }], outputs: [{ name: "evidences", type: "tuple[]", components: [{ name: "submittedBy", type: "address" }, { name: "content", type: "string" }, { name: "timestamp", type: "uint256" }] }] },
   { type: "function", name: "getClientOrders", stateMutability: "view", inputs: [{ name: "client", type: "address" }], outputs: [{ name: "orderIds", type: "uint256[]" }] },
   { type: "function", name: "getTechnicianOrders", stateMutability: "view", inputs: [{ name: "technician", type: "address" }], outputs: [{ name: "orderIds", type: "uint256[]" }] },

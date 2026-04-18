@@ -27,9 +27,10 @@ export type DisputesPanelViewProps = {
 	voteSupportOpener: boolean;
 	busyDisputeId: number | null;
 	votedDisputeIds: number[];
+	votedDisputeChoices: Record<number, boolean>;
 	evidenceSubmittedDisputeIds: number[];
 	onRefresh: () => void;
-	onSelectDispute: (disputeId: number) => void;
+	onSelectDispute: (disputeId: number) => Promise<void>;
 	onCloseDispute: () => void;
 	onEvidenceDraftChange: (value: string) => void;
 	onVoteSupportChange: (value: boolean) => void;
@@ -220,6 +221,7 @@ export function DisputesPanelView({
 	voteSupportOpener,
 	busyDisputeId,
 	votedDisputeIds,
+	votedDisputeChoices,
 	evidenceSubmittedDisputeIds,
 	onRefresh,
 	onSelectDispute,
@@ -236,9 +238,12 @@ export function DisputesPanelView({
 	const selectedVotingWindow = selectedState === "janela_votacao";
 	const selectedEncerrada = selectedState === "encerrada";
 	const selectedVoteAlreadySubmitted = selectedDispute ? votedDisputeIds.includes(selectedDispute.request.id) : false;
+	const selectedVoteChoice = selectedDispute ? votedDisputeChoices[selectedDispute.request.id] : undefined;
+	const selectedVoteLocked = selectedVoteAlreadySubmitted && selectedVoteChoice !== undefined;
+	const selectedVoteSupportOpener = selectedVoteChoice ?? voteSupportOpener;
 	const selectedEvidenceAlreadySubmitted = selectedDispute ? evidenceSubmittedDisputeIds.includes(selectedDispute.request.id) : false;
 	const selectedCanSendEvidence = connected && selectedVotingWindow && selectedIsParticipant && !selectedEvidenceAlreadySubmitted;
-	const selectedCanVote = connected && selectedVotingWindow && !selectedIsParticipant && !selectedVoteAlreadySubmitted;
+	const selectedCanVote = connected && selectedVotingWindow && !selectedIsParticipant;
 	const selectedCanResolve = connected && selectedEncerrada;
 	const totalOpen = visibleDisputes.length;
 	const disputeTitle = selectedDispute?.request.description ?? "Disputa";
@@ -456,16 +461,31 @@ export function DisputesPanelView({
 								</Stack>
 
 								<SegmentedControl
-									value={voteSupportOpener ? "apoio_opener" : "apoio_opposing"}
-									onChange={(value) => onVoteSupportChange(value === "apoio_opener")}
+									value={selectedVoteSupportOpener ? "apoio_opener" : "apoio_opposing"}
+									onChange={(value) => {
+										if (!selectedVoteLocked) {
+											onVoteSupportChange(value === "apoio_opener");
+										}
+									}}
+									disabled={selectedVoteLocked}
 									data={[
-										{ label: "Apoiar quem abriu", value: "apoio_opener" },
-										{ label: "Apoiar a outra parte", value: "apoio_opposing" },
+										{
+											label: "Apoiar quem abriu",
+											value: "apoio_opener",
+											disabled: selectedVoteLocked && selectedVoteSupportOpener === false,
+										},
+										{
+											label: "Apoiar a outra parte",
+											value: "apoio_opposing",
+											disabled: selectedVoteLocked && selectedVoteSupportOpener === true,
+										},
 									]}
 								/>
 
 								<Text size="sm" c={hasVotingTokens ? "dimmed" : "red"}>
-									{hasVotingTokens
+									{selectedVoteLocked
+										? "Seu voto ja foi registrado nesta disputa."
+										: hasVotingTokens
 										? "Seu voto sera enviado ao contrato e contabilizado de acordo com a posicao escolhida."
 										: "Voce precisa ter RPT para votar."}
 								</Text>
@@ -475,7 +495,7 @@ export function DisputesPanelView({
 										type="button"
 										onClick={() => void onSubmitVote()}
 										loading={busyDisputeId === selectedDispute.request.id}
-										disabled={!hasVotingTokens}
+										disabled={!hasVotingTokens || selectedVoteLocked}
 									>
 										Registrar voto
 									</Button>
