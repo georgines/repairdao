@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "db:reset": "prisma migrate reset -f --skip-generate",
-    "dev": "next dev",
-    "predev": "yarn db:reset",
+    "dev": "next dev",  
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
