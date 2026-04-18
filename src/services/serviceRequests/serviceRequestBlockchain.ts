@@ -62,6 +62,15 @@ export async function concluirOrdemNoContrato(ethereum: EthereumProvider, ordemI
 	return aguardarTransacao(await contrato.writeContract({ functionName: "completeOrder", args: [ordemId] }));
 }
 
+export async function abrirDisputaNoContrato(
+	ethereum: EthereumProvider,
+	ordemId: bigint | number | string,
+	motivo: string,
+): Promise<unknown> {
+	const contrato = obterContrato(ethereum);
+	return aguardarTransacao(await contrato.writeContract({ functionName: "openDispute", args: [ordemId, motivo] }));
+}
+
 export async function carregarEstadoAvaliacaoNoContrato(
 	ethereum: EthereumProvider,
 	ordemId: bigint | number | string,

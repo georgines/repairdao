@@ -61,6 +61,12 @@ export interface DisputaContratoBruta {
   estado: bigint | number | string;
   ordemId: bigint | number | string;
   motivo?: string | null;
+  openedBy?: string | null;
+  opposingParty?: string | null;
+  votesForOpener?: bigint | number | string | null;
+  votesForOpposing?: bigint | number | string | null;
+  deadline?: bigint | number | string | null;
+  resolved?: boolean | null;
 }
 
 export interface DisputaContratoDominio {
@@ -68,6 +74,24 @@ export interface DisputaContratoDominio {
   estado: EstadoDisputaRepairDAO;
   ordemId: string;
   motivo?: string;
+  openedBy?: string;
+  opposingParty?: string;
+  votesForOpener?: number;
+  votesForOpposing?: number;
+  deadline?: string;
+  resolved?: boolean;
+}
+
+export interface EvidenciaContratoBruta {
+  submittedBy: string;
+  content: string;
+  timestamp: bigint | number | string;
+}
+
+export interface EvidenciaContratoDominio {
+  submittedBy: string;
+  content: string;
+  timestamp: string;
 }
 
 export interface PropostaContratoBruta {
@@ -166,6 +190,29 @@ export function mapearDisputaDoContrato(disputa: DisputaContratoBruta): DisputaC
     estado: mapearEstadoDisputaDoContrato(disputa.estado),
     ordemId: String(disputa.ordemId),
     motivo: disputa.motivo ? garantirTextoNaoVazio(disputa.motivo, "motivo da disputa") : undefined,
+    openedBy: disputa.openedBy ?? undefined,
+    opposingParty: disputa.opposingParty ?? undefined,
+    votesForOpener:
+      disputa.votesForOpener === undefined || disputa.votesForOpener === null
+        ? undefined
+        : normalizarNumero(disputa.votesForOpener, "votos a favor de quem abriu a disputa"),
+    votesForOpposing:
+      disputa.votesForOpposing === undefined || disputa.votesForOpposing === null
+        ? undefined
+        : normalizarNumero(disputa.votesForOpposing, "votos a favor da outra parte"),
+    deadline:
+      disputa.deadline === undefined || disputa.deadline === null
+        ? undefined
+        : new Date(normalizarNumero(disputa.deadline, "deadline da disputa") * 1000).toISOString(),
+    resolved: disputa.resolved === undefined || disputa.resolved === null ? undefined : Boolean(disputa.resolved),
+  };
+}
+
+export function mapearEvidenciaDoContrato(evidencia: EvidenciaContratoBruta): EvidenciaContratoDominio {
+  return {
+    submittedBy: garantirTextoNaoVazio(evidencia.submittedBy, "autor da evidencia"),
+    content: garantirTextoNaoVazio(evidencia.content, "conteudo da evidencia"),
+    timestamp: new Date(normalizarNumero(evidencia.timestamp, "timestamp da evidencia") * 1000).toISOString(),
   };
 }
 

@@ -26,7 +26,14 @@ describe("escrowGateway", () => {
           deadline: Math.floor(Date.now() / 1000) + 3600,
           resolved: false,
           reason: "falha",
-        }),
+        })
+        .mockResolvedValueOnce([
+          {
+            submittedBy: "0xcliente",
+            content: "fotos anexadas",
+            timestamp: Math.floor(Date.now() / 1000),
+          },
+        ]),
       writeContract: vi.fn().mockResolvedValue("0xdef"),
     };
 
@@ -37,6 +44,9 @@ describe("escrowGateway", () => {
     await expect(gateway.concluirOrdem({ ordemId: 1, tecnico: "0xtec" })).resolves.toBe("0xdef");
     await expect(gateway.avaliarServico({ ordemId: 1, nota: 5 })).resolves.toBe("0xdef");
     await expect(gateway.abrirDisputa({ ordemId: 1, autor: "0xcliente", motivo: "falha" })).resolves.toBe("0xdef");
+    await expect(gateway.enviarEvidencia({ ordemId: 1, autor: "0xcliente", conteudo: "fotos anexadas" })).resolves.toBe("0xdef");
+    await expect(gateway.votarDisputa({ ordemId: 1, apoiandoAbertura: true, votante: "0xvotante" })).resolves.toBe("0xdef");
+    await expect(gateway.resolverDisputa({ ordemId: 1 })).resolves.toBe("0xdef");
     await expect(gateway.buscarOrdem(1)).resolves.toEqual({
       id: 1,
       estado: 1,
@@ -52,10 +62,23 @@ describe("escrowGateway", () => {
       estado: "janela_votacao",
       ordemId: 2,
       motivo: "falha",
+      openedBy: "0xcliente",
+      opposingParty: "0xtec",
+      votesForOpener: 10,
+      votesForOpposing: 5,
+      deadline: expect.any(Number),
+      resolved: false,
     });
+    await expect(gateway.buscarEvidencias(1)).resolves.toEqual([
+      {
+        submittedBy: "0xcliente",
+        content: "fotos anexadas",
+        timestamp: expect.any(Number),
+      },
+    ]);
 
-    expect(contractClient.writeContract).toHaveBeenCalledTimes(5);
-    expect(contractClient.readContract).toHaveBeenCalledTimes(2);
+    expect(contractClient.writeContract).toHaveBeenCalledTimes(8);
+    expect(contractClient.readContract).toHaveBeenCalledTimes(3);
   });
 
   it("normaliza registros vazios, resolvidos e expirados", async () => {
@@ -92,12 +115,14 @@ describe("escrowGateway", () => {
       estado: "resolvida",
       ordemId: 3,
       motivo: "finalizada",
+      resolved: true,
     });
     await expect(gateway.buscarDisputa(4)).resolves.toEqual({
       id: 4,
       estado: "encerrada",
       ordemId: 4,
       motivo: "prazo",
+      deadline: expect.any(Number),
     });
   });
 

@@ -5,6 +5,7 @@ import { useAccountProfile } from "@/hooks/useAccountProfile";
 import { useWalletStatus } from "@/hooks/useWalletStatus";
 import { obterEthereumProvider } from "@/services/wallet/provider";
 import {
+	abrirDisputaNoContrato,
 	aceitarOrcamentoNoContrato,
 	avaliarServicoNoContrato,
 	carregarEstadoAvaliacaoNoContrato,
@@ -16,12 +17,13 @@ import {
 	acceptServiceBudget,
 	completeServiceRequest,
 	loadServiceRequests,
+	openServiceDispute,
 	sendServiceBudget,
 	type ServiceRequestSummary,
 } from "@/services/serviceRequests/serviceRequestClient";
 import type { ServiceRequestStatus } from "@/services/serviceRequests";
 
-type RequestModalAction = "details" | "budget" | "pay" | "complete" | "rate";
+type RequestModalAction = "details" | "budget" | "pay" | "complete" | "rate" | "dispute";
 
 type UseServiceRequestsPanelResult = {
 	connected: boolean;
@@ -38,6 +40,7 @@ type UseServiceRequestsPanelResult = {
 	requestModalAction: RequestModalAction | null;
 	requestModalBudget: number | null;
 	requestModalRating: number;
+	requestModalDisputeReason: string;
 	busyRequestId: number | null;
 	onRefresh: () => Promise<void>;
 	onQueryChange: (value: string) => void;
@@ -47,10 +50,12 @@ type UseServiceRequestsPanelResult = {
 	onCloseRequestModal: () => void;
 	onRequestModalBudgetChange: (value: number | null) => void;
 	onRequestModalRatingChange: (value: number) => void;
+	onRequestModalDisputeReasonChange: (value: string) => void;
 	onSubmitBudget: () => Promise<void>;
 	onPayBudget: () => Promise<void>;
 	onCompleteOrder: () => Promise<void>;
 	onRateService: () => Promise<void>;
+	onOpenDispute: () => Promise<void>;
 };
 
 export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
@@ -66,6 +71,7 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 	const [requestModalAction, setRequestModalAction] = useState<RequestModalAction | null>(null);
 	const [requestModalBudget, setRequestModalBudget] = useState<number | null>(null);
 	const [requestModalRating, setRequestModalRating] = useState(5);
+	const [requestModalDisputeReason, setRequestModalDisputeReason] = useState("");
 	const [busyRequestId, setBusyRequestId] = useState<number | null>(null);
 
 	const walletAddress = state.connected ? state.address ?? null : null;
@@ -181,6 +187,7 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 		setRequestModalAction(action);
 		setRequestModalBudget(null);
 		setRequestModalRating(5);
+		setRequestModalDisputeReason("");
 		setError(null);
 	}
 
@@ -189,6 +196,7 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 		setRequestModalAction(null);
 		setRequestModalBudget(null);
 		setRequestModalRating(5);
+		setRequestModalDisputeReason("");
 		setError(null);
 	}
 
@@ -198,6 +206,10 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 
 	function onRequestModalRatingChange(value: number) {
 		setRequestModalRating(value);
+	}
+
+	function onRequestModalDisputeReasonChange(value: string) {
+		setRequestModalDisputeReason(value);
 	}
 
 	async function onSubmitBudget() {
@@ -388,6 +400,60 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 		}
 	}
 
+	async function onOpenDispute() {
+		if (!walletAddress) {
+			setError("Conecte a carteira para abrir a disputa.");
+			return;
+		}
+
+		if (!requestModalRequest) {
+			setError("Selecione uma ordem de servico para abrir a disputa.");
+			return;
+		}
+
+		if (requestModalAction !== "dispute") {
+			setError("Selecione uma ordem de servico para abrir a disputa.");
+			return;
+		}
+
+		const ehCliente = walletAddress === requestModalRequest.clientAddress;
+		const ehTecnico = walletAddress === requestModalRequest.technicianAddress;
+
+		if (!ehCliente && !ehTecnico) {
+			setError("A ordem nao pertence a esta carteira.");
+			return;
+		}
+
+		if (requestModalRequest.status !== "aceito_cliente" && requestModalRequest.status !== "concluida") {
+			setError("A disputa so pode ser aberta quando a ordem estiver em andamento ou concluida.");
+			return;
+		}
+
+		const disputeReason = requestModalDisputeReason.trim();
+		if (!disputeReason) {
+			setError("Informe o motivo da disputa.");
+			return;
+		}
+
+		setBusyRequestId(requestModalRequest.id);
+		setError(null);
+
+		try {
+			await abrirDisputaNoContrato(ethereum, requestModalRequest.id, disputeReason);
+			const nextRequest = await openServiceDispute({
+				id: requestModalRequest.id,
+				actorAddress: walletAddress,
+				disputeReason,
+			});
+			updateRequest(nextRequest);
+			onCloseRequestModal();
+		} catch (requestError) {
+			setError(requestError instanceof Error ? requestError.message : "Nao foi possivel abrir a disputa.");
+		} finally {
+			setBusyRequestId(null);
+		}
+	}
+
 	return {
 		connected: state.connected,
 		walletAddress,
@@ -404,6 +470,7 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 		requestModalAction,
 		requestModalBudget,
 		requestModalRating,
+		requestModalDisputeReason,
 		busyRequestId,
 		onRefresh,
 		onQueryChange,
@@ -413,9 +480,11 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 		onCloseRequestModal,
 		onRequestModalBudgetChange,
 		onRequestModalRatingChange,
+		onRequestModalDisputeReasonChange,
 		onSubmitBudget,
 		onPayBudget,
 		onCompleteOrder,
 		onRateService,
+		onOpenDispute,
 	};
 }

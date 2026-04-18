@@ -54,6 +54,15 @@ const concludedRequest: ServiceRequestSummary = {
 	updatedAt: "2026-04-17T13:00:00.000Z",
 };
 
+const disputedRequest: ServiceRequestSummary = {
+	...concludedRequest,
+	id: 4,
+	status: "disputada",
+	disputedAt: "2026-04-17T14:00:00.000Z",
+	disputeReason: "Servico fora do combinado",
+	updatedAt: "2026-04-17T14:00:00.000Z",
+};
+
 describe("components/services/ServiceRequestsPanelView", () => {
 	beforeEach(() => {
 		(globalThis as typeof globalThis & { ResizeObserver?: typeof ResizeObserver }).ResizeObserver = class {
@@ -99,6 +108,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				requestModalAction={null}
 				requestModalBudget={null}
 				requestModalRating={5}
+				requestModalDisputeReason=""
 				busyRequestId={null}
 				onRefresh={vi.fn()}
 				onQueryChange={vi.fn()}
@@ -108,10 +118,12 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onCloseRequestModal={vi.fn()}
 				onRequestModalBudgetChange={vi.fn()}
 				onRequestModalRatingChange={vi.fn()}
+				onRequestModalDisputeReasonChange={vi.fn()}
 				onSubmitBudget={vi.fn()}
 				onPayBudget={vi.fn()}
 				onCompleteOrder={vi.fn()}
 				onRateService={vi.fn()}
+				onOpenDispute={vi.fn()}
 			/>,
 		);
 
@@ -119,6 +131,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 		expect(screen.getAllByText("Instalacao de luminaria")).toHaveLength(2);
 		expect(screen.getByRole("button", { name: "Pagar" })).toBeDefined();
 		expect(screen.getByRole("button", { name: "Avaliar" })).toBeDefined();
+		expect(screen.getByRole("button", { name: "Disputar" })).toBeDefined();
 	});
 
 	it("esconde o botao de avaliacao para quem ja avaliou", () => {
@@ -168,6 +181,47 @@ describe("components/services/ServiceRequestsPanelView", () => {
 		expect(screen.queryByRole("button", { name: "Avaliar" })).toBeNull();
 	});
 
+	it("mostra ordens em disputa com status destacado", () => {
+		renderWithMantine(
+			<ServiceRequestsPanelView
+				connected
+				walletAddress="0xcliente"
+				walletNotice={null}
+				perfilAtivo="cliente"
+				loading={false}
+				error={null}
+				clientRequests={[disputedRequest]}
+				visibleRequests={[disputedRequest]}
+				query=""
+				statusFilter="all"
+				requestModalOpened={false}
+				requestModalRequest={null}
+				requestModalAction={null}
+				requestModalBudget={null}
+				requestModalRating={5}
+				requestModalDisputeReason=""
+				busyRequestId={null}
+				onRefresh={vi.fn()}
+				onQueryChange={vi.fn()}
+				onStatusFilterChange={vi.fn()}
+				onClearFilters={vi.fn()}
+				onOpenRequestModal={vi.fn()}
+				onCloseRequestModal={vi.fn()}
+				onRequestModalBudgetChange={vi.fn()}
+				onRequestModalRatingChange={vi.fn()}
+				onRequestModalDisputeReasonChange={vi.fn()}
+				onSubmitBudget={vi.fn()}
+				onPayBudget={vi.fn()}
+				onCompleteOrder={vi.fn()}
+				onRateService={vi.fn()}
+				onOpenDispute={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getAllByText("Em disputa")).toHaveLength(2);
+		expect(screen.queryByRole("button", { name: "Disputar" })).toBeNull();
+	});
+
 	it("mostra o modal de orcamento para o tecnico", () => {
 		const onSubmitBudget = vi.fn();
 
@@ -188,6 +242,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				requestModalAction="budget"
 				requestModalBudget={250}
 				requestModalRating={5}
+				requestModalDisputeReason=""
 				busyRequestId={null}
 				onRefresh={vi.fn()}
 				onQueryChange={vi.fn()}
@@ -197,10 +252,12 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onCloseRequestModal={vi.fn()}
 				onRequestModalBudgetChange={vi.fn()}
 				onRequestModalRatingChange={vi.fn()}
+				onRequestModalDisputeReasonChange={vi.fn()}
 				onSubmitBudget={onSubmitBudget}
 				onPayBudget={vi.fn()}
 				onCompleteOrder={vi.fn()}
 				onRateService={vi.fn()}
+				onOpenDispute={vi.fn()}
 			/>,
 		);
 
@@ -231,6 +288,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				requestModalAction="pay"
 				requestModalBudget={null}
 				requestModalRating={5}
+				requestModalDisputeReason=""
 				busyRequestId={null}
 				onRefresh={vi.fn()}
 				onQueryChange={vi.fn()}
@@ -240,10 +298,12 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onCloseRequestModal={vi.fn()}
 				onRequestModalBudgetChange={vi.fn()}
 				onRequestModalRatingChange={vi.fn()}
+				onRequestModalDisputeReasonChange={vi.fn()}
 				onSubmitBudget={vi.fn()}
 				onPayBudget={onPayBudget}
 				onCompleteOrder={vi.fn()}
 				onRateService={vi.fn()}
+				onOpenDispute={vi.fn()}
 			/>,
 		);
 
@@ -273,6 +333,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				requestModalAction="rate"
 				requestModalBudget={null}
 				requestModalRating={5}
+				requestModalDisputeReason=""
 				busyRequestId={null}
 				onRefresh={vi.fn()}
 				onQueryChange={vi.fn()}
@@ -282,10 +343,12 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onCloseRequestModal={vi.fn()}
 				onRequestModalBudgetChange={vi.fn()}
 				onRequestModalRatingChange={onRequestModalRatingChange}
+				onRequestModalDisputeReasonChange={vi.fn()}
 				onSubmitBudget={vi.fn()}
 				onPayBudget={vi.fn()}
 				onCompleteOrder={vi.fn()}
 				onRateService={onRateService}
+				onOpenDispute={vi.fn()}
 			/>,
 		);
 
@@ -296,6 +359,56 @@ describe("components/services/ServiceRequestsPanelView", () => {
 		expect(onRequestModalRatingChange).toHaveBeenCalledWith(4);
 		fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Avaliar" }));
 		expect(onRateService).toHaveBeenCalledTimes(1);
+	});
+
+	it("mostra o modal de disputa", () => {
+		const onOpenDispute = vi.fn();
+		const onRequestModalDisputeReasonChange = vi.fn();
+
+		renderWithMantine(
+			<ServiceRequestsPanelView
+				connected
+				walletAddress="0xcliente"
+				walletNotice={null}
+				perfilAtivo="cliente"
+				loading={false}
+				error={null}
+				clientRequests={[concludedRequest]}
+				visibleRequests={[concludedRequest]}
+				query=""
+				statusFilter="all"
+				requestModalOpened
+				requestModalRequest={concludedRequest}
+				requestModalAction="dispute"
+				requestModalBudget={null}
+				requestModalRating={5}
+				requestModalDisputeReason="Servico fora do combinado"
+				busyRequestId={null}
+				onRefresh={vi.fn()}
+				onQueryChange={vi.fn()}
+				onStatusFilterChange={vi.fn()}
+				onClearFilters={vi.fn()}
+				onOpenRequestModal={vi.fn()}
+				onCloseRequestModal={vi.fn()}
+				onRequestModalBudgetChange={vi.fn()}
+				onRequestModalRatingChange={vi.fn()}
+				onRequestModalDisputeReasonChange={onRequestModalDisputeReasonChange}
+				onSubmitBudget={vi.fn()}
+				onPayBudget={vi.fn()}
+				onCompleteOrder={vi.fn()}
+				onRateService={vi.fn()}
+				onOpenDispute={onOpenDispute}
+			/>,
+		);
+
+		expect(screen.getByRole("heading", { name: "Abrir disputa" })).toBeDefined();
+		expect(screen.getByDisplayValue("Servico fora do combinado")).toBeDefined();
+		fireEvent.change(screen.getByLabelText("Motivo da disputa"), {
+			target: { value: "Servico com defeito" },
+		});
+		expect(onRequestModalDisputeReasonChange).toHaveBeenCalledWith("Servico com defeito");
+		fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Abrir disputa" }));
+		expect(onOpenDispute).toHaveBeenCalledTimes(1);
 	});
 
 	it("propaga as interacoes da busca e dos filtros", () => {
@@ -322,6 +435,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				requestModalAction={null}
 				requestModalBudget={null}
 				requestModalRating={5}
+				requestModalDisputeReason=""
 				busyRequestId={null}
 				onRefresh={onRefresh}
 				onQueryChange={onQueryChange}
@@ -331,10 +445,12 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onCloseRequestModal={vi.fn()}
 				onRequestModalBudgetChange={vi.fn()}
 				onRequestModalRatingChange={vi.fn()}
+				onRequestModalDisputeReasonChange={vi.fn()}
 				onSubmitBudget={vi.fn()}
 				onPayBudget={vi.fn()}
 				onCompleteOrder={vi.fn()}
 				onRateService={vi.fn()}
+				onOpenDispute={vi.fn()}
 			/>,
 		);
 

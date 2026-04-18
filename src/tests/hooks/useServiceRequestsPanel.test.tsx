@@ -8,6 +8,7 @@ import { useServiceRequestsPanel } from "@/hooks/useServiceRequestsPanel";
 
 const serviceMocks = vi.hoisted(() => ({
 	loadServiceRequests: vi.fn(),
+	abrirDisputaNoContrato: vi.fn(),
 	enviarOrcamentoNoContrato: vi.fn(),
 	autorizarPagamentoNoContrato: vi.fn(),
 	acceptServiceBudget: vi.fn(),
@@ -16,6 +17,7 @@ const serviceMocks = vi.hoisted(() => ({
 	concluirOrdemNoContrato: vi.fn(),
 	avaliarServicoNoContrato: vi.fn(),
 	carregarEstadoAvaliacaoNoContrato: vi.fn(),
+	openServiceDispute: vi.fn(),
 	sendServiceBudget: vi.fn(),
 }));
 
@@ -45,6 +47,7 @@ vi.mock("@/services/wallet/provider", () => ({
 }));
 
 vi.mock("@/services/serviceRequests/serviceRequestBlockchain", () => ({
+	abrirDisputaNoContrato: serviceMocks.abrirDisputaNoContrato,
 	enviarOrcamentoNoContrato: serviceMocks.enviarOrcamentoNoContrato,
 	autorizarPagamentoNoContrato: serviceMocks.autorizarPagamentoNoContrato,
 	aceitarOrcamentoNoContrato: serviceMocks.aceitarOrcamentoNoContrato,
@@ -57,6 +60,7 @@ vi.mock("@/services/serviceRequests/serviceRequestClient", () => ({
 	loadServiceRequests: serviceMocks.loadServiceRequests,
 	acceptServiceBudget: serviceMocks.acceptServiceBudget,
 	completeServiceRequest: serviceMocks.completeServiceRequest,
+	openServiceDispute: serviceMocks.openServiceDispute,
 	sendServiceBudget: serviceMocks.sendServiceBudget,
 }));
 
@@ -313,6 +317,62 @@ beforeEach(() => {
 		expect(getLatest()?.requestModalOpened).toBe(false);
 	});
 
+	it("abre disputa passando pelo contrato primeiro", async () => {
+		walletState.address = "0xcliente";
+		profileState.perfilAtivo = "cliente";
+		const disputeRequest: ServiceRequestSummary = {
+			id: 3,
+			clientAddress: "0xcliente",
+			clientName: "Cliente",
+			technicianAddress: "0xtec",
+			technicianName: "Tecnico",
+			description: "Instalacao de tomada",
+			status: "concluida",
+			budgetAmount: 180,
+			acceptedAt: "2026-04-17T11:00:00.000Z",
+			budgetSentAt: "2026-04-17T12:00:00.000Z",
+			clientAcceptedAt: "2026-04-17T13:00:00.000Z",
+			completedAt: "2026-04-17T14:00:00.000Z",
+			createdAt: "2026-04-17T09:00:00.000Z",
+			updatedAt: "2026-04-17T14:00:00.000Z",
+		};
+		serviceMocks.loadServiceRequests.mockResolvedValue([
+			disputeRequest,
+		]);
+		serviceMocks.abrirDisputaNoContrato.mockResolvedValue({ hash: "0x4" });
+		serviceMocks.openServiceDispute.mockResolvedValue({
+			...disputeRequest,
+			status: "disputada",
+			disputedAt: "2026-04-17T15:00:00.000Z",
+			disputeReason: "Servico nao foi concluido corretamente",
+			updatedAt: "2026-04-17T15:00:00.000Z",
+		});
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.onOpenRequestModal(3, "dispute");
+			getLatest()?.onRequestModalDisputeReasonChange("Servico nao foi concluido corretamente");
+			await flush();
+		});
+
+		await act(async () => {
+			await getLatest()?.onOpenDispute();
+			await flush();
+		});
+
+		expect(serviceMocks.abrirDisputaNoContrato).toHaveBeenCalledWith({}, 3, "Servico nao foi concluido corretamente");
+		expect(serviceMocks.openServiceDispute).toHaveBeenCalledWith({
+			id: 3,
+			actorAddress: "0xcliente",
+			disputeReason: "Servico nao foi concluido corretamente",
+		});
+		expect(getLatest()?.requestModalOpened).toBe(false);
+	});
+
 	it("mescla o estado de avaliacao vindo do contrato", async () => {
 		serviceMocks.loadServiceRequests.mockResolvedValue([
 			{
@@ -350,6 +410,47 @@ beforeEach(() => {
 
 		expect(getLatest()?.visibleRequests).toHaveLength(1);
 		expect(getLatest()?.visibleRequests[0]?.id).toBe(2);
+	});
+
+	it("mostra o motivo de disputa e bloqueia submissao vazia", async () => {
+		const disputeRequest: ServiceRequestSummary = {
+			id: 3,
+			clientAddress: "0xcliente",
+			clientName: "Cliente",
+			technicianAddress: "0xtec",
+			technicianName: "Tecnico",
+			description: "Instalacao de tomada",
+			status: "concluida",
+			budgetAmount: 180,
+			acceptedAt: "2026-04-17T11:00:00.000Z",
+			budgetSentAt: "2026-04-17T12:00:00.000Z",
+			clientAcceptedAt: "2026-04-17T13:00:00.000Z",
+			completedAt: "2026-04-17T14:00:00.000Z",
+			createdAt: "2026-04-17T09:00:00.000Z",
+			updatedAt: "2026-04-17T14:00:00.000Z",
+		};
+		serviceMocks.loadServiceRequests.mockResolvedValue([
+			disputeRequest,
+		]);
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			getLatest()?.onOpenRequestModal(3, "dispute");
+			await flush();
+		});
+
+		expect(getLatest()?.requestModalAction).toBe("dispute");
+
+		await act(async () => {
+			await getLatest()?.onOpenDispute();
+			await flush();
+		});
+
+		expect(getLatest()?.error).toBe("Informe o motivo da disputa.");
 	});
 
 	it("bloqueia a aceitacao quando nao ha carteira ou ordem selecionada", async () => {

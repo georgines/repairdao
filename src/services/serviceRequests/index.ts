@@ -3,6 +3,7 @@ export {
 	acceptServiceRequest,
 	createServiceRequest,
 	completeServiceRequest,
+	openServiceDispute,
 	listServiceRequests,
 	sendServiceBudget,
 } from "@/services/serviceRequests/serviceRequestRepository";
@@ -12,6 +13,7 @@ export type {
 	ServiceRequestBudgetInput,
 	ServiceRequestCreateInput,
 	ServiceRequestCompletionInput,
+	ServiceRequestDisputeInput,
 	ServiceRequestFilters,
 	ServiceRequestStatus,
 	ServiceRequestSummary,

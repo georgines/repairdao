@@ -11,6 +11,7 @@ const menuItems = [
 	{ label: "Loja", href: "/store" },
 	{ label: "Elegibilidade", href: "/eligibility" },
 	{ label: "Servicos", href: "/services", visibleFor: "tecnico" },
+	{ label: "Disputas", href: "/disputes" },
 	{ label: "Tecnicos", href: "/technicians", visibleFor: "cliente" },
 ];
 

@@ -19,6 +19,7 @@ import {
 	acceptServiceBudget,
 	createServiceRequest,
 	completeServiceRequest,
+	openServiceDispute,
 	listServiceRequests,
 	sendServiceBudget,
 } from "@/services/serviceRequests/serviceRequestRepository";
@@ -428,6 +429,96 @@ describe("serviceRequestRepository", () => {
 			status: "concluida",
 			completedAt: "2026-04-17T14:00:00.000Z",
 		});
+	});
+
+	it("abre disputa quando o cliente ou tecnico autorizados informam um motivo", async () => {
+		prismaMocks.serviceRequest.findUnique.mockResolvedValue({
+			id: 8,
+			clientAddress: "0xcliente",
+			clientName: "Cliente",
+			technicianAddress: "0xtec",
+			technicianName: "Tecnico",
+			description: "Servico",
+			status: "ACEITO_CLIENTE",
+			budgetAmount: 240,
+			acceptedAt: new Date("2026-04-17T11:00:00.000Z"),
+			budgetSentAt: new Date("2026-04-17T12:00:00.000Z"),
+			clientAcceptedAt: new Date("2026-04-17T13:00:00.000Z"),
+			completedAt: null,
+			disputedAt: null,
+			disputeReason: null,
+			createdAt: new Date("2026-04-17T10:00:00.000Z"),
+			updatedAt: new Date("2026-04-17T13:00:00.000Z"),
+		});
+		prismaMocks.serviceRequest.update.mockResolvedValue({
+			id: 8,
+			clientAddress: "0xcliente",
+			clientName: "Cliente",
+			technicianAddress: "0xtec",
+			technicianName: "Tecnico",
+			description: "Servico",
+			status: "DISPUTADA",
+			budgetAmount: 240,
+			acceptedAt: new Date("2026-04-17T11:00:00.000Z"),
+			budgetSentAt: new Date("2026-04-17T12:00:00.000Z"),
+			clientAcceptedAt: new Date("2026-04-17T13:00:00.000Z"),
+			completedAt: null,
+			disputedAt: new Date("2026-04-17T14:00:00.000Z"),
+			disputeReason: "Servico fora do combinado",
+			createdAt: new Date("2026-04-17T10:00:00.000Z"),
+			updatedAt: new Date("2026-04-17T14:00:00.000Z"),
+		});
+
+		await expect(
+			openServiceDispute({
+				id: 8,
+				actorAddress: "0xCLIENTE",
+				disputeReason: " Servico fora do combinado ",
+			}),
+		).resolves.toMatchObject({
+			id: 8,
+			status: "disputada",
+			disputedAt: "2026-04-17T14:00:00.000Z",
+			disputeReason: "Servico fora do combinado",
+		});
+	});
+
+	it("rejeita disputa quando a ordem nao esta apta ou o autor nao participa dela", async () => {
+		prismaMocks.serviceRequest.findUnique.mockResolvedValue({
+			id: 9,
+			clientAddress: "0xcliente",
+			clientName: "Cliente",
+			technicianAddress: "0xtec",
+			technicianName: "Tecnico",
+			description: "Servico",
+			status: "ABERTA",
+			budgetAmount: null,
+			acceptedAt: null,
+			budgetSentAt: null,
+			clientAcceptedAt: null,
+			completedAt: null,
+			disputedAt: null,
+			disputeReason: null,
+			createdAt: new Date("2026-04-17T10:00:00.000Z"),
+			updatedAt: new Date("2026-04-17T10:00:00.000Z"),
+		});
+
+		await expect(
+			openServiceDispute({
+				id: 9,
+				actorAddress: "0xcliente",
+				disputeReason: "falha",
+			}),
+		).rejects.toBeInstanceOf(RepairDAODominioError);
+
+		await expect(
+			openServiceDispute({
+				id: 9,
+				actorAddress: "0xoutsider",
+				disputeReason: "falha",
+			}),
+		).rejects.toBeInstanceOf(RepairDAODominioError);
+		expect(prismaMocks.serviceRequest.update).not.toHaveBeenCalled();
 	});
 
 	it("rejeita a conclusao quando a ordem nao esta pronta ou o tecnico nao corresponde", async () => {

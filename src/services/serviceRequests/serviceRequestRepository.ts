@@ -4,6 +4,7 @@ import type {
 	ServiceRequestClientAcceptanceInput,
 	ServiceRequestAcceptInput,
 	ServiceRequestCompletionInput,
+	ServiceRequestDisputeInput,
 	ServiceRequestBudgetInput,
 	ServiceRequestCreateInput,
 	ServiceRequestFilters,
@@ -13,12 +14,13 @@ import type {
 import {
 	validateServiceRequestAddress,
 	validateServiceRequestBudget,
+	validateServiceRequestDisputeReason,
 	validateServiceRequestDescription,
 	validateServiceRequestIdentifier,
 	validateServiceRequestName,
 } from "@/services/serviceRequests/serviceRequestValidation";
 
-type PrismaStatus = "ABERTA" | "ACEITA" | "ORCADA" | "ACEITO_CLIENTE";
+type PrismaStatus = "ABERTA" | "ACEITA" | "ORCADA" | "ACEITO_CLIENTE" | "CONCLUIDA" | "DISPUTADA";
 
 const STATUS_PRISMA_POR_DOMINIO: Record<ServiceRequestStatus, PrismaStatus> = {
 	aberta: "ABERTA",
@@ -26,6 +28,7 @@ const STATUS_PRISMA_POR_DOMINIO: Record<ServiceRequestStatus, PrismaStatus> = {
 	orcada: "ORCADA",
 	aceito_cliente: "ACEITO_CLIENTE",
 	concluida: "CONCLUIDA",
+	disputada: "DISPUTADA",
 };
 
 const STATUS_DOMINIO_POR_PRISMA: Record<PrismaStatus, ServiceRequestStatus> = {
@@ -34,6 +37,7 @@ const STATUS_DOMINIO_POR_PRISMA: Record<PrismaStatus, ServiceRequestStatus> = {
 	ORCADA: "orcada",
 	ACEITO_CLIENTE: "aceito_cliente",
 	CONCLUIDA: "concluida",
+	DISPUTADA: "disputada",
 };
 
 function toPrismaStatus(status: ServiceRequestStatus): PrismaStatus {
@@ -57,6 +61,8 @@ function toSummary(record: {
 	budgetSentAt: Date | null;
 	clientAcceptedAt: Date | null;
 	completedAt?: Date | null;
+	disputedAt?: Date | null;
+	disputeReason?: string | null;
 	createdAt: Date;
 	updatedAt: Date;
 }): ServiceRequestSummary {
@@ -75,6 +81,8 @@ function toSummary(record: {
 		createdAt: record.createdAt.toISOString(),
 		updatedAt: record.updatedAt.toISOString(),
 		...(record.completedAt ? { completedAt: record.completedAt.toISOString() } : {}),
+		...(record.disputedAt ? { disputedAt: record.disputedAt.toISOString() } : {}),
+		...(record.disputeReason ? { disputeReason: record.disputeReason } : {}),
 	};
 }
 
@@ -239,6 +247,39 @@ export async function completeServiceRequest(input: ServiceRequestCompletionInpu
 		data: {
 			status: "CONCLUIDA",
 			completedAt: new Date(),
+		},
+	});
+
+	return toSummary({
+		...updated,
+		status: updated.status as PrismaStatus,
+	});
+}
+
+export async function openServiceDispute(input: ServiceRequestDisputeInput): Promise<ServiceRequestSummary> {
+	const id = validateServiceRequestIdentifier(input.id);
+	const actorAddress = validateServiceRequestAddress(input.actorAddress, "identificador do autor");
+	const disputeReason = validateServiceRequestDisputeReason(input.disputeReason);
+	const record = await findServiceRequest(id);
+
+	if (!record) {
+		throw new RepairDAODominioError("ordem_nao_encontrada", "A ordem de servico nao foi encontrada.");
+	}
+
+	if (record.clientAddress !== actorAddress && record.technicianAddress !== actorAddress) {
+		throw new RepairDAODominioError("disputa_nao_autorizada", "A disputa so pode ser aberta por cliente ou tecnico da ordem.");
+	}
+
+	if (record.status !== "ACEITO_CLIENTE" && record.status !== "CONCLUIDA") {
+		throw new RepairDAODominioError("ordem_nao_apta", "A ordem precisa estar em andamento ou concluida para abrir disputa.");
+	}
+
+	const updated = await prisma.serviceRequest.update({
+		where: { id },
+		data: {
+			status: "DISPUTADA",
+			disputedAt: new Date(),
+			disputeReason,
 		},
 	});
 

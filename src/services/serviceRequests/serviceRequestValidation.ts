@@ -13,6 +13,10 @@ export function validateServiceRequestDescription(value: string) {
 	return garantirTextoNaoVazio(value, "descricao do servico").trim();
 }
 
+export function validateServiceRequestDisputeReason(value: string) {
+	return garantirTextoNaoVazio(value, "motivo da disputa").trim();
+}
+
 export function validateServiceRequestBudget(value: number) {
 	const amount = Math.trunc(value);
 

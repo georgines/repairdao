@@ -10,6 +10,7 @@ const serviceMocks = vi.hoisted(() => ({
 	sendServiceBudget: vi.fn(),
 	acceptServiceBudget: vi.fn(),
 	completeServiceRequest: vi.fn(),
+	openServiceDispute: vi.fn(),
 }));
 
 vi.mock("@/services/serviceRequests/serviceRequestRepository", () => ({
@@ -19,6 +20,7 @@ vi.mock("@/services/serviceRequests/serviceRequestRepository", () => ({
 	sendServiceBudget: serviceMocks.sendServiceBudget,
 	acceptServiceBudget: serviceMocks.acceptServiceBudget,
 	completeServiceRequest: serviceMocks.completeServiceRequest,
+	openServiceDispute: serviceMocks.openServiceDispute,
 }));
 
 import { GET, PATCH, POST } from "@/app/api/service-requests/route";
@@ -184,12 +186,12 @@ describe("/api/service-requests", () => {
 			id: 2,
 			technicianAddress: "0xtec",
 		});
-	expect(serviceMocks.sendServiceBudget).toHaveBeenCalledWith({
-		action: "budget",
-		id: 2,
-		technicianAddress: "0xtec",
-		budgetAmount: 240,
-	});
+		expect(serviceMocks.sendServiceBudget).toHaveBeenCalledWith({
+			action: "budget",
+			id: 2,
+			technicianAddress: "0xtec",
+			budgetAmount: 240,
+		});
 	});
 
 	it("aceita o orcamento pelo cliente", async () => {
@@ -262,6 +264,46 @@ describe("/api/service-requests", () => {
 			action: "complete",
 			id: 2,
 			technicianAddress: "0xtec",
+		});
+	});
+
+	it("abre disputa pela parte autorizada", async () => {
+		serviceMocks.openServiceDispute.mockResolvedValue({
+			id: 2,
+			clientAddress: "0xcliente",
+			clientName: "Cliente",
+			technicianAddress: "0xtec",
+			technicianName: "Tecnico",
+			description: "Servico",
+			status: "disputada",
+			budgetAmount: 240,
+			acceptedAt: "2026-04-17T10:00:00.000Z",
+			budgetSentAt: "2026-04-17T11:00:00.000Z",
+			clientAcceptedAt: "2026-04-17T12:00:00.000Z",
+			disputedAt: "2026-04-17T13:00:00.000Z",
+			disputeReason: "Servico nao entregue",
+			createdAt: "2026-04-17T10:00:00.000Z",
+			updatedAt: "2026-04-17T13:00:00.000Z",
+		});
+
+		const response = await PATCH(
+			new Request("http://localhost/api/service-requests", {
+				method: "PATCH",
+				body: JSON.stringify({
+					action: "dispute",
+					id: 2,
+					actorAddress: "0xcliente",
+					disputeReason: "Servico nao entregue",
+				}),
+			}),
+		);
+
+		expect(response.status).toBe(200);
+		expect(serviceMocks.openServiceDispute).toHaveBeenCalledWith({
+			action: "dispute",
+			id: 2,
+			actorAddress: "0xcliente",
+			disputeReason: "Servico nao entregue",
 		});
 	});
 
@@ -383,5 +425,30 @@ describe("/api/service-requests", () => {
 
 		expect(response.status).toBe(500);
 		expect(body).toMatchObject({ message: "Falha ao processar a ordem de servico." });
+	});
+
+	it("retorna 400 quando a disputa falha com erro de dominio", async () => {
+		serviceMocks.openServiceDispute.mockRejectedValue(
+			new RepairDAODominioError("ordem_nao_apta", "A ordem precisa estar em andamento ou concluida para abrir disputa."),
+		);
+
+		const response = await PATCH(
+			new Request("http://localhost/api/service-requests", {
+				method: "PATCH",
+				body: JSON.stringify({
+					action: "dispute",
+					id: 2,
+					actorAddress: "0xcliente",
+					disputeReason: "Servico nao entregue",
+				}),
+			}),
+		);
+		const body = await response.json();
+
+		expect(response.status).toBe(400);
+		expect(body).toMatchObject({
+			code: "ordem_nao_apta",
+			message: "A ordem precisa estar em andamento ou concluida para abrir disputa.",
+		});
 	});
 });

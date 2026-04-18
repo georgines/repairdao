@@ -1,4 +1,4 @@
-export type ServiceRequestStatus = "aberta" | "aceita" | "orcada" | "aceito_cliente" | "concluida";
+export type ServiceRequestStatus = "aberta" | "aceita" | "orcada" | "aceito_cliente" | "concluida" | "disputada";
 
 export type ServiceRequestSummary = {
 	id: number;
@@ -13,6 +13,8 @@ export type ServiceRequestSummary = {
 	budgetSentAt: string | null;
 	clientAcceptedAt: string | null;
 	completedAt?: string | null;
+	disputedAt?: string | null;
+	disputeReason?: string | null;
 	clientRated?: boolean;
 	technicianRated?: boolean;
 	createdAt: string;
@@ -46,6 +48,12 @@ export type ServiceRequestClientAcceptanceInput = {
 export type ServiceRequestCompletionInput = {
 	id: number;
 	technicianAddress: string;
+};
+
+export type ServiceRequestDisputeInput = {
+	id: number;
+	actorAddress: string;
+	disputeReason: string;
 };
 
 export type ServiceRequestFilters = {

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { RepairDAODominioError } from "@/erros/errors";
 import {
 	validateServiceRequestAddress,
+	validateServiceRequestDisputeReason,
 	validateServiceRequestBudget,
 	validateServiceRequestDescription,
 	validateServiceRequestIdentifier,
@@ -13,6 +14,7 @@ describe("serviceRequestValidation", () => {
 		expect(validateServiceRequestAddress(" 0xABC ", "cliente")).toBe("0xabc");
 		expect(validateServiceRequestName(" Ana ", "cliente")).toBe("Ana");
 		expect(validateServiceRequestDescription(" Servico urgente ")).toBe("Servico urgente");
+		expect(validateServiceRequestDisputeReason(" Motivo valido ")).toBe("Motivo valido");
 	});
 
 	it("normaliza o orcamento e o identificador", () => {

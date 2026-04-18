@@ -13,6 +13,7 @@ import {
 	Table,
 	Text,
 	TextInput,
+	Textarea,
 	Title,
 } from "@mantine/core";
 import { formatarRPT } from "@/services/wallet";
@@ -31,22 +32,25 @@ export type ServiceRequestsPanelViewProps = {
 	statusFilter: ServiceRequestStatus | "all";
 	requestModalOpened: boolean;
 	requestModalRequest: ServiceRequestSummary | null;
-	requestModalAction: "details" | "budget" | "pay" | "complete" | "rate" | null;
+	requestModalAction: "details" | "budget" | "pay" | "complete" | "rate" | "dispute" | null;
 	requestModalBudget: number | null;
 	requestModalRating: number;
+	requestModalDisputeReason: string;
 	busyRequestId: number | null;
 	onRefresh: () => void;
 	onQueryChange: (value: string) => void;
 	onStatusFilterChange: (value: string | null) => void;
 	onClearFilters: () => void;
-	onOpenRequestModal: (requestId: number, action: "details" | "budget" | "pay" | "complete" | "rate") => void;
+	onOpenRequestModal: (requestId: number, action: "details" | "budget" | "pay" | "complete" | "rate" | "dispute") => void;
 	onCloseRequestModal: () => void;
 	onRequestModalBudgetChange: (value: number | null) => void;
 	onRequestModalRatingChange: (value: number) => void;
+	onRequestModalDisputeReasonChange: (value: string) => void;
 	onSubmitBudget: () => Promise<void>;
 	onPayBudget: () => Promise<void>;
 	onCompleteOrder: () => Promise<void>;
 	onRateService: () => Promise<void>;
+	onOpenDispute: () => Promise<void>;
 };
 
 const STATUS_OPTIONS = [
@@ -56,6 +60,7 @@ const STATUS_OPTIONS = [
 	{ value: "orcada", label: "Aguardando pagamento" },
 	{ value: "aceito_cliente", label: "Pagas" },
 	{ value: "concluida", label: "Concluidas" },
+	{ value: "disputada", label: "Em disputa" },
 ];
 
 function formatStatus(status: ServiceRequestSummary["status"]) {
@@ -70,6 +75,8 @@ function formatStatus(status: ServiceRequestSummary["status"]) {
 			return "Paga";
 		case "concluida":
 			return "Concluida";
+		case "disputada":
+			return "Em disputa";
 	}
 }
 
@@ -85,6 +92,8 @@ function statusColor(status: ServiceRequestSummary["status"]) {
 			return "teal";
 		case "concluida":
 			return "gray";
+		case "disputada":
+			return "red";
 	}
 }
 
@@ -147,6 +156,46 @@ function obterAcaoPrincipal(
 	return null;
 }
 
+function obterAcaoDisputa(
+	request: ServiceRequestSummary,
+	perfilAtivo: "cliente" | "tecnico" | null,
+	walletAddress: string | null,
+) {
+	if (!walletAddress) {
+		return null;
+	}
+
+	const ehCliente = perfilAtivo === "cliente" && request.clientAddress === walletAddress;
+	const ehTecnico = perfilAtivo === "tecnico" && request.technicianAddress === walletAddress;
+
+	if (!ehCliente && !ehTecnico) {
+		return null;
+	}
+
+	if (request.status === "aceito_cliente" || request.status === "concluida") {
+		return { label: "Disputar", action: "dispute" as const };
+	}
+
+	return null;
+}
+
+function obterTituloModal(modalAction: "details" | "budget" | "pay" | "complete" | "rate" | "dispute") {
+	switch (modalAction) {
+		case "budget":
+			return "Definir valor do servico";
+		case "pay":
+			return "Confirmar pagamento do orcamento";
+		case "complete":
+			return "Confirmar finalizacao da ordem";
+		case "rate":
+			return "Avaliar servico";
+		case "dispute":
+			return "Abrir disputa";
+		default:
+			return "Detalhes da ordem";
+	}
+}
+
 export function ServiceRequestsPanelView({
 	connected,
 	walletAddress,
@@ -163,6 +212,7 @@ export function ServiceRequestsPanelView({
 	requestModalAction,
 	requestModalBudget,
 	requestModalRating,
+	requestModalDisputeReason,
 	busyRequestId,
 	onRefresh,
 	onQueryChange,
@@ -172,14 +222,17 @@ export function ServiceRequestsPanelView({
 	onCloseRequestModal,
 	onRequestModalBudgetChange,
 	onRequestModalRatingChange,
+	onRequestModalDisputeReasonChange,
 	onSubmitBudget,
 	onPayBudget,
 	onCompleteOrder,
 	onRateService,
+	onOpenDispute,
 }: ServiceRequestsPanelViewProps) {
 	const hasWallet = connected && walletAddress !== null;
 	const withBudget = clientRequests.filter((request) => request.status === "orcada").length;
 	const completedRequests = clientRequests.filter((request) => request.status === "concluida").length;
+	const disputedRequests = clientRequests.filter((request) => request.status === "disputada").length;
 	const statusFilterValue = statusFilter;
 	const modalAction = requestModalAction ?? "details";
 
@@ -202,6 +255,7 @@ export function ServiceRequestsPanelView({
 						<Badge variant="light">{visibleRequests.length} visiveis</Badge>
 						<Badge variant="light">{withBudget} com valor em RPT</Badge>
 						<Badge variant="light">{completedRequests} concluidas</Badge>
+						<Badge variant="light">{disputedRequests} em disputa</Badge>
 						{perfilAtivo ? (
 							<Badge variant="light" color={perfilAtivo === "tecnico" ? "blue" : "grape"}>
 								{perfilAtivo}
@@ -280,6 +334,7 @@ export function ServiceRequestsPanelView({
 									<Table.Tbody>
 										{visibleRequests.map((request) => {
 											const acaoPrincipal = obterAcaoPrincipal(request, perfilAtivo, walletAddress);
+											const acaoDisputa = obterAcaoDisputa(request, perfilAtivo, walletAddress);
 
 											return (
 												<Table.Tr key={request.id}>
@@ -312,6 +367,17 @@ export function ServiceRequestsPanelView({
 																	{acaoPrincipal.label}
 																</Button>
 															) : null}
+															{acaoDisputa ? (
+																<Button
+																	size="xs"
+																	variant="light"
+																	color="red"
+																	onClick={() => onOpenRequestModal(request.id, acaoDisputa.action)}
+																	loading={busyRequestId === request.id}
+																>
+																	{acaoDisputa.label}
+																</Button>
+															) : null}
 														</Group>
 													</Table.Td>
 												</Table.Tr>
@@ -332,17 +398,7 @@ export function ServiceRequestsPanelView({
 			<Modal
 				opened={requestModalOpened}
 				onClose={onCloseRequestModal}
-				title={
-					modalAction === "budget"
-						? "Definir valor do servico"
-						: modalAction === "pay"
-							? "Confirmar pagamento do orcamento"
-							: modalAction === "complete"
-								? "Confirmar finalizacao da ordem"
-								: modalAction === "rate"
-									? "Avaliar servico"
-									: "Detalhes da ordem"
-				}
+				title={obterTituloModal(modalAction)}
 				size="md"
 				centered
 				overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
@@ -374,6 +430,7 @@ export function ServiceRequestsPanelView({
 									<Text size="sm">A finalizacao libera o valor ao tecnico.</Text>
 								) : null}
 								{modalAction === "rate" ? <Text size="sm">A avaliacao fica disponivel depois da finalizacao.</Text> : null}
+								{modalAction === "dispute" ? <Text size="sm">Explique o motivo e abra a disputa contra a outra parte.</Text> : null}
 							</Stack>
 						</Card>
 
@@ -409,6 +466,17 @@ export function ServiceRequestsPanelView({
 							</Stack>
 						) : null}
 
+						{modalAction === "dispute" ? (
+							<Textarea
+								label="Motivo da disputa"
+								description="Explique o problema com clareza. Esse texto vai espelhar o contrato."
+								placeholder="Ex.: o servico nao foi executado conforme combinado."
+								minRows={4}
+								value={requestModalDisputeReason}
+								onChange={(event) => onRequestModalDisputeReasonChange(event.currentTarget.value)}
+							/>
+						) : null}
+
 						{modalAction === "pay" && requestModalRequest.status !== "orcada" ? (
 							<Text size="sm" c="dimmed">
 								Esta ordem ainda nao recebeu um orcamento.
@@ -424,6 +492,12 @@ export function ServiceRequestsPanelView({
 						{modalAction === "rate" && requestModalRequest.status !== "concluida" ? (
 							<Text size="sm" c="dimmed">
 								A ordem ainda nao foi finalizada.
+							</Text>
+						) : null}
+
+						{modalAction === "dispute" && requestModalRequest.status !== "aceito_cliente" && requestModalRequest.status !== "concluida" ? (
+							<Text size="sm" c="dimmed">
+								A disputa so pode ser aberta quando a ordem estiver em andamento ou concluida.
 							</Text>
 						) : null}
 
@@ -469,6 +543,20 @@ export function ServiceRequestsPanelView({
 									disabled={requestModalRequest.status !== "concluida"}
 								>
 									Avaliar
+								</Button>
+							) : null}
+
+							{modalAction === "dispute" ? (
+								<Button
+									color="red"
+									onClick={() => void onOpenDispute()}
+									loading={busyRequestId === requestModalRequest.id}
+									disabled={
+										(requestModalRequest.status !== "aceito_cliente" && requestModalRequest.status !== "concluida") ||
+										requestModalDisputeReason.trim().length === 0
+									}
+								>
+									Abrir disputa
 								</Button>
 							) : null}
 						</Group>

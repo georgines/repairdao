@@ -53,14 +53,17 @@ export function papelPodeVotarEmGovernanca(contexto: ContextoPapelRepairDAO): bo
 }
 
 export function papelPodeVotarEmDisputa(contexto: ContextoPapelRepairDAO): boolean {
-  return contexto.papel === "votante"
-    && tokensPositivos(contexto.tokens)
-    && contexto.envolvidoEmDisputa !== true;
+  return tokensPositivos(contexto.tokens) && contexto.envolvidoEmDisputa !== true;
 }
 
 export function papelPodeAbrirDisputa(contexto: ContextoPapelRepairDAO): boolean {
   return (contexto.papel === "cliente" || contexto.papel === "tecnico")
     && depositoAtivoValido(contexto.depositoAtivo);
+}
+
+export function papelPodeEnviarEvidencia(contexto: ContextoPapelRepairDAO): boolean {
+  return (contexto.papel === "cliente" || contexto.papel === "tecnico")
+    && contexto.envolvidoEmDisputa === true;
 }
 
 export function garantirPodeVotarEmGovernanca(contexto: ContextoPapelRepairDAO): true {
@@ -87,5 +90,13 @@ export function garantirPodeAbrirDisputa(contexto: ContextoPapelRepairDAO): true
   }
 
   garantirDepositoAtivo(contexto.depositoAtivo, "abrir disputa");
+  return true;
+}
+
+export function garantirPodeEnviarEvidencia(contexto: ContextoPapelRepairDAO): true {
+  if (!papelPodeEnviarEvidencia(contexto)) {
+    throw new RepairDAODominioError("evidencia_disputa_invalida", "A evidencia da disputa so pode ser enviada pelo cliente ou tecnico da ordem.", contexto);
+  }
+
   return true;
 }

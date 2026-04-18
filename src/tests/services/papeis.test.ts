@@ -6,10 +6,12 @@ import {
   ehPapelValido,
   garantirPapelValido,
   garantirPodeAbrirDisputa,
+  garantirPodeEnviarEvidencia,
   garantirPodeVotarEmDisputa,
   garantirPodeVotarEmGovernanca,
   papelPodeAbrirDisputa,
   papelPodeAvaliarServico,
+  papelPodeEnviarEvidencia,
   papelPodeCriarProposta,
   papelPodeSacarRecompensa,
   papelPodeVotarEmDisputa,
@@ -59,19 +61,22 @@ describe("papeis", () => {
     expect(papelPodeAvaliarServico({ papel: "votante", depositoAtivo: true })).toBe(false);
   });
 
-  it("permite votacao em governanca e disputa somente para votante com tokens e sem envolvimento", () => {
+  it("permite votacao em governanca e disputa conforme tokens e envolvimento", () => {
     expect(papelPodeVotarEmGovernanca({ papel: "votante", depositoAtivo: true, tokens: 1 })).toBe(true);
     expect(papelPodeVotarEmGovernanca({ papel: "votante", depositoAtivo: true, tokens: 0 })).toBe(false);
-    expect(papelPodeVotarEmDisputa({ papel: "votante", depositoAtivo: true, tokens: 1, envolvidoEmDisputa: false })).toBe(true);
-    expect(papelPodeVotarEmDisputa({ papel: "votante", depositoAtivo: true, tokens: 1, envolvidoEmDisputa: true })).toBe(false);
+    expect(papelPodeVotarEmDisputa({ papel: "cliente", depositoAtivo: true, tokens: 1, envolvidoEmDisputa: false })).toBe(true);
+    expect(papelPodeVotarEmDisputa({ papel: "tecnico", depositoAtivo: true, tokens: 1, envolvidoEmDisputa: true })).toBe(false);
   });
 
   it("garante votacao e abertura de disputa com falha e sucesso", () => {
     expect(garantirPodeVotarEmGovernanca({ papel: "votante", depositoAtivo: true, tokens: 1 })).toBe(true);
     expect(() => garantirPodeVotarEmGovernanca({ papel: "votante", depositoAtivo: true, tokens: 0 })).toThrow(/precisa ter tokens/);
-    expect(garantirPodeVotarEmDisputa({ papel: "votante", depositoAtivo: true, tokens: 1, envolvidoEmDisputa: false })).toBe(true);
-    expect(() => garantirPodeVotarEmDisputa({ papel: "votante", depositoAtivo: true, tokens: 1, envolvidoEmDisputa: true })).toThrow(/nao e permitido/);
+    expect(garantirPodeVotarEmDisputa({ papel: "cliente", depositoAtivo: true, tokens: 1, envolvidoEmDisputa: false })).toBe(true);
+    expect(() => garantirPodeVotarEmDisputa({ papel: "cliente", depositoAtivo: true, tokens: 1, envolvidoEmDisputa: true })).toThrow(/nao e permitido/);
     expect(garantirPodeAbrirDisputa({ papel: "cliente", depositoAtivo: true })).toBe(true);
     expect(() => garantirPodeAbrirDisputa({ papel: "outsider", depositoAtivo: true })).toThrow(/so pode ser aberta/);
+    expect(papelPodeEnviarEvidencia({ papel: "cliente", depositoAtivo: true, envolvidoEmDisputa: true })).toBe(true);
+    expect(papelPodeEnviarEvidencia({ papel: "cliente", depositoAtivo: true, envolvidoEmDisputa: false })).toBe(false);
+    expect(garantirPodeEnviarEvidencia({ papel: "tecnico", depositoAtivo: true, envolvidoEmDisputa: true })).toBe(true);
   });
 });

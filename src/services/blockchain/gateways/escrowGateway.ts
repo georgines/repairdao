@@ -1,8 +1,21 @@
 import type { RepairDAOContractClient } from "@/services/blockchain/contractClient";
-import type { RepairDAOBlockchainGateway } from "@/services/blockchain/repairdaoBlockchain";
-import type { DisputaContratoBruta, OrdemContratoBruta } from "@/services/blockchain/adapters";
+import type { DisputaContratoBruta, EvidenciaContratoBruta, OrdemContratoBruta } from "@/services/blockchain/adapters";
 import { criarGatewayContrato, normalizarEndereco, normalizarNumero, normalizarTextoOpcional, obterTextoDeContrato, obterValorDeContrato, garantirEscritaDisponivel, type GatewayContratoBase } from "@/services/blockchain/gateways/shared";
 import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
+
+export interface RepairEscrowGateway extends GatewayContratoBase {
+  criarOrdem(input: { descricao: string; cliente: string }): Promise<unknown>;
+  enviarOrcamento(input: { ordemId: bigint | number | string; tecnico: string; valor: number }): Promise<unknown>;
+  concluirOrdem(input: { ordemId: bigint | number | string; tecnico: string }): Promise<unknown>;
+  avaliarServico(input: { ordemId: bigint | number | string; nota: number }): Promise<unknown>;
+  abrirDisputa(input: { ordemId: bigint | number | string; autor: string; motivo: string }): Promise<unknown>;
+  enviarEvidencia(input: { ordemId: bigint | number | string; autor: string; conteudo: string }): Promise<unknown>;
+  votarDisputa(input: { ordemId: bigint | number | string; apoiandoAbertura: boolean; votante: string }): Promise<unknown>;
+  resolverDisputa(input: { ordemId: bigint | number | string }): Promise<unknown>;
+  buscarOrdem(ordemId: bigint | number | string): Promise<OrdemContratoBruta | null>;
+  buscarDisputa(disputaId: bigint | number | string): Promise<DisputaContratoBruta | null>;
+  buscarEvidencias(ordemId: bigint | number | string): Promise<EvidenciaContratoBruta[]>;
+}
 
 function registrarOrdemVazia(registro: Record<string, unknown>): boolean {
   const id = registro.id ?? registro.orderId ?? registro.order_id;
@@ -40,6 +53,22 @@ function derivarEstadoDaDisputa(registro: Record<string, unknown>): "aberta" | "
   return "janela_votacao";
 }
 
+function normalizarEvidenciaContrato(registro: Record<string, unknown>): EvidenciaContratoBruta | null {
+  const submittedBy = registro.submittedBy ?? registro.author ?? registro.owner;
+  const content = registro.content ?? registro.message ?? registro.reason;
+  const timestamp = registro.timestamp ?? registro.createdAt ?? registro.created_at;
+
+  if (!submittedBy || !content || timestamp === undefined || timestamp === null) {
+    return null;
+  }
+
+  return {
+    submittedBy: normalizarEndereco(submittedBy, "autor da evidencia") ?? String(submittedBy),
+    content: obterTextoDeContrato(registro, ["content", "message", "reason"]),
+    timestamp: timestamp as EvidenciaContratoBruta["timestamp"],
+  };
+}
+
 function normalizarOrdemContrato(registro: Record<string, unknown>): OrdemContratoBruta | null {
   if (registrarOrdemVazia(registro)) {
     return null;
@@ -71,16 +100,26 @@ function normalizarDisputaContrato(registro: Record<string, unknown>): DisputaCo
   }
 
   const ordemId = obterValorDeContrato(registro, ["orderId", "ordemId", "order_id"]);
+  const openedBy = normalizarEndereco(registro.openedBy ?? registro.opened_by, "autor da disputa");
+  const opposingParty = normalizarEndereco(registro.opposingParty ?? registro.opposing_party, "parte oposta da disputa");
+  const votesForOpener = registro.votesForOpener ?? registro.votes_for_opener ?? undefined;
+  const votesForOpposing = registro.votesForOpposing ?? registro.votes_for_opposing ?? undefined;
 
   return {
     id: ordemId as DisputaContratoBruta["id"],
     estado: derivarEstadoDaDisputa(registro),
     ordemId: ordemId as DisputaContratoBruta["ordemId"],
     motivo: normalizarTextoOpcional(registro.reason ?? registro.motivo),
+    ...(openedBy ? { openedBy } : {}),
+    ...(opposingParty ? { opposingParty } : {}),
+    ...(votesForOpener !== undefined && votesForOpener !== null ? { votesForOpener } : {}),
+    ...(votesForOpposing !== undefined && votesForOpposing !== null ? { votesForOpposing } : {}),
+    ...(registro.deadline !== undefined && registro.deadline !== null ? { deadline: registro.deadline } : {}),
+    ...(typeof registro.resolved === "boolean" ? { resolved: registro.resolved } : {}),
   };
 }
 
-export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient): RepairDAOBlockchainGateway & GatewayContratoBase {
+export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient): RepairEscrowGateway {
   const base = criarGatewayContrato(contractClient, REPAIRDAO_CONTRACTOS.escrow);
 
   return {
@@ -140,6 +179,39 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
       });
     },
 
+    async enviarEvidencia(input) {
+      garantirEscritaDisponivel(contractClient);
+
+      return contractClient.writeContract({
+        address: REPAIRDAO_CONTRACTOS.escrow.address,
+        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        functionName: "submitEvidence",
+        args: [input.ordemId, input.conteudo],
+      });
+    },
+
+    async votarDisputa(input) {
+      garantirEscritaDisponivel(contractClient);
+
+      return contractClient.writeContract({
+        address: REPAIRDAO_CONTRACTOS.escrow.address,
+        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        functionName: "voteOnDispute",
+        args: [input.ordemId, input.apoiarAbertura],
+      });
+    },
+
+    async resolverDisputa(input) {
+      garantirEscritaDisponivel(contractClient);
+
+      return contractClient.writeContract({
+        address: REPAIRDAO_CONTRACTOS.escrow.address,
+        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        functionName: "resolveDispute",
+        args: [input.ordemId],
+      });
+    },
+
     async buscarOrdem(ordemId) {
       const ordem = await base.readContract({
         address: REPAIRDAO_CONTRACTOS.escrow.address,
@@ -160,6 +232,23 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
       });
 
       return disputa ? normalizarDisputaContrato(disputa as Record<string, unknown>) : null;
+    },
+
+    async buscarEvidencias(ordemId) {
+      const evidencias = await base.readContract({
+        address: REPAIRDAO_CONTRACTOS.escrow.address,
+        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        functionName: "getEvidences",
+        args: [ordemId],
+      });
+
+      if (!Array.isArray(evidencias)) {
+        return [];
+      }
+
+      return evidencias
+        .map((registro) => normalizarEvidenciaContrato(registro as Record<string, unknown>))
+        .filter((evidencia): evidencia is EvidenciaContratoBruta => evidencia !== null);
     },
   };
 }
