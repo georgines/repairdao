@@ -47,6 +47,12 @@ describe("escrowGateway", () => {
     await expect(gateway.enviarEvidencia({ ordemId: 1, autor: "0xcliente", conteudo: "fotos anexadas" })).resolves.toBe("0xdef");
     await expect(gateway.votarDisputa({ ordemId: 1, apoiandoAbertura: true, votante: "0xvotante" })).resolves.toBe("0xdef");
     await expect(gateway.resolverDisputa({ ordemId: 1 })).resolves.toBe("0xdef");
+    expect(contractClient.writeContract).toHaveBeenCalledWith(
+      expect.objectContaining({
+        functionName: "voteOnDispute",
+        args: [1, true],
+      }),
+    );
     await expect(gateway.buscarOrdem(1)).resolves.toEqual({
       id: 1,
       estado: 1,

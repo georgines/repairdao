@@ -87,6 +87,7 @@ describe("components/disputes/DisputesPanelView", () => {
 				walletAddress="0xcliente"
 				walletNotice={null}
 				perfilAtivo="cliente"
+				hasVotingTokens
 				loading={false}
 				error={null}
 				disputes={[{ request: disputeRequest, contract: disputeContract }]}
@@ -97,16 +98,19 @@ describe("components/disputes/DisputesPanelView", () => {
 				evidenceDraft="Nova prova"
 				voteSupportOpener
 				busyDisputeId={null}
+				votedDisputeIds={[]}
+				evidenceSubmittedDisputeIds={[]}
 				onRefresh={vi.fn()}
 				onSelectDispute={vi.fn()}
 				onEvidenceDraftChange={vi.fn()}
 				onVoteSupportChange={vi.fn()}
 				onSubmitEvidence={onSubmitEvidence}
 				onSubmitVote={vi.fn()}
+				onResolveDispute={vi.fn()}
 			/>,
 		);
 
-		expect(screen.getByText("Acompanhe e participe das disputas")).toBeDefined();
+		expect(screen.getByText("Acompanhe, leia e participe da disputa no contrato")).toBeDefined();
 		expect(screen.getByRole("heading", { name: "Enviar evidencia" })).toBeDefined();
 		expect(screen.queryByText("Votar na disputa")).toBeNull();
 		expect(screen.getByText("Fotos do defeito")).toBeDefined();
@@ -125,6 +129,7 @@ describe("components/disputes/DisputesPanelView", () => {
 				walletAddress="0xvotante"
 				walletNotice={null}
 				perfilAtivo={null}
+				hasVotingTokens
 				loading={false}
 				error={null}
 				disputes={[{ request: disputeRequest, contract: disputeContract }]}
@@ -135,19 +140,125 @@ describe("components/disputes/DisputesPanelView", () => {
 				evidenceDraft=""
 				voteSupportOpener={true}
 				busyDisputeId={null}
+				votedDisputeIds={[]}
+				evidenceSubmittedDisputeIds={[]}
 				onRefresh={vi.fn()}
 				onSelectDispute={vi.fn()}
 				onEvidenceDraftChange={vi.fn()}
 				onVoteSupportChange={onVoteSupportChange}
 				onSubmitEvidence={vi.fn()}
 				onSubmitVote={onSubmitVote}
+				onResolveDispute={vi.fn()}
 			/>,
 		);
 
 		expect(screen.getByText("Votar na disputa")).toBeDefined();
-		fireEvent.click(screen.getByRole("button", { name: "Apoiar a outra parte" }));
+		fireEvent.click(screen.getByRole("radio", { name: "Apoiar a outra parte" }));
 		expect(onVoteSupportChange).toHaveBeenCalledWith(false);
 		fireEvent.click(screen.getByRole("button", { name: "Registrar voto" }));
 		expect(onSubmitVote).toHaveBeenCalledTimes(1);
+	});
+
+	it("mostra a acao de resolucao quando a janela termina", () => {
+		renderWithMantine(
+			<DisputesPanelView
+				connected
+				walletAddress="0xvotante"
+				walletNotice={null}
+				perfilAtivo={null}
+				hasVotingTokens
+				loading={false}
+				error={null}
+				disputes={[{ request: disputeRequest, contract: { ...disputeContract, estado: "encerrada" } }]}
+				visibleDisputes={[{ request: disputeRequest, contract: { ...disputeContract, estado: "encerrada" } }]}
+				selectedDisputeId={21}
+				selectedDispute={{ request: disputeRequest, contract: { ...disputeContract, estado: "encerrada" } }}
+				selectedEvidence={disputeEvidence}
+				evidenceDraft=""
+				voteSupportOpener={true}
+				busyDisputeId={null}
+				votedDisputeIds={[]}
+				evidenceSubmittedDisputeIds={[]}
+				onRefresh={vi.fn()}
+				onSelectDispute={vi.fn()}
+				onEvidenceDraftChange={vi.fn()}
+				onVoteSupportChange={vi.fn()}
+				onSubmitEvidence={vi.fn()}
+				onSubmitVote={vi.fn()}
+				onResolveDispute={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByRole("button", { name: "Resolver disputa" })).toBeDefined();
+		expect(screen.queryByText("Votar na disputa")).toBeNull();
+		expect(screen.queryByText("Enviar evidencia")).toBeNull();
+	});
+
+	it("mantem o card de voto visivel apos registrar o voto", () => {
+		renderWithMantine(
+			<DisputesPanelView
+				connected
+				walletAddress="0xvotante"
+				walletNotice={null}
+				perfilAtivo={null}
+				hasVotingTokens
+				loading={false}
+				error={null}
+				disputes={[{ request: disputeRequest, contract: disputeContract }]}
+				visibleDisputes={[{ request: disputeRequest, contract: disputeContract }]}
+				selectedDisputeId={21}
+				selectedDispute={{ request: disputeRequest, contract: disputeContract }}
+				selectedEvidence={disputeEvidence}
+				evidenceDraft=""
+				voteSupportOpener={true}
+				busyDisputeId={null}
+				votedDisputeIds={[21]}
+				evidenceSubmittedDisputeIds={[]}
+				onRefresh={vi.fn()}
+				onSelectDispute={vi.fn()}
+				onEvidenceDraftChange={vi.fn()}
+				onVoteSupportChange={vi.fn()}
+				onSubmitEvidence={vi.fn()}
+				onSubmitVote={vi.fn()}
+				onResolveDispute={vi.fn()}
+			/>,
+		);
+
+		expect(screen.queryByRole("heading", { name: "Votar na disputa" })).toBeNull();
+		expect(screen.queryByText("Seu voto ja foi registrado nesta sessao. O card de votacao foi ocultado.")).toBeNull();
+	});
+
+	it("oculta o card de evidencia apos registrar a evidencia", () => {
+		renderWithMantine(
+			<DisputesPanelView
+				connected
+				walletAddress="0xcliente"
+				walletNotice={null}
+				perfilAtivo="cliente"
+				hasVotingTokens
+				loading={false}
+				error={null}
+				disputes={[{ request: disputeRequest, contract: disputeContract }]}
+				visibleDisputes={[{ request: disputeRequest, contract: disputeContract }]}
+				selectedDisputeId={21}
+				selectedDispute={{ request: disputeRequest, contract: disputeContract }}
+				selectedEvidence={disputeEvidence}
+				evidenceDraft=""
+				voteSupportOpener={true}
+				busyDisputeId={null}
+				votedDisputeIds={[]}
+				evidenceSubmittedDisputeIds={[21]}
+				onRefresh={vi.fn()}
+				onSelectDispute={vi.fn()}
+				onEvidenceDraftChange={vi.fn()}
+				onVoteSupportChange={vi.fn()}
+				onSubmitEvidence={vi.fn()}
+				onSubmitVote={vi.fn()}
+				onResolveDispute={vi.fn()}
+			/>,
+		);
+
+		expect(screen.queryByRole("heading", { name: "Enviar evidencia" })).toBeNull();
+		expect(screen.queryByText("Sua evidencia ja foi registrada nesta sessao. O card de envio foi ocultado.")).toBeNull();
 	});
 });

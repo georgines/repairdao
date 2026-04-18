@@ -10,6 +10,7 @@ import {
 	carregarDisputaNoContrato,
 	carregarEvidenciasDaDisputaNoContrato,
 	enviarEvidenciaNaDisputaNoContrato,
+	resolverDisputaNoContrato,
 	votarNaDisputaNoContrato,
 } from "@/services/disputes/disputeBlockchain";
 import type { ContextoPapelRepairDAO } from "@/types";
@@ -24,6 +25,7 @@ type UseDisputesPanelResult = {
 	walletAddress: string | null;
 	walletNotice: string | null;
 	perfilAtivo: "cliente" | "tecnico" | null;
+	hasVotingTokens: boolean;
 	loading: boolean;
 	error: string | null;
 	disputes: DisputeItem[];
@@ -34,12 +36,15 @@ type UseDisputesPanelResult = {
 	evidenceDraft: string;
 	voteSupportOpener: boolean;
 	busyDisputeId: number | null;
+	votedDisputeIds: number[];
+	evidenceSubmittedDisputeIds: number[];
 	onRefresh: () => Promise<void>;
 	onSelectDispute: (disputeId: number) => void;
 	onEvidenceDraftChange: (value: string) => void;
 	onVoteSupportChange: (value: boolean) => void;
 	onSubmitEvidence: () => Promise<void>;
 	onSubmitVote: () => Promise<void>;
+	onResolveDispute: () => Promise<void>;
 };
 
 const EMPTY_METRICS: EligibilityMetrics = {
@@ -69,6 +74,8 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 	const [selectedEvidence, setSelectedEvidence] = useState<EvidenciaContratoDominio[]>([]);
 	const [evidenceDraft, setEvidenceDraft] = useState("");
 	const [voteSupportOpener, setVoteSupportOpener] = useState(true);
+	const [votedDisputeIds, setVotedDisputeIds] = useState<number[]>([]);
+	const [evidenceSubmittedDisputeIds, setEvidenceSubmittedDisputeIds] = useState<number[]>([]);
 	const [busyDisputeId, setBusyDisputeId] = useState<number | null>(null);
 
 	const walletAddress = state.connected ? state.address ?? null : null;
@@ -230,6 +237,11 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 			return;
 		}
 
+		if (selectedDispute.contract?.estado !== "janela_votacao") {
+			setError("A evidencia so pode ser enviada durante a janela de votacao.");
+			return;
+		}
+
 		if (walletAddress !== selectedDispute.request.clientAddress && walletAddress !== selectedDispute.request.technicianAddress) {
 			setError("Apenas cliente ou tecnico da ordem podem enviar evidencia.");
 			return;
@@ -253,6 +265,7 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 				walletAddress,
 				conteudo,
 			);
+			setEvidenceSubmittedDisputeIds((current) => (current.includes(selectedDispute.request.id) ? current : [...current, selectedDispute.request.id]));
 			setEvidenceDraft("");
 			await carregarEvidencias(selectedDispute.request.id);
 		} catch (requestError) {
@@ -278,6 +291,11 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 			return;
 		}
 
+		if (selectedDispute.contract?.estado !== "janela_votacao") {
+			setError("O voto so pode ser registrado durante a janela de votacao.");
+			return;
+		}
+
 		const isParticipant = walletAddress === selectedDispute.request.clientAddress || walletAddress === selectedDispute.request.technicianAddress;
 		if (isParticipant) {
 			setError("Quem participa da disputa nao pode votar nela.");
@@ -300,10 +318,41 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 				walletAddress,
 				voteSupportOpener,
 			);
+			setVotedDisputeIds((current) => (current.includes(selectedDispute.request.id) ? current : [...current, selectedDispute.request.id]));
 			await carregarDisputas();
 			await carregarEvidencias(selectedDispute.request.id);
 		} catch (requestError) {
 			setError(requestError instanceof Error ? requestError.message : "Nao foi possivel registrar o voto.");
+		} finally {
+			setBusyDisputeId(null);
+		}
+	}
+
+	async function onResolveDispute() {
+		if (!ethereum) {
+			setError("Conecte a carteira para resolver a disputa.");
+			return;
+		}
+
+		if (!selectedDispute) {
+			setError("Selecione uma disputa para resolver.");
+			return;
+		}
+
+		if (selectedDispute.contract?.estado !== "encerrada") {
+			setError("A disputa so pode ser resolvida depois do prazo terminar.");
+			return;
+		}
+
+		setBusyDisputeId(selectedDispute.request.id);
+		setError(null);
+
+		try {
+			await resolverDisputaNoContrato(ethereum, selectedDispute.request.id);
+			await carregarDisputas();
+			await carregarEvidencias(selectedDispute.request.id);
+		} catch (requestError) {
+			setError(requestError instanceof Error ? requestError.message : "Nao foi possivel resolver a disputa.");
 		} finally {
 			setBusyDisputeId(null);
 		}
@@ -314,6 +363,7 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 		walletAddress,
 		walletNotice,
 		perfilAtivo: metrics.perfilAtivo,
+		hasVotingTokens: metrics.rptBalanceRaw > 0n,
 		loading,
 		error,
 		disputes,
@@ -324,11 +374,14 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 		evidenceDraft,
 		voteSupportOpener,
 		busyDisputeId,
+		votedDisputeIds,
+		evidenceSubmittedDisputeIds,
 		onRefresh,
 		onSelectDispute,
 		onEvidenceDraftChange,
 		onVoteSupportChange,
 		onSubmitEvidence,
 		onSubmitVote,
+		onResolveDispute,
 	};
 }

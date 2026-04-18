@@ -15,6 +15,7 @@ const serviceMocks = vi.hoisted(() => ({
 	carregarEvidenciasDaDisputaNoContrato: vi.fn(),
 	enviarEvidenciaNaDisputaNoContrato: vi.fn(),
 	votarNaDisputaNoContrato: vi.fn(),
+	resolverDisputaNoContrato: vi.fn(),
 }));
 
 vi.mock("@/hooks/useWalletStatus", () => ({
@@ -38,6 +39,7 @@ vi.mock("@/services/disputes/disputeBlockchain", () => ({
 	carregarEvidenciasDaDisputaNoContrato: serviceMocks.carregarEvidenciasDaDisputaNoContrato,
 	enviarEvidenciaNaDisputaNoContrato: serviceMocks.enviarEvidenciaNaDisputaNoContrato,
 	votarNaDisputaNoContrato: serviceMocks.votarNaDisputaNoContrato,
+	resolverDisputaNoContrato: serviceMocks.resolverDisputaNoContrato,
 }));
 
 async function flush() {
@@ -127,6 +129,7 @@ describe("useDisputesPanel", () => {
 		]);
 		serviceMocks.enviarEvidenciaNaDisputaNoContrato.mockResolvedValue("ok");
 		serviceMocks.votarNaDisputaNoContrato.mockResolvedValue("ok");
+		serviceMocks.resolverDisputaNoContrato.mockResolvedValue("ok");
 	});
 
 	afterEach(async () => {
@@ -170,6 +173,7 @@ describe("useDisputesPanel", () => {
 			"nova evidencia",
 		);
 		expect(serviceMocks.carregarEvidenciasDaDisputaNoContrato).toHaveBeenCalledWith({}, 21);
+		expect(getLatest()?.evidenceSubmittedDisputeIds).toContain(21);
 	});
 
 	it("permite votar quando nao faz parte da disputa", async () => {
@@ -219,5 +223,26 @@ describe("useDisputesPanel", () => {
 			"0xvotante",
 			false,
 		);
+		expect(getLatest()?.votedDisputeIds).toContain(21);
+	});
+
+	it("permite resolver a disputa quando o prazo termina", async () => {
+		serviceMocks.carregarDisputaNoContrato.mockResolvedValue({
+			...disputeContract,
+			estado: "encerrada",
+		});
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+			await flush();
+		});
+
+		await act(async () => {
+			await getLatest()?.onResolveDispute();
+			await flush();
+		});
+
+		expect(serviceMocks.resolverDisputaNoContrato).toHaveBeenCalledWith({}, 21);
 	});
 });

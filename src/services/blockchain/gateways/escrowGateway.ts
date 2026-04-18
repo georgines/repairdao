@@ -197,7 +197,7 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
         address: REPAIRDAO_CONTRACTOS.escrow.address,
         abi: REPAIRDAO_CONTRACTOS.escrow.abi,
         functionName: "voteOnDispute",
-        args: [input.ordemId, input.apoiarAbertura],
+        args: [input.ordemId, input.apoiandoAbertura],
       });
     },
 
