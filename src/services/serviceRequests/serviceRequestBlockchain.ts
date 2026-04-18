@@ -62,6 +62,11 @@ export async function concluirOrdemNoContrato(ethereum: EthereumProvider, ordemI
 	return aguardarTransacao(await contrato.writeContract({ functionName: "completeOrder", args: [ordemId] }));
 }
 
+export async function confirmarEntregaNoContrato(ethereum: EthereumProvider, ordemId: bigint | number | string): Promise<unknown> {
+	const contrato = obterContrato(ethereum);
+	return aguardarTransacao(await contrato.writeContract({ functionName: "confirmCompletion", args: [ordemId] }));
+}
+
 export async function abrirDisputaNoContrato(
 	ethereum: EthereumProvider,
 	ordemId: bigint | number | string,
@@ -88,4 +93,12 @@ export async function carregarEstadoAvaliacaoNoContrato(
 		clientRated: Boolean(ordemDominio.clientRated),
 		technicianRated: Boolean(ordemDominio.technicianRated),
 	};
+}
+
+export async function carregarEstadoConfirmacaoEntregaNoContrato(
+	ethereum: EthereumProvider,
+	ordemId: bigint | number | string,
+): Promise<{ deliveryConfirmedAt: string | null } | null> {
+	const contrato = obterContrato(ethereum);
+	return contrato.verificarConfirmacaoDaEntrega(ordemId);
 }

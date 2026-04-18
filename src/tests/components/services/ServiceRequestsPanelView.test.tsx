@@ -122,6 +122,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onSubmitBudget={vi.fn()}
 				onPayBudget={vi.fn()}
 				onCompleteOrder={vi.fn()}
+				onConfirmDelivery={vi.fn()}
 				onRateService={vi.fn()}
 				onOpenDispute={vi.fn()}
 			/>,
@@ -130,7 +131,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 		expect(screen.getByText("Acompanhe suas ordens de servico")).toBeDefined();
 		expect(screen.getAllByText("Instalacao de luminaria")).toHaveLength(2);
 		expect(screen.getByRole("button", { name: "Pagar" })).toBeDefined();
-		expect(screen.getByRole("button", { name: "Avaliar" })).toBeDefined();
+		expect(screen.getByRole("button", { name: "Confirmar entrega" })).toBeDefined();
 		expect(screen.getByRole("button", { name: "Disputar" })).toBeDefined();
 	});
 
@@ -174,6 +175,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onSubmitBudget={vi.fn()}
 				onPayBudget={vi.fn()}
 				onCompleteOrder={vi.fn()}
+				onConfirmDelivery={vi.fn()}
 				onRateService={vi.fn()}
 			/>,
 		);
@@ -213,6 +215,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onSubmitBudget={vi.fn()}
 				onPayBudget={vi.fn()}
 				onCompleteOrder={vi.fn()}
+				onConfirmDelivery={vi.fn()}
 				onRateService={vi.fn()}
 				onOpenDispute={vi.fn()}
 			/>,
@@ -256,6 +259,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onSubmitBudget={onSubmitBudget}
 				onPayBudget={vi.fn()}
 				onCompleteOrder={vi.fn()}
+				onConfirmDelivery={vi.fn()}
 				onRateService={vi.fn()}
 				onOpenDispute={vi.fn()}
 			/>,
@@ -302,6 +306,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onSubmitBudget={vi.fn()}
 				onPayBudget={onPayBudget}
 				onCompleteOrder={vi.fn()}
+				onConfirmDelivery={vi.fn()}
 				onRateService={vi.fn()}
 				onOpenDispute={vi.fn()}
 			/>,
@@ -310,6 +315,51 @@ describe("components/services/ServiceRequestsPanelView", () => {
 		expect(screen.getByText("Confirmar pagamento do orcamento")).toBeDefined();
 		fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Pagar" }));
 		expect(onPayBudget).toHaveBeenCalledTimes(1);
+	});
+
+	it("mostra o modal de confirmacao de entrega", () => {
+		const onConfirmDelivery = vi.fn();
+
+		renderWithMantine(
+			<ServiceRequestsPanelView
+				connected
+				walletAddress="0xcliente"
+				walletNotice={null}
+				perfilAtivo="cliente"
+				loading={false}
+				error={null}
+				clientRequests={[concludedRequest]}
+				visibleRequests={[concludedRequest]}
+				query=""
+				statusFilter="all"
+				requestModalOpened
+				requestModalRequest={concludedRequest}
+				requestModalAction="confirm"
+				requestModalBudget={null}
+				requestModalRating={5}
+				requestModalDisputeReason=""
+				busyRequestId={null}
+				onRefresh={vi.fn()}
+				onQueryChange={vi.fn()}
+				onStatusFilterChange={vi.fn()}
+				onClearFilters={vi.fn()}
+				onOpenRequestModal={vi.fn()}
+				onCloseRequestModal={vi.fn()}
+				onRequestModalBudgetChange={vi.fn()}
+				onRequestModalRatingChange={vi.fn()}
+				onRequestModalDisputeReasonChange={vi.fn()}
+				onSubmitBudget={vi.fn()}
+				onPayBudget={vi.fn()}
+				onCompleteOrder={vi.fn()}
+				onConfirmDelivery={onConfirmDelivery}
+				onRateService={vi.fn()}
+				onOpenDispute={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByRole("heading", { name: "Confirmar entrega" })).toBeDefined();
+		fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Confirmar entrega" }));
+		expect(onConfirmDelivery).toHaveBeenCalledTimes(1);
 	});
 
 	it("mostra o modal de avaliacao", () => {
@@ -347,6 +397,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onSubmitBudget={vi.fn()}
 				onPayBudget={vi.fn()}
 				onCompleteOrder={vi.fn()}
+				onConfirmDelivery={vi.fn()}
 				onRateService={onRateService}
 				onOpenDispute={vi.fn()}
 			/>,
@@ -396,6 +447,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onSubmitBudget={vi.fn()}
 				onPayBudget={vi.fn()}
 				onCompleteOrder={vi.fn()}
+				onConfirmDelivery={vi.fn()}
 				onRateService={vi.fn()}
 				onOpenDispute={onOpenDispute}
 			/>,
@@ -449,6 +501,7 @@ describe("components/services/ServiceRequestsPanelView", () => {
 				onSubmitBudget={vi.fn()}
 				onPayBudget={vi.fn()}
 				onCompleteOrder={vi.fn()}
+				onConfirmDelivery={vi.fn()}
 				onRateService={vi.fn()}
 				onOpenDispute={vi.fn()}
 			/>,

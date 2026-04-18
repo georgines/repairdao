@@ -15,8 +15,10 @@ const serviceMocks = vi.hoisted(() => ({
 	aceitarOrcamentoNoContrato: vi.fn(),
 	completeServiceRequest: vi.fn(),
 	concluirOrdemNoContrato: vi.fn(),
+	confirmarEntregaNoContrato: vi.fn(),
 	avaliarServicoNoContrato: vi.fn(),
 	carregarEstadoAvaliacaoNoContrato: vi.fn(),
+	carregarEstadoConfirmacaoEntregaNoContrato: vi.fn(),
 	openServiceDispute: vi.fn(),
 	sendServiceBudget: vi.fn(),
 }));
@@ -52,8 +54,10 @@ vi.mock("@/services/serviceRequests/serviceRequestBlockchain", () => ({
 	autorizarPagamentoNoContrato: serviceMocks.autorizarPagamentoNoContrato,
 	aceitarOrcamentoNoContrato: serviceMocks.aceitarOrcamentoNoContrato,
 	concluirOrdemNoContrato: serviceMocks.concluirOrdemNoContrato,
+	confirmarEntregaNoContrato: serviceMocks.confirmarEntregaNoContrato,
 	avaliarServicoNoContrato: serviceMocks.avaliarServicoNoContrato,
 	carregarEstadoAvaliacaoNoContrato: serviceMocks.carregarEstadoAvaliacaoNoContrato,
+	carregarEstadoConfirmacaoEntregaNoContrato: serviceMocks.carregarEstadoConfirmacaoEntregaNoContrato,
 }));
 
 vi.mock("@/services/serviceRequests/serviceRequestClient", () => ({
@@ -128,6 +132,7 @@ beforeEach(() => {
 		profileState.perfilAtivo = "cliente";
 		serviceMocks.loadServiceRequests.mockResolvedValue(initialRequests);
 		serviceMocks.carregarEstadoAvaliacaoNoContrato.mockResolvedValue(null);
+		serviceMocks.carregarEstadoConfirmacaoEntregaNoContrato.mockResolvedValue(null);
 		serviceMocks.acceptServiceBudget.mockResolvedValue({
 			...initialRequests[1],
 			status: "aceito_cliente",
@@ -284,6 +289,51 @@ beforeEach(() => {
 		expect(getLatest()?.busyRequestId).toBeNull();
 	});
 
+	it("confirma a entrega pelo cliente passando pelo contrato primeiro", async () => {
+		walletState.address = "0xcliente";
+		profileState.perfilAtivo = "cliente";
+		serviceMocks.loadServiceRequests.mockResolvedValue([
+			{
+				...initialRequests[1],
+				status: "concluida",
+				completedAt: "2026-04-17T14:00:00.000Z",
+				updatedAt: "2026-04-17T14:00:00.000Z",
+			},
+		]);
+		serviceMocks.confirmarEntregaNoContrato.mockResolvedValue({ hash: "0x5" });
+		serviceMocks.carregarEstadoConfirmacaoEntregaNoContrato.mockResolvedValueOnce(null);
+		serviceMocks.carregarEstadoConfirmacaoEntregaNoContrato.mockResolvedValueOnce({
+			deliveryConfirmedAt: "2026-04-17T15:00:00.000Z",
+		});
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+			await flush();
+		});
+
+		expect(getLatest()?.clientRequests[0]?.status).toBe("concluida");
+
+		await act(async () => {
+			getLatest()?.onOpenRequestModal(2, "confirm");
+			await flush();
+		});
+
+		expect(getLatest()?.requestModalAction).toBe("confirm");
+		expect(getLatest()?.requestModalRequest?.status).toBe("concluida");
+
+		await act(async () => {
+			await getLatest()?.onConfirmDelivery();
+			await flush();
+		});
+
+		expect(serviceMocks.confirmarEntregaNoContrato).toHaveBeenCalledWith({}, 2);
+		expect(serviceMocks.carregarEstadoConfirmacaoEntregaNoContrato).toHaveBeenCalledWith({}, 2);
+		expect(getLatest()?.requestModalOpened).toBe(false);
+		expect(getLatest()?.busyRequestId).toBeNull();
+		expect(getLatest()?.clientRequests[0]?.deliveryConfirmedAt).toBe("2026-04-17T15:00:00.000Z");
+	});
+
 	it("avalia a ordem concluida passando pelo contrato primeiro", async () => {
 		walletState.address = "0xcliente";
 		profileState.perfilAtivo = "cliente";
@@ -386,6 +436,9 @@ beforeEach(() => {
 			clientRated: true,
 			technicianRated: false,
 		});
+		serviceMocks.carregarEstadoConfirmacaoEntregaNoContrato.mockResolvedValue({
+			deliveryConfirmedAt: null,
+		});
 
 		await act(async () => {
 			root.render(<Probe />);
@@ -394,6 +447,7 @@ beforeEach(() => {
 
 		expect(getLatest()?.clientRequests[0]?.clientRated).toBe(true);
 		expect(serviceMocks.carregarEstadoAvaliacaoNoContrato).toHaveBeenCalledWith({}, 2);
+		expect(serviceMocks.carregarEstadoConfirmacaoEntregaNoContrato).toHaveBeenCalledWith({}, 2);
 	});
 
 	it("aplica filtros locais de busca e status", async () => {

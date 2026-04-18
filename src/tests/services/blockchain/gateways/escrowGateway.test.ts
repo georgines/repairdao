@@ -34,6 +34,18 @@ describe("escrowGateway", () => {
             timestamp: Math.floor(Date.now() / 1000),
           },
         ])
+        .mockResolvedValueOnce({
+          id: 1,
+          client: "0xcliente",
+          technician: "0xtec",
+          amount: 120,
+          description: "troca de pneu",
+          state: 3,
+          createdAt: 100,
+          completedAt: Math.floor(Date.now() / 1000),
+          clientRated: false,
+          technicianRated: false,
+        })
         .mockResolvedValueOnce(true)
         .mockResolvedValueOnce(true),
       writeContract: vi.fn().mockResolvedValue("0xdef"),
@@ -84,13 +96,16 @@ describe("escrowGateway", () => {
         timestamp: expect.any(Number),
       },
     ]);
+    await expect(gateway.verificarConfirmacaoDaEntrega(1)).resolves.toEqual({
+      deliveryConfirmedAt: expect.any(String),
+    });
     await expect(gateway.verificarVotoDaDisputa(2, "0xvotante")).resolves.toEqual({
       hasVoted: true,
       supportOpener: true,
     });
 
     expect(contractClient.writeContract).toHaveBeenCalledTimes(8);
-    expect(contractClient.readContract).toHaveBeenCalledTimes(5);
+    expect(contractClient.readContract).toHaveBeenCalledTimes(6);
   });
 
   it("normaliza registros vazios, resolvidos e expirados", async () => {

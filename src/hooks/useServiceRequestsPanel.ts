@@ -9,6 +9,8 @@ import {
 	aceitarOrcamentoNoContrato,
 	avaliarServicoNoContrato,
 	carregarEstadoAvaliacaoNoContrato,
+	carregarEstadoConfirmacaoEntregaNoContrato,
+	confirmarEntregaNoContrato,
 	concluirOrdemNoContrato,
 	autorizarPagamentoNoContrato,
 	enviarOrcamentoNoContrato,
@@ -23,7 +25,7 @@ import {
 } from "@/services/serviceRequests/serviceRequestClient";
 import type { ServiceRequestStatus } from "@/services/serviceRequests";
 
-type RequestModalAction = "details" | "budget" | "pay" | "complete" | "rate" | "dispute";
+type RequestModalAction = "details" | "budget" | "pay" | "complete" | "confirm" | "rate" | "dispute";
 
 type UseServiceRequestsPanelResult = {
 	connected: boolean;
@@ -54,6 +56,7 @@ type UseServiceRequestsPanelResult = {
 	onSubmitBudget: () => Promise<void>;
 	onPayBudget: () => Promise<void>;
 	onCompleteOrder: () => Promise<void>;
+	onConfirmDelivery: () => Promise<void>;
 	onRateService: () => Promise<void>;
 	onOpenDispute: () => Promise<void>;
 };
@@ -103,9 +106,16 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 						return request;
 					}
 
-					const estadoAvaliacao = await carregarEstadoAvaliacaoNoContrato(ethereum, request.id);
+					const [estadoAvaliacao, estadoConfirmacao] = await Promise.all([
+						carregarEstadoAvaliacaoNoContrato(ethereum, request.id),
+						carregarEstadoConfirmacaoEntregaNoContrato(ethereum, request.id),
+					]);
 
-					return estadoAvaliacao ? { ...request, ...estadoAvaliacao } : request;
+					return {
+						...request,
+						...(estadoAvaliacao ?? {}),
+						...(estadoConfirmacao ?? {}),
+					};
 				}),
 			);
 
@@ -352,6 +362,54 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 		}
 	}
 
+	async function onConfirmDelivery() {
+		if (!walletAddress) {
+			setError("Conecte a carteira para confirmar a entrega.");
+			return;
+		}
+
+		if (!requestModalRequest) {
+			setError("Selecione uma ordem de servico para confirmar a entrega.");
+			return;
+		}
+
+		if (requestModalAction !== "confirm") {
+			setError("Selecione uma ordem de servico para confirmar a entrega.");
+			return;
+		}
+
+		if (requestModalRequest.status !== "concluida") {
+			setError("A ordem precisa estar concluida antes da confirmacao da entrega.");
+			return;
+		}
+
+		if (requestModalRequest.clientAddress !== walletAddress) {
+			setError("A ordem nao pertence a este cliente.");
+			return;
+		}
+
+		if (requestModalRequest.deliveryConfirmedAt) {
+			setError("A entrega ja foi confirmada.");
+			return;
+		}
+
+		setBusyRequestId(requestModalRequest.id);
+		setError(null);
+
+		try {
+			await confirmarEntregaNoContrato(ethereum, requestModalRequest.id);
+			const estadoConfirmacao = await carregarEstadoConfirmacaoEntregaNoContrato(ethereum, requestModalRequest.id);
+			if (estadoConfirmacao) {
+				updateRequest({ ...requestModalRequest, ...estadoConfirmacao });
+			}
+			onCloseRequestModal();
+		} catch (requestError) {
+			setError(requestError instanceof Error ? requestError.message : "Nao foi possivel confirmar a entrega.");
+		} finally {
+			setBusyRequestId(null);
+		}
+	}
+
 	async function onRateService() {
 		if (!walletAddress) {
 			setError("Conecte a carteira para avaliar o servico.");
@@ -484,6 +542,7 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 		onSubmitBudget,
 		onPayBudget,
 		onCompleteOrder,
+		onConfirmDelivery,
 		onRateService,
 		onOpenDispute,
 	};

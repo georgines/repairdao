@@ -7,6 +7,7 @@ export interface RepairEscrowGateway extends GatewayContratoBase {
   criarOrdem(input: { descricao: string; cliente: string }): Promise<unknown>;
   enviarOrcamento(input: { ordemId: bigint | number | string; tecnico: string; valor: number }): Promise<unknown>;
   concluirOrdem(input: { ordemId: bigint | number | string; tecnico: string }): Promise<unknown>;
+  confirmarEntrega(input: { ordemId: bigint | number | string; cliente: string }): Promise<unknown>;
   avaliarServico(input: { ordemId: bigint | number | string; nota: number }): Promise<unknown>;
   abrirDisputa(input: { ordemId: bigint | number | string; autor: string; motivo: string }): Promise<unknown>;
   enviarEvidencia(input: { ordemId: bigint | number | string; autor: string; conteudo: string }): Promise<unknown>;
@@ -14,6 +15,9 @@ export interface RepairEscrowGateway extends GatewayContratoBase {
   resolverDisputa(input: { ordemId: bigint | number | string }): Promise<unknown>;
   buscarOrdem(ordemId: bigint | number | string): Promise<OrdemContratoBruta | null>;
   buscarDisputa(disputaId: bigint | number | string): Promise<DisputaContratoBruta | null>;
+  verificarConfirmacaoDaEntrega(
+    ordemId: bigint | number | string,
+  ): Promise<{ deliveryConfirmedAt: string | null }>;
   verificarVotoDaDisputa(
     disputaId: bigint | number | string,
     votante: string,
@@ -167,6 +171,17 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
       });
     },
 
+    async confirmarEntrega(input) {
+      garantirEscritaDisponivel(contractClient);
+
+      return contractClient.writeContract({
+        address: REPAIRDAO_CONTRACTOS.escrow.address,
+        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        functionName: "confirmCompletion",
+        args: [input.ordemId],
+      });
+    },
+
     async avaliarServico(input) {
       garantirEscritaDisponivel(contractClient);
 
@@ -238,6 +253,25 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
       });
 
       return disputa ? normalizarDisputaContrato(disputa as Record<string, unknown>) : null;
+    },
+
+    async verificarConfirmacaoDaEntrega(ordemId) {
+      const ordem = await base.readContract({
+        functionName: "getOrder",
+        args: [ordemId],
+      });
+
+      const completedAt = ordem && typeof ordem === "object" ? (ordem as Record<string, unknown>).completedAt : null;
+
+      if (completedAt === undefined || completedAt === null) {
+        return { deliveryConfirmedAt: null };
+      }
+
+      const completedAtNumber = normalizarNumero(completedAt, "confirmacao da entrega");
+
+      return {
+        deliveryConfirmedAt: completedAtNumber > 0 ? new Date(completedAtNumber * 1000).toISOString() : null,
+      };
     },
 
     async verificarVotoDaDisputa(disputaId, votante) {

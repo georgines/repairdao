@@ -38,7 +38,12 @@ vi.mock("@/services/wallet/transaction", () => ({
 	aguardarTransacao: blockchainMocks.aguardarTransacao,
 }));
 
-import { abrirDisputaNoContrato, autorizarPagamentoNoContrato, criarOrdemServicoNoContrato } from "@/services/serviceRequests/serviceRequestBlockchain";
+import {
+	abrirDisputaNoContrato,
+	autorizarPagamentoNoContrato,
+	confirmarEntregaNoContrato,
+	criarOrdemServicoNoContrato,
+} from "@/services/serviceRequests/serviceRequestBlockchain";
 
 describe("serviceRequestBlockchain", () => {
 	beforeEach(() => {
@@ -80,5 +85,21 @@ describe("serviceRequestBlockchain", () => {
 			functionName: "approve",
 			args: ["0xescrow", "parsed:240"],
 		});
+	});
+
+	it("confirma a entrega no contrato antes de aguardar a transacao", async () => {
+		const writeContract = vi.fn().mockResolvedValue({ hash: "0xghi" });
+		const gateway = { writeContract };
+
+		blockchainMocks.criarRepairEscrowGateway.mockReturnValue(gateway);
+		blockchainMocks.aguardarTransacao.mockResolvedValue({ mined: true });
+
+		await expect(confirmarEntregaNoContrato({} as never, 88)).resolves.toEqual({ mined: true });
+
+		expect(writeContract).toHaveBeenCalledWith({
+			functionName: "confirmCompletion",
+			args: [88],
+		});
+		expect(blockchainMocks.aguardarTransacao).toHaveBeenCalledWith({ hash: "0xghi" });
 	});
 });

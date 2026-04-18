@@ -32,7 +32,7 @@ export type ServiceRequestsPanelViewProps = {
 	statusFilter: ServiceRequestStatus | "all";
 	requestModalOpened: boolean;
 	requestModalRequest: ServiceRequestSummary | null;
-	requestModalAction: "details" | "budget" | "pay" | "complete" | "rate" | "dispute" | null;
+	requestModalAction: "details" | "budget" | "pay" | "complete" | "confirm" | "rate" | "dispute" | null;
 	requestModalBudget: number | null;
 	requestModalRating: number;
 	requestModalDisputeReason: string;
@@ -41,7 +41,7 @@ export type ServiceRequestsPanelViewProps = {
 	onQueryChange: (value: string) => void;
 	onStatusFilterChange: (value: string | null) => void;
 	onClearFilters: () => void;
-	onOpenRequestModal: (requestId: number, action: "details" | "budget" | "pay" | "complete" | "rate" | "dispute") => void;
+	onOpenRequestModal: (requestId: number, action: "details" | "budget" | "pay" | "complete" | "confirm" | "rate" | "dispute") => void;
 	onCloseRequestModal: () => void;
 	onRequestModalBudgetChange: (value: number | null) => void;
 	onRequestModalRatingChange: (value: number) => void;
@@ -49,6 +49,7 @@ export type ServiceRequestsPanelViewProps = {
 	onSubmitBudget: () => Promise<void>;
 	onPayBudget: () => Promise<void>;
 	onCompleteOrder: () => Promise<void>;
+	onConfirmDelivery: () => Promise<void>;
 	onRateService: () => Promise<void>;
 	onOpenDispute: () => Promise<void>;
 };
@@ -133,8 +134,14 @@ function obterAcaoPrincipal(
 	const ehCliente = perfilAtivo === "cliente" && request.clientAddress === walletAddress;
 	const ehTecnico = perfilAtivo === "tecnico" && request.technicianAddress === walletAddress;
 
-	if (request.status === "concluida" && ehCliente && !request.clientRated) {
-		return { label: "Avaliar", action: "rate" as const };
+	if (request.status === "concluida" && ehCliente) {
+		if (!request.deliveryConfirmedAt) {
+			return { label: "Confirmar entrega", action: "confirm" as const };
+		}
+
+		if (!request.clientRated) {
+			return { label: "Avaliar", action: "rate" as const };
+		}
 	}
 
 	if (request.status === "concluida" && ehTecnico && !request.technicianRated) {
@@ -179,7 +186,7 @@ function obterAcaoDisputa(
 	return null;
 }
 
-function obterTituloModal(modalAction: "details" | "budget" | "pay" | "complete" | "rate" | "dispute") {
+function obterTituloModal(modalAction: "details" | "budget" | "pay" | "complete" | "confirm" | "rate" | "dispute") {
 	switch (modalAction) {
 		case "budget":
 			return "Definir valor do servico";
@@ -187,6 +194,8 @@ function obterTituloModal(modalAction: "details" | "budget" | "pay" | "complete"
 			return "Confirmar pagamento do orcamento";
 		case "complete":
 			return "Confirmar finalizacao da ordem";
+		case "confirm":
+			return "Confirmar entrega";
 		case "rate":
 			return "Avaliar servico";
 		case "dispute":
@@ -226,6 +235,7 @@ export function ServiceRequestsPanelView({
 	onSubmitBudget,
 	onPayBudget,
 	onCompleteOrder,
+	onConfirmDelivery,
 	onRateService,
 	onOpenDispute,
 }: ServiceRequestsPanelViewProps) {
@@ -429,6 +439,7 @@ export function ServiceRequestsPanelView({
 								{modalAction === "complete" ? (
 									<Text size="sm">A finalizacao libera o valor ao tecnico.</Text>
 								) : null}
+								{modalAction === "confirm" ? <Text size="sm">A confirmacao da entrega libera o pagamento ao tecnico.</Text> : null}
 								{modalAction === "rate" ? <Text size="sm">A avaliacao fica disponivel depois da finalizacao.</Text> : null}
 								{modalAction === "dispute" ? <Text size="sm">Explique o motivo e abra a disputa contra a outra parte.</Text> : null}
 							</Stack>
@@ -489,6 +500,18 @@ export function ServiceRequestsPanelView({
 							</Text>
 						) : null}
 
+						{modalAction === "confirm" && requestModalRequest.status !== "concluida" ? (
+							<Text size="sm" c="dimmed">
+								A ordem precisa estar concluida antes da confirmacao.
+							</Text>
+						) : null}
+
+						{modalAction === "confirm" && requestModalRequest.deliveryConfirmedAt ? (
+							<Text size="sm" c="dimmed">
+								A entrega ja foi confirmada.
+							</Text>
+						) : null}
+
 						{modalAction === "rate" && requestModalRequest.status !== "concluida" ? (
 							<Text size="sm" c="dimmed">
 								A ordem ainda nao foi finalizada.
@@ -533,6 +556,16 @@ export function ServiceRequestsPanelView({
 									disabled={requestModalRequest.status !== "aceito_cliente"}
 								>
 									Finalizar
+								</Button>
+							) : null}
+
+							{modalAction === "confirm" ? (
+								<Button
+									onClick={() => void onConfirmDelivery()}
+									loading={busyRequestId === requestModalRequest.id}
+									disabled={requestModalRequest.status !== "concluida" || Boolean(requestModalRequest.deliveryConfirmedAt)}
+								>
+									Confirmar entrega
 								</Button>
 							) : null}
 

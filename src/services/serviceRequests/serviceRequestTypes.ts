@@ -13,6 +13,7 @@ export type ServiceRequestSummary = {
 	budgetSentAt: string | null;
 	clientAcceptedAt: string | null;
 	completedAt?: string | null;
+	deliveryConfirmedAt?: string | null;
 	disputedAt?: string | null;
 	disputeReason?: string | null;
 	clientRated?: boolean;
