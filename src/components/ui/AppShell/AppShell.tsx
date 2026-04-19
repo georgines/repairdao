@@ -58,7 +58,7 @@ export default function AppShell({ children }: AppShellProps) {
                             <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" aria-label="Toggle navigation" />
                         </Group>
 
-                        <Group justify="flex-end" wrap="nowrap">
+                        <Group justify="flex-end" wrap="nowrap" style={{ width: "50%", marginLeft: "auto" }}>
                             <WalletStatus
                                 connected={state.connected}
                                 loading={state.loading}
