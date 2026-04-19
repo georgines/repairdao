@@ -10,10 +10,10 @@ const menuItems = [
   { label: "Minha conta", href: "/account" },
 	{ label: "Loja", href: "/store" },
 	{ label: "Elegibilidade", href: "/eligibility" },
-	{ label: "Configuracoes do sistema", href: "/eligibility/configuration", ownerOnly: true },
 	{ label: "Servicos", href: "/services" },
 	{ label: "Disputas", href: "/disputes" },
 	{ label: "Tecnicos disponiveis", href: "/technicians", visibleFor: "cliente" },
+	{ label: "Configuracoes do sistema", href: "/eligibility/configuration", ownerOnly: true },
 ];
 
 type NavBarProps = {

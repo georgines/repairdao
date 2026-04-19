@@ -98,4 +98,20 @@ describe("components/ui/NavBar/NavBar", () => {
 		expect(markup).toContain("Configuracoes do sistema");
 		expect(markup).toContain('href="/eligibility/configuration"');
 	});
+
+	it("mantem configuracoes do sistema por ultimo", () => {
+		pathnameState.value = "/eligibility";
+		profileState.perfilAtivo = "cliente";
+		depositAccessState.isOwner = true;
+
+		const markup = renderWithMantine(
+			<MantineAppShell header={{ height: 4 }} navbar={{ width: 280, breakpoint: 0 }}>
+				<MantineAppShell.Navbar>
+					<NavBar />
+				</MantineAppShell.Navbar>
+			</MantineAppShell>,
+		);
+
+		expect(markup.lastIndexOf("Configuracoes do sistema")).toBeGreaterThan(markup.lastIndexOf("Disputas"));
+	});
 });
