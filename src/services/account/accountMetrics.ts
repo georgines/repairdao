@@ -23,7 +23,7 @@ export async function carregarMetricasDaConta(address?: string | null) {
 		isActive: boolean;
 		perfilAtivo: "cliente" | "tecnico" | null;
 		badgeLevel: string;
-		reputationLevel: number;
+		reputationLevelName: string;
 		totalPointsRaw: string;
 		totalPoints: string;
 		positiveRatingsRaw: string;
@@ -45,7 +45,7 @@ export async function carregarMetricasDaConta(address?: string | null) {
 		isActive: dados.isActive,
 		perfilAtivo: dados.perfilAtivo,
 		badgeLevel: dados.badgeLevel,
-		reputationLevel: dados.reputationLevel,
+		reputationLevelName: dados.reputationLevelName,
 		totalPointsRaw: BigInt(dados.totalPointsRaw),
 		totalPoints: dados.totalPoints,
 		positiveRatingsRaw: BigInt(dados.positiveRatingsRaw),

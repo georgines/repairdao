@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDebouncedValue } from "@mantine/hooks";
 import { parseUnits } from "ethers";
+import { useAccountMetrics } from "@/hooks/useAccountMetrics";
 import { useWalletStatus } from "@/hooks/useWalletStatus";
 import { obterEthereumProvider } from "@/services/wallet/provider";
 import { depositarTokens, sacarDeposito } from "@/services/eligibility/tokenDeposit";
@@ -102,13 +103,15 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 	const [quantidadeRptDebounced] = useDebouncedValue(quantidadeRpt, 500);
 	const [depositing, setDepositing] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [refreshIndex, setRefreshIndex] = useState(0);
+	const accountMetrics = useAccountMetrics({ refreshKey: refreshIndex });
 	const [metricas, setMetricas] = useState<EligibilityMetrics>(METRICAS_PADRAO);
 	const connected = state.connected;
 	const ethBalance = connected ? state.ethBalance : "0";
 	const usdBalance = connected ? state.usdBalance : "0";
 	const ethUsdPrice = connected ? state.ethUsdPrice : "0";
 	const walletNotice = connected ? null : "Carteira desconectada";
-	const perfilRegistrado = metricas.perfilAtivo ?? perfilSelecionado;
+	const perfilRegistrado = accountMetrics.perfilAtivo ?? perfilSelecionado;
 	const mostrarSeletoresPapel = !metricas.isActive;
 	const perfilConfirmacao = metricas.isActive ? obterPerfilOposto(perfilRegistrado) : perfilSelecionado;
 	const perfilConfirmacaoEhTecnico = perfilConfirmacao === "tecnico";
@@ -219,7 +222,7 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 				name: nomeTexto,
 				expertiseArea: perfilConfirmacaoEhTecnico ? areaAtuacaoTexto : null,
 				role: perfilConfirmacao,
-				badgeLevel: metricasAtualizadas.badgeLevel,
+				badgeLevel: accountMetrics.badgeLevel,
 				reputation: 0,
 				depositLevel: Number(metricasAtualizadas.rptBalanceRaw / 10n ** 18n),
 				isActive: true,
@@ -227,6 +230,7 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 			});
 
 			setMetricas(metricasAtualizadas);
+			setRefreshIndex((value) => value + 1);
 		} catch (depositError) {
 			if (depositou) {
 				await sacarDeposito(ethereum).catch(() => undefined);
@@ -254,9 +258,9 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 		ethUsdPrice,
 		tokensPerEth: metricas.tokensPerEth,
 		rptBalance: connected ? metricas.rptBalance : "0",
-		badgeLevel: connected ? metricas.badgeLevel : "Sem carteira",
+		badgeLevel: connected ? accountMetrics.badgeLevel : "Sem carteira",
 		isActive: connected ? metricas.isActive : false,
-		perfilAtivo: connected ? metricas.perfilAtivo : null,
+		perfilAtivo: connected ? accountMetrics.perfilAtivo : null,
 		mostrarSeletoresPapel: connected ? mostrarSeletoresPapel : false,
 		perfilSelecionado,
 		perfilConfirmacao,

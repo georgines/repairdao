@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { RepairDAODominioError } from "@/erros/errors";
-import { getUserDetails, listUsers, registerUser, updateUserProfile, withdrawUser } from "@/services/users/userRepository";
+import { loadUserDetails, loadUsersForDiscovery } from "@/services/users/userDiscoveryServer";
+import { registerUser, updateUserProfile, withdrawUser } from "@/services/users/userRepository";
 import type { UserActivationPayload } from "@/services/users/userTypes";
 
 export const dynamic = "force-dynamic";
@@ -41,7 +42,7 @@ export async function GET(request: Request) {
 		const address = searchParams.get("address");
 
 		if (address) {
-			const user = await getUserDetails(address);
+			const user = await loadUserDetails(address);
 
 			if (!user) {
 				return NextResponse.json(
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
 			return NextResponse.json(user);
 		}
 
-		return NextResponse.json(await listUsers());
+		return NextResponse.json(await loadUsersForDiscovery());
 	} catch (error) {
 		return toErrorResponse(error);
 	}

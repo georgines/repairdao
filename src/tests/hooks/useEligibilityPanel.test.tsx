@@ -6,12 +6,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as userValidation from "@/services/users/userValidation";
 
 const serviceMocks = vi.hoisted(() => ({
+	carregarMetricasDaConta: vi.fn(),
 	carregarMetricasElegibilidade: vi.fn(),
 	depositarTokens: vi.fn(),
 	sacarDeposito: vi.fn(),
 	persistUserProfile: vi.fn(),
 	obterEthereumProvider: vi.fn(),
 	useWalletStatus: vi.fn(),
+}));
+
+vi.mock("@/services/account/accountMetrics", () => ({
+	carregarMetricasDaConta: serviceMocks.carregarMetricasDaConta,
 }));
 
 vi.mock("@/services/eligibility/eligibilityMetrics", () => ({
@@ -74,6 +79,28 @@ describe("useEligibilityPanel", () => {
 				usdBalance: "1000",
 				ethUsdPrice: "2000",
 			},
+		});
+		serviceMocks.carregarMetricasDaConta.mockResolvedValue({
+			depositRaw: 0n,
+			deposit: "0",
+			rewardsRaw: 0n,
+			rewards: "0",
+			isActive: true,
+			perfilAtivo: "cliente",
+			badgeLevel: "bronze",
+			reputationLevel: 0,
+			reputationLevelName: "None",
+			totalPointsRaw: 0n,
+			totalPoints: "0",
+			positiveRatingsRaw: 0n,
+			positiveRatings: "0",
+			negativeRatingsRaw: 0n,
+			negativeRatings: "0",
+			totalRatingsRaw: 0n,
+			totalRatings: "0",
+			ratingSumRaw: 0n,
+			ratingSum: "0",
+			averageRating: "0,0",
 		});
 		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
 			rptBalanceRaw: 5500000000000000000n,
@@ -157,6 +184,28 @@ describe("useEligibilityPanel", () => {
 	});
 
 	it("mantem o papel registrado e permite trocar para cliente quando o nivel ativo e tecnico", async () => {
+		serviceMocks.carregarMetricasDaConta.mockResolvedValue({
+			depositRaw: 0n,
+			deposit: "0",
+			rewardsRaw: 0n,
+			rewards: "0",
+			isActive: true,
+			perfilAtivo: "tecnico",
+			badgeLevel: "bronze",
+			reputationLevel: 0,
+			reputationLevelName: "None",
+			totalPointsRaw: 0n,
+			totalPoints: "0",
+			positiveRatingsRaw: 0n,
+			positiveRatings: "0",
+			negativeRatingsRaw: 0n,
+			negativeRatings: "0",
+			totalRatingsRaw: 0n,
+			totalRatings: "0",
+			ratingSumRaw: 0n,
+			ratingSum: "0",
+			averageRating: "0,0",
+		});
 		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
 			rptBalanceRaw: 5500000000000000000n,
 			rptBalance: "5.5",
@@ -679,6 +728,7 @@ describe("useEligibilityPanel", () => {
 	});
 
 	it("zera as metricas quando o carregamento falha", async () => {
+		serviceMocks.carregarMetricasDaConta.mockRejectedValue(new Error("falha"));
 		serviceMocks.carregarMetricasElegibilidade.mockRejectedValue(new Error("falha"));
 
 		await act(async () => {
@@ -692,6 +742,51 @@ describe("useEligibilityPanel", () => {
 
 	it("atualiza as metricas no intervalo", async () => {
 		vi.useFakeTimers();
+		serviceMocks.carregarMetricasDaConta
+			.mockResolvedValueOnce({
+				depositRaw: 0n,
+				deposit: "0",
+				rewardsRaw: 0n,
+				rewards: "0",
+				isActive: true,
+				perfilAtivo: "cliente",
+				badgeLevel: "bronze",
+				reputationLevel: 0,
+				reputationLevelName: "None",
+				totalPointsRaw: 0n,
+				totalPoints: "0",
+				positiveRatingsRaw: 0n,
+				positiveRatings: "0",
+				negativeRatingsRaw: 0n,
+				negativeRatings: "0",
+				totalRatingsRaw: 0n,
+				totalRatings: "0",
+				ratingSumRaw: 0n,
+				ratingSum: "0",
+				averageRating: "0,0",
+			})
+			.mockResolvedValueOnce({
+				depositRaw: 0n,
+				deposit: "0",
+				rewardsRaw: 0n,
+				rewards: "0",
+				isActive: true,
+				perfilAtivo: "cliente",
+				badgeLevel: "silver",
+				reputationLevel: 0,
+				reputationLevelName: "None",
+				totalPointsRaw: 0n,
+				totalPoints: "0",
+				positiveRatingsRaw: 0n,
+				positiveRatings: "0",
+				negativeRatingsRaw: 0n,
+				negativeRatings: "0",
+				totalRatingsRaw: 0n,
+				totalRatings: "0",
+				ratingSumRaw: 0n,
+				ratingSum: "0",
+				averageRating: "0,0",
+			});
 		serviceMocks.carregarMetricasElegibilidade
 			.mockResolvedValueOnce({
 			rptBalanceRaw: 5500000000000000000n,
@@ -804,8 +899,8 @@ describe("useEligibilityPanel", () => {
 			});
 
 			expect(serviceMocks.carregarMetricasElegibilidade).toHaveBeenCalledTimes(2);
-			expect(clearIntervalSpy).toHaveBeenCalledTimes(1);
-			expect(setIntervalSpy).toHaveBeenCalledTimes(1);
+			expect(clearIntervalSpy).toHaveBeenCalledTimes(2);
+			expect(setIntervalSpy).toHaveBeenCalledTimes(2);
 		} finally {
 			setIntervalSpy.mockRestore();
 			clearIntervalSpy.mockRestore();

@@ -18,7 +18,7 @@ export function AccountPanel() {
 			deposit={panel.deposit}
 			rewards={panel.rewards}
 			badgeLevel={panel.badgeLevel}
-			reputationLevel={panel.reputationLevel}
+			reputationLevelName={panel.reputationLevelName}
 			perfilAtivo={panel.perfilAtivo}
 			isActive={panel.isActive}
 			totalPoints={panel.totalPoints}

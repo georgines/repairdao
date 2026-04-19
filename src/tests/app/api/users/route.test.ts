@@ -4,16 +4,19 @@ import { describe, expect, it, vi } from "vitest";
 import { RepairDAODominioError } from "@/erros/errors";
 
 const serviceMocks = vi.hoisted(() => ({
-	getUserDetails: vi.fn(),
-	listUsers: vi.fn(),
+	loadUserDetails: vi.fn(),
+	loadUsersForDiscovery: vi.fn(),
 	registerUser: vi.fn(),
 	updateUserProfile: vi.fn(),
 	withdrawUser: vi.fn(),
 }));
 
+vi.mock("@/services/users/userDiscoveryServer", () => ({
+	loadUserDetails: serviceMocks.loadUserDetails,
+	loadUsersForDiscovery: serviceMocks.loadUsersForDiscovery,
+}));
+
 vi.mock("@/services/users/userRepository", () => ({
-	getUserDetails: serviceMocks.getUserDetails,
-	listUsers: serviceMocks.listUsers,
 	registerUser: serviceMocks.registerUser,
 	updateUserProfile: serviceMocks.updateUserProfile,
 	withdrawUser: serviceMocks.withdrawUser,
@@ -65,7 +68,7 @@ describe("/api/users", () => {
 	});
 
 	it("retorna um usuario quando o endereco e informado", async () => {
-		serviceMocks.getUserDetails.mockResolvedValue({
+		serviceMocks.loadUserDetails.mockResolvedValue({
 			address: "0xabc",
 			name: "Ana",
 			expertiseArea: "Eletrica",
@@ -83,7 +86,7 @@ describe("/api/users", () => {
 		const body = await response.json();
 
 		expect(response.status).toBe(200);
-		expect(serviceMocks.getUserDetails).toHaveBeenCalledWith("0xabc");
+		expect(serviceMocks.loadUserDetails).toHaveBeenCalledWith("0xabc");
 		expect(body).toMatchObject({
 			address: "0xabc",
 			name: "Ana",
@@ -91,7 +94,7 @@ describe("/api/users", () => {
 	});
 
 	it("retorna a lista de usuarios quando nao ha endereco", async () => {
-		serviceMocks.listUsers.mockResolvedValue([
+		serviceMocks.loadUsersForDiscovery.mockResolvedValue([
 			{
 				address: "0xabc",
 				name: "Ana",
@@ -110,12 +113,12 @@ describe("/api/users", () => {
 		const body = await response.json();
 
 		expect(response.status).toBe(200);
-		expect(serviceMocks.listUsers).toHaveBeenCalledTimes(1);
+		expect(serviceMocks.loadUsersForDiscovery).toHaveBeenCalledTimes(1);
 		expect(body).toHaveLength(1);
 	});
 
 	it("retorna 500 quando a consulta falha com erro generico", async () => {
-		serviceMocks.listUsers.mockRejectedValue(new Error("falha inesperada"));
+		serviceMocks.loadUsersForDiscovery.mockRejectedValue(new Error("falha inesperada"));
 
 		const response = await GET(new Request("http://localhost/api/users"));
 		const body = await response.json();
@@ -191,7 +194,7 @@ describe("/api/users", () => {
 	});
 
 	it("retorna 404 quando o usuario nao existe na busca", async () => {
-		serviceMocks.getUserDetails.mockResolvedValue(null);
+		serviceMocks.loadUserDetails.mockResolvedValue(null);
 
 		const response = await GET(new Request("http://localhost/api/users?address=0xabc"));
 		const body = await response.json();

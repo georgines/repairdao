@@ -2,6 +2,7 @@ import { formatUnits } from "ethers";
 import { criarGatewaysRepairDAO } from "@/services/blockchain/gateway";
 import { criarRepairDAOContractClient } from "@/services/blockchain/contractClient";
 import { formatarNumeroCompleto } from "@/services/wallet/formatters";
+import { nomeNivelReputacao } from "@/services/reputacao";
 
 const DEFAULT_ACCOUNT_LEVEL = "Sem carteira";
 
@@ -13,7 +14,7 @@ export type AccountMetrics = {
 	isActive: boolean;
 	perfilAtivo: "cliente" | "tecnico" | null;
 	badgeLevel: string;
-	reputationLevel: number;
+	reputationLevelName: string;
 	totalPointsRaw: bigint;
 	totalPoints: string;
 	positiveRatingsRaw: bigint;
@@ -87,7 +88,7 @@ export async function carregarMetricasDaContaNoServidor(address?: string | null)
 		isActive,
 		perfilAtivo,
 		badgeLevel,
-		reputationLevel: Number(reputationLevelRaw),
+		reputationLevelName: nomeNivelReputacao(Number(reputationLevelRaw)),
 		totalPointsRaw,
 		totalPoints: formatarNumeroCompleto(String(totalPointsRaw), 0),
 		positiveRatingsRaw,

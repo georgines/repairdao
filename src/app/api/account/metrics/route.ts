@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 		isActive: metricas.isActive,
 		perfilAtivo: metricas.perfilAtivo,
 		badgeLevel: metricas.badgeLevel,
-		reputationLevel: metricas.reputationLevel,
+		reputationLevelName: metricas.reputationLevelName,
 		totalPointsRaw: metricas.totalPointsRaw.toString(),
 		totalPoints: metricas.totalPoints,
 		positiveRatingsRaw: metricas.positiveRatingsRaw.toString(),

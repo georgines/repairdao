@@ -35,6 +35,26 @@ export function calcularNivelBadgePorReputacao(
   return clamp(nivelReputacao, REPAIRDAO_LIMITES.badgeMinimo, REPAIRDAO_LIMITES.badgeMaximo) as NivelReputacaoRepairDAO;
 }
 
+const NOME_NIVEL_REPUTACAO: Record<NivelReputacaoRepairDAO, string> = {
+  1: "Bronze",
+  2: "Silver",
+  3: "Gold",
+  4: "Platinum",
+  5: "Elite",
+};
+
+export function nomeNivelReputacao(nivel: number | null | undefined): string {
+  if (nivel === null || nivel === undefined) {
+    return "None";
+  }
+
+  if (nivel in NOME_NIVEL_REPUTACAO) {
+    return NOME_NIVEL_REPUTACAO[nivel as NivelReputacaoRepairDAO];
+  }
+
+  return "None";
+}
+
 export function badgePodeExistir(
   depositoAtivo: boolean,
   nivelReputacao: NivelReputacaoRepairDAO,

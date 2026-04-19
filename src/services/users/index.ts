@@ -1,4 +1,4 @@
-export { applyUserFilters, loadTechniciansForDiscovery, loadUserDetails } from "@/services/users/userDiscoveryServer";
+export { applyUserFilters, loadTechniciansForDiscovery, loadUserDetails, loadUsersForDiscovery } from "@/services/users/userDiscoveryServer";
 export {
 	getUserDetails,
 	listEligibleTechnicians,

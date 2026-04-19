@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useAccountMetrics } from "@/hooks/useAccountMetrics";
 import { useWalletStatus } from "@/hooks/useWalletStatus";
 import { obterEthereumProvider } from "@/services/wallet/provider";
-import { carregarMetricasDaConta, type AccountMetrics } from "@/services/account/accountMetrics";
 import { carregarMetricasElegibilidade, type EligibilityMetrics } from "@/services/eligibility/eligibilityMetrics";
 import { sacarDeposito, sacarRendimento } from "@/services/account/accountActions";
 import { deleteUserProfile } from "@/services/users/userClient";
@@ -20,7 +20,7 @@ type UseAccountPanelResult = {
 	deposit: string;
 	rewards: string;
 	badgeLevel: string;
-	reputationLevel: number;
+	reputationLevelName: string;
 	perfilAtivo: "cliente" | "tecnico" | null;
 	isActive: boolean;
 	totalPoints: string;
@@ -38,28 +38,6 @@ type UseAccountPanelResult = {
 	handleWithdrawRewards: () => Promise<void>;
 };
 
-const METRICAS_PADRAO: AccountMetrics = {
-	depositRaw: 0n,
-	deposit: "0",
-	rewardsRaw: 0n,
-	rewards: "0",
-	isActive: false,
-	perfilAtivo: null,
-	badgeLevel: "Sem carteira",
-	reputationLevel: 0,
-	totalPointsRaw: 0n,
-	totalPoints: "0",
-	positiveRatingsRaw: 0n,
-	positiveRatings: "0",
-	negativeRatingsRaw: 0n,
-	negativeRatings: "0",
-	totalRatingsRaw: 0n,
-	totalRatings: "0",
-	ratingSumRaw: 0n,
-	ratingSum: "0",
-	averageRating: "0,0",
-};
-
 const METRICAS_ELEGIBILIDADE_PADRAO: EligibilityMetrics = {
 	rptBalanceRaw: 0n,
 	rptBalance: "0",
@@ -75,9 +53,9 @@ const METRICAS_ELEGIBILIDADE_PADRAO: EligibilityMetrics = {
 export function useAccountPanel(): UseAccountPanelResult {
 	const { state } = useWalletStatus();
 	const ethereum = useMemo(() => obterEthereumProvider(), []);
-	const [metricas, setMetricas] = useState<AccountMetrics>(METRICAS_PADRAO);
-	const [metricasElegibilidade, setMetricasElegibilidade] = useState<EligibilityMetrics>(METRICAS_ELEGIBILIDADE_PADRAO);
 	const [refreshIndex, setRefreshIndex] = useState(0);
+	const metricas = useAccountMetrics({ refreshKey: refreshIndex });
+	const [metricasElegibilidade, setMetricasElegibilidade] = useState<EligibilityMetrics>(METRICAS_ELEGIBILIDADE_PADRAO);
 	const [withdrawingDeposit, setWithdrawingDeposit] = useState(false);
 	const [withdrawingRewards, setWithdrawingRewards] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -87,35 +65,6 @@ export function useAccountPanel(): UseAccountPanelResult {
 	const walletNotice = connected ? null : "Carteira desconectada";
 	const canWithdrawDeposit = connected && metricas.isActive && metricas.depositRaw > 0n && !withdrawingDeposit && !withdrawingRewards;
 	const canWithdrawRewards = connected && metricas.isActive && metricas.rewardsRaw > 0n && !withdrawingDeposit && !withdrawingRewards;
-
-	useEffect(() => {
-		let ativo = true;
-
-		async function sincronizarMetricas() {
-			try {
-				const dados = await carregarMetricasDaConta(connected ? state.address : null);
-
-				if (ativo) {
-					setMetricas(dados);
-				}
-			} catch {
-				if (ativo) {
-					setMetricas(METRICAS_PADRAO);
-				}
-			}
-		}
-
-		void sincronizarMetricas();
-
-		const intervalo = window.setInterval(() => {
-			void sincronizarMetricas();
-		}, 15000);
-
-		return () => {
-			ativo = false;
-			window.clearInterval(intervalo);
-		};
-	}, [connected, state.address, refreshIndex]);
 
 	useEffect(() => {
 		let ativo = true;
@@ -166,13 +115,13 @@ export function useAccountPanel(): UseAccountPanelResult {
 	}
 
 	async function handleWithdrawDeposit() {
-		if (!metricas.isActive || metricas.depositRaw <= 0n) {
-			setError("Nao ha deposito disponivel para saque.");
+		if (!ethereum || !connected) {
+			setError("Conecte a carteira para sacar o deposito.");
 			return;
 		}
 
-		if (!ethereum) {
-			setError("Conecte a carteira para sacar o deposito.");
+		if (!metricas.isActive || metricas.depositRaw <= 0n) {
+			setError("Nao ha deposito disponivel para saque.");
 			return;
 		}
 
@@ -190,13 +139,13 @@ export function useAccountPanel(): UseAccountPanelResult {
 	}
 
 	async function handleWithdrawRewards() {
-		if (!metricas.isActive || metricas.rewardsRaw <= 0n) {
-			setError("Nao ha rendimentos disponiveis para saque.");
+		if (!ethereum || !connected) {
+			setError("Conecte a carteira para sacar os rendimentos.");
 			return;
 		}
 
-		if (!ethereum) {
-			setError("Conecte a carteira para sacar os rendimentos.");
+		if (!metricas.isActive || metricas.rewardsRaw <= 0n) {
+			setError("Nao ha rendimentos disponiveis para saque.");
 			return;
 		}
 
@@ -220,7 +169,7 @@ export function useAccountPanel(): UseAccountPanelResult {
 		deposit: connected ? metricas.deposit : "0",
 		rewards: connected ? metricas.rewards : "0",
 		badgeLevel: connected ? metricas.badgeLevel : "Sem carteira",
-		reputationLevel: connected ? metricas.reputationLevel : 0,
+		reputationLevelName: connected ? metricas.reputationLevelName : "None",
 		perfilAtivo: connected ? metricas.perfilAtivo : null,
 		isActive: connected ? metricas.isActive : false,
 		totalPoints: connected ? metricas.totalPoints : "0",

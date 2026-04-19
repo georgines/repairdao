@@ -16,7 +16,7 @@ export type AccountPanelViewProps = {
 	deposit: string;
 	rewards: string;
 	badgeLevel: string;
-	reputationLevel: number;
+	reputationLevelName: string;
 	perfilAtivo: "cliente" | "tecnico" | null;
 	isActive: boolean;
 	totalPoints: string;
@@ -46,7 +46,7 @@ export function AccountPanelView({
 	deposit,
 	rewards,
 	badgeLevel,
-	reputationLevel,
+	reputationLevelName,
 	perfilAtivo,
 	isActive,
 	totalPoints,
@@ -129,7 +129,7 @@ export function AccountPanelView({
 					<Grid.Col span={{ base: 12, sm: 6, lg: 3 }}>
 						<AccountMetricCard
 							label="Nivel"
-							value={`Nivel ${reputationLevel}`}
+							value={`${reputationLevelName}`}
 							description={`Pontos acumulados: ${totalPoints}`}
 						/>
 					</Grid.Col>

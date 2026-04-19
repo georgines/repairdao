@@ -59,7 +59,7 @@ describe("AccountPanelView", () => {
 				deposit="150"
 				rewards="5"
 				badgeLevel="Ouro"
-				reputationLevel={4}
+				reputationLevelName="Platinum"
 				perfilAtivo="tecnico"
 				isActive={true}
 				totalPoints="32"
@@ -87,7 +87,7 @@ describe("AccountPanelView", () => {
 		expect(markup).toContain("Perfil tecnico");
 		expect(markup).toContain("RPT 150,00");
 		expect(markup).toContain("RPT 5,00");
-		expect(markup).toContain("Nivel 4");
+		expect(markup).toContain("Nivel Platinum");
 		expect(markup).toContain("4,6/5");
 		expect(markup).toContain("Taxa positiva");
 		expect(markup).toContain("89%");
@@ -110,7 +110,7 @@ describe("AccountPanelView", () => {
 				deposit="0"
 				rewards="0"
 				badgeLevel="Sem carteira"
-				reputationLevel={0}
+				reputationLevelName="None"
 				perfilAtivo={null}
 				isActive={false}
 				totalPoints="0"
@@ -150,7 +150,7 @@ describe("AccountPanelView", () => {
 				deposit="0"
 				rewards="0"
 				badgeLevel="Sem carteira"
-				reputationLevel={0}
+				reputationLevelName="None"
 				perfilAtivo={null}
 				isActive={false}
 				totalPoints="0"
@@ -193,7 +193,7 @@ describe("AccountPanelView", () => {
 						deposit="150"
 						rewards="5"
 						badgeLevel="Ouro"
-						reputationLevel={4}
+						reputationLevelName="Platinum"
 						perfilAtivo={null}
 						isActive={true}
 						totalPoints="32"

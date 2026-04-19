@@ -84,7 +84,7 @@ describe("carregarMetricasDaContaNoServidor", () => {
 			isActive: true,
 			perfilAtivo: "tecnico",
 			badgeLevel: "Ouro",
-			reputationLevel: 4,
+			reputationLevelName: "Platinum",
 			totalPointsRaw: 32n,
 			totalPoints: "32",
 			positiveRatingsRaw: 8n,
@@ -122,7 +122,7 @@ describe("carregarMetricasDaContaNoServidor", () => {
 			isActive: false,
 			perfilAtivo: null,
 			badgeLevel: "Sem carteira",
-			reputationLevel: 0,
+			reputationLevelName: "None",
 			totalPointsRaw: 0n,
 			totalPoints: "0",
 			positiveRatingsRaw: 0n,
@@ -204,7 +204,7 @@ describe("carregarMetricasDaContaNoServidor", () => {
 			isActive: false,
 			perfilAtivo: null,
 			badgeLevel: "Sem carteira",
-			reputationLevel: 0,
+			reputationLevelName: "None",
 			totalPointsRaw: 0n,
 			totalPoints: "0",
 			positiveRatingsRaw: 0n,
@@ -236,7 +236,7 @@ describe("carregarMetricasDaContaNoServidor", () => {
 
 		await expect(carregarMetricasDaContaNoServidor("0xabc")).resolves.toMatchObject({
 			perfilAtivo: "cliente",
-			reputationLevel: 2,
+			reputationLevelName: "Silver",
 			averageRating: "4,5",
 		});
 	});
