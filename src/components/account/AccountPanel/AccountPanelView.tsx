@@ -100,14 +100,16 @@ export function AccountPanelView({
 					) : null}
 					</Group>
 
-				<BalanceSummary
-					rptBalance={rptBalance}
-					tokensPerEth={tokensPerEth}
-					ethUsdPrice={ethUsdPrice}
-					ethBalance={ethBalance}
-					usdBalance={usdBalance}
-					note={walletNotice}
-				/>
+				<Card withBorder shadow="none" radius="md" padding="md" style={{ background: "rgba(255,255,255,0.92)", borderColor: "rgba(15, 23, 42, 0.08)" }}>
+					<BalanceSummary
+						rptBalance={rptBalance}
+						tokensPerEth={tokensPerEth}
+						ethUsdPrice={ethUsdPrice}
+						ethBalance={ethBalance}
+						usdBalance={usdBalance}
+						note={walletNotice}
+					/>
+				</Card>
 
 				<Grid>
 					<Grid.Col span={{ base: 12, sm: 6, lg: 3 }}>
