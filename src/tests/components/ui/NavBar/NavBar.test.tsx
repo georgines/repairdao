@@ -18,14 +18,18 @@ vi.mock("@/hooks/useAccountProfile", () => ({
 	}),
 }));
 
-vi.mock("@/hooks/useDepositConfigurationAccess", () => ({
-	useDepositConfigurationAccess: () => ({
+vi.mock("@/hooks/useSystemConfigurationAccess", () => ({
+	useSystemConfigurationAccess: () => ({
 		isOwner: depositAccessState.isOwner,
+		isDepositOwner: depositAccessState.isOwner,
+		isTokenOwner: depositAccessState.isOwner,
 		loading: false,
 		error: null,
 		configuracao: null,
-		donoAtual: null,
-		donoAtualCurto: "Carteira desconectada",
+		donoDepositoAtual: null,
+		donoDepositoAtualCurto: "Carteira desconectada",
+		donoTokenAtual: null,
+		donoTokenAtualCurto: "Carteira desconectada",
 		connected: false,
 		walletAddress: null,
 		refresh: async () => null,
@@ -91,7 +95,7 @@ describe("components/ui/NavBar/NavBar", () => {
 			</MantineAppShell>,
 		);
 
-		expect(markup).toContain("Configuracao do deposito");
+		expect(markup).toContain("Configuracoes do sistema");
 		expect(markup).toContain('href="/eligibility/configuration"');
 	});
 });

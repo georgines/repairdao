@@ -65,6 +65,10 @@ model DepositConfiguration {
   ownerAddress    String
   minDepositRaw   String
   minDeposit      String
+  tokenContractAddress String   @default("")
+  tokenOwnerAddress    String   @default("")
+  tokensPerEthRaw      String   @default("0")
+  tokensPerEth         String   @default("0")
   syncedAt        DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

@@ -12,14 +12,18 @@ vi.mock("@/hooks/useAccountProfile", () => ({
 	}),
 }));
 
-vi.mock("@/hooks/useDepositConfigurationAccess", () => ({
-	useDepositConfigurationAccess: () => ({
+vi.mock("@/hooks/useSystemConfigurationAccess", () => ({
+	useSystemConfigurationAccess: () => ({
 		isOwner: false,
+		isDepositOwner: false,
+		isTokenOwner: false,
 		loading: false,
 		error: null,
 		configuracao: null,
-		donoAtual: null,
-		donoAtualCurto: "Carteira desconectada",
+		donoDepositoAtual: null,
+		donoDepositoAtualCurto: "Carteira desconectada",
+		donoTokenAtual: null,
+		donoTokenAtualCurto: "Carteira desconectada",
 		connected: false,
 		walletAddress: null,
 		refresh: async () => null,

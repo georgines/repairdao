@@ -4,13 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AppShell, NavLink, ScrollArea, Stack } from "@mantine/core";
 import { useAccountProfile } from "@/hooks/useAccountProfile";
-import { useDepositConfigurationAccess } from "@/hooks/useDepositConfigurationAccess";
+import { useSystemConfigurationAccess } from "@/hooks/useSystemConfigurationAccess";
 
 const menuItems = [
   { label: "Minha conta", href: "/account" },
 	{ label: "Loja", href: "/store" },
 	{ label: "Elegibilidade", href: "/eligibility" },
-	{ label: "Configuracao do deposito", href: "/eligibility/configuration", ownerOnly: true },
+	{ label: "Configuracoes do sistema", href: "/eligibility/configuration", ownerOnly: true },
 	{ label: "Servicos", href: "/services" },
 	{ label: "Disputas", href: "/disputes" },
 	{ label: "Tecnicos disponiveis", href: "/technicians", visibleFor: "cliente" },
@@ -23,14 +23,14 @@ type NavBarProps = {
 export function NavBar({ onNavigate }: NavBarProps) {
 	const pathname = usePathname();
 	const { perfilAtivo } = useAccountProfile();
-	const configuracaoDeposito = useDepositConfigurationAccess();
+	const configuracaoSistema = useSystemConfigurationAccess();
 
 	return (
 		<Stack h="100%" gap="sm" p="md">
 			<AppShell.Section grow component={ScrollArea}>
 				<Stack gap={4}>
 					{menuItems.map((item) => {
-						if ("ownerOnly" in item && item.ownerOnly && !configuracaoDeposito.isOwner) {
+						if ("ownerOnly" in item && item.ownerOnly && !configuracaoSistema.isOwner) {
 							return null;
 						}
 

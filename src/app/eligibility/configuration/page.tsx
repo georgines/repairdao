@@ -1,18 +1,18 @@
 "use client";
 
 import { Alert, Loader, Paper, Stack, Text } from "@mantine/core";
-import { DepositConfigurationPanel } from "@/components/deposit/DepositConfigurationPanel/DepositConfigurationPanel";
-import { useDepositConfigurationAccess } from "@/hooks/useDepositConfigurationAccess";
+import { SystemConfigurationPanel } from "@/components/system/SystemConfigurationPanel/SystemConfigurationPanel";
+import { useSystemConfigurationAccess } from "@/hooks/useSystemConfigurationAccess";
 
-export default function DepositConfigurationPage() {
-	const access = useDepositConfigurationAccess();
+export default function SystemConfigurationPage() {
+	const access = useSystemConfigurationAccess();
 
 	if (access.loading) {
 		return (
 			<Paper p="lg" withBorder radius="md">
 				<Stack gap="sm">
 					<Loader size="sm" />
-					<Text size="sm">Carregando pagina administrativa...</Text>
+					<Text size="sm">Carregando configuracoes do sistema...</Text>
 				</Stack>
 			</Paper>
 		);
@@ -22,7 +22,7 @@ export default function DepositConfigurationPage() {
 		return (
 			<Paper p="lg" withBorder radius="md">
 				<Alert color="yellow" title="Carteira desconectada">
-					Conecte a carteira do dono para acessar a configuracao do deposito.
+					Conecte a carteira autorizada para acessar as configuracoes do sistema.
 				</Alert>
 			</Paper>
 		);
@@ -42,5 +42,5 @@ export default function DepositConfigurationPage() {
 		return null;
 	}
 
-	return <DepositConfigurationPanel />;
+	return <SystemConfigurationPanel />;
 }

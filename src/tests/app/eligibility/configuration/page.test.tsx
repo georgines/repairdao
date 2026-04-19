@@ -6,19 +6,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MantineProvider } from "@mantine/core";
 
 const pageMocks = vi.hoisted(() => ({
-	useDepositConfigurationAccess: vi.fn(),
-	DepositConfigurationPanel: vi.fn(() => <div>painel</div>),
+	useSystemConfigurationAccess: vi.fn(),
+	SystemConfigurationPanel: vi.fn(() => <div>painel</div>),
 }));
 
-vi.mock("@/hooks/useDepositConfigurationAccess", () => ({
-	useDepositConfigurationAccess: pageMocks.useDepositConfigurationAccess,
+vi.mock("@/hooks/useSystemConfigurationAccess", () => ({
+	useSystemConfigurationAccess: pageMocks.useSystemConfigurationAccess,
 }));
 
-vi.mock("@/components/deposit/DepositConfigurationPanel/DepositConfigurationPanel", () => ({
-	DepositConfigurationPanel: pageMocks.DepositConfigurationPanel,
+vi.mock("@/components/system/SystemConfigurationPanel/SystemConfigurationPanel", () => ({
+	SystemConfigurationPanel: pageMocks.SystemConfigurationPanel,
 }));
 
-import DepositConfigurationPage from "@/app/eligibility/configuration/page";
+import SystemConfigurationPage from "@/app/eligibility/configuration/page";
 
 async function flush() {
 	await Promise.resolve();
@@ -48,19 +48,27 @@ describe("app/eligibility/configuration/page", () => {
 		document.body.appendChild(container);
 		root = createRoot(container);
 		vi.clearAllMocks();
-		pageMocks.useDepositConfigurationAccess.mockReturnValue({
+		pageMocks.useSystemConfigurationAccess.mockReturnValue({
 			loading: false,
 			error: null,
 			configuracao: {
 				network: "local",
-				contractAddress: "0xdeposit",
-				ownerAddress: "0xowner",
+				depositContractAddress: "0xdeposit",
+				depositOwnerAddress: "0xowner",
 				minDepositRaw: "100000000000000000000",
 				minDeposit: "100",
+				tokenContractAddress: "0xtoken",
+				tokenOwnerAddress: "0xowner",
+				tokensPerEthRaw: "1000",
+				tokensPerEth: "1000",
 				syncedAt: "2026-04-19T12:00:00.000Z",
 			},
-			donoAtual: "0xowner",
-			donoAtualCurto: "0xowne...wner",
+			donoDepositoAtual: "0xowner",
+			donoDepositoAtualCurto: "0xowne...wner",
+			donoTokenAtual: "0xowner",
+			donoTokenAtualCurto: "0xowne...wner",
+			isDepositOwner: true,
+			isTokenOwner: true,
 			isOwner: true,
 			connected: true,
 			walletAddress: "0xowner",
@@ -79,23 +87,27 @@ describe("app/eligibility/configuration/page", () => {
 	it("renderiza o painel quando a carteira e do dono", async () => {
 		await act(async () => {
 			root.render(
-				<MantineProvider>
-					<DepositConfigurationPage />
-				</MantineProvider>,
-			);
-			await flush();
-		});
+					<MantineProvider>
+					<SystemConfigurationPage />
+					</MantineProvider>,
+				);
+				await flush();
+			});
 
 		expect(container.textContent).toContain("painel");
 	});
 
 	it("mostra carregamento enquanto busca acesso", async () => {
-		pageMocks.useDepositConfigurationAccess.mockReturnValueOnce({
+		pageMocks.useSystemConfigurationAccess.mockReturnValueOnce({
 			loading: true,
 			error: null,
 			configuracao: null,
-			donoAtual: null,
-			donoAtualCurto: "Carteira desconectada",
+			donoDepositoAtual: null,
+			donoDepositoAtualCurto: "Carteira desconectada",
+			donoTokenAtual: null,
+			donoTokenAtualCurto: "Carteira desconectada",
+			isDepositOwner: false,
+			isTokenOwner: false,
 			isOwner: false,
 			connected: true,
 			walletAddress: "0xowner",
@@ -104,23 +116,27 @@ describe("app/eligibility/configuration/page", () => {
 
 		await act(async () => {
 			root.render(
-				<MantineProvider>
-					<DepositConfigurationPage />
-				</MantineProvider>,
-			);
-			await flush();
-		});
+					<MantineProvider>
+					<SystemConfigurationPage />
+					</MantineProvider>,
+				);
+				await flush();
+			});
 
-		expect(container.textContent).toContain("Carregando pagina administrativa");
+		expect(container.textContent).toContain("Carregando configuracoes do sistema");
 	});
 
 	it("mostra aviso quando a carteira esta desconectada", async () => {
-		pageMocks.useDepositConfigurationAccess.mockReturnValueOnce({
+		pageMocks.useSystemConfigurationAccess.mockReturnValueOnce({
 			loading: false,
 			error: null,
 			configuracao: null,
-			donoAtual: null,
-			donoAtualCurto: "Carteira desconectada",
+			donoDepositoAtual: null,
+			donoDepositoAtualCurto: "Carteira desconectada",
+			donoTokenAtual: null,
+			donoTokenAtualCurto: "Carteira desconectada",
+			isDepositOwner: false,
+			isTokenOwner: false,
 			isOwner: false,
 			connected: false,
 			walletAddress: null,
@@ -129,23 +145,27 @@ describe("app/eligibility/configuration/page", () => {
 
 		await act(async () => {
 			root.render(
-				<MantineProvider>
-					<DepositConfigurationPage />
-				</MantineProvider>,
-			);
-			await flush();
-		});
+					<MantineProvider>
+					<SystemConfigurationPage />
+					</MantineProvider>,
+				);
+				await flush();
+			});
 
 		expect(container.textContent).toContain("Carteira desconectada");
 	});
 
 	it("mostra erro quando a leitura da configuracao falha", async () => {
-		pageMocks.useDepositConfigurationAccess.mockReturnValueOnce({
+		pageMocks.useSystemConfigurationAccess.mockReturnValueOnce({
 			loading: false,
 			error: "Falha ao ler",
 			configuracao: null,
-			donoAtual: "0xowner",
-			donoAtualCurto: "0xowne...wner",
+			donoDepositoAtual: "0xowner",
+			donoDepositoAtualCurto: "0xowne...wner",
+			donoTokenAtual: "0xowner",
+			donoTokenAtualCurto: "0xowne...wner",
+			isDepositOwner: false,
+			isTokenOwner: false,
 			isOwner: false,
 			connected: true,
 			walletAddress: "0xowner",
@@ -154,24 +174,28 @@ describe("app/eligibility/configuration/page", () => {
 
 		await act(async () => {
 			root.render(
-				<MantineProvider>
-					<DepositConfigurationPage />
-				</MantineProvider>,
-			);
-			await flush();
-		});
+					<MantineProvider>
+					<SystemConfigurationPage />
+					</MantineProvider>,
+				);
+				await flush();
+			});
 
 		expect(container.textContent).toContain("Falha ao carregar a configuracao");
 		expect(container.textContent).toContain("Falha ao ler");
 	});
 
 	it("nao renderiza nada quando a carteira conectada nao e do dono", async () => {
-		pageMocks.useDepositConfigurationAccess.mockReturnValueOnce({
+		pageMocks.useSystemConfigurationAccess.mockReturnValueOnce({
 			loading: false,
 			error: null,
 			configuracao: null,
-			donoAtual: "0xowner",
-			donoAtualCurto: "0xowne...wner",
+			donoDepositoAtual: "0xowner",
+			donoDepositoAtualCurto: "0xowne...wner",
+			donoTokenAtual: "0xowner",
+			donoTokenAtualCurto: "0xowne...wner",
+			isDepositOwner: false,
+			isTokenOwner: false,
 			isOwner: false,
 			connected: true,
 			walletAddress: "0xnot-owner",
@@ -180,13 +204,13 @@ describe("app/eligibility/configuration/page", () => {
 
 		await act(async () => {
 			root.render(
-				<MantineProvider>
-					<DepositConfigurationPage />
-				</MantineProvider>,
-			);
-			await flush();
-		});
+					<MantineProvider>
+					<SystemConfigurationPage />
+					</MantineProvider>,
+				);
+				await flush();
+			});
 
-		expect(pageMocks.DepositConfigurationPanel).not.toHaveBeenCalled();
+		expect(pageMocks.SystemConfigurationPanel).not.toHaveBeenCalled();
 	});
 });
