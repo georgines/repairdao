@@ -44,9 +44,15 @@ vi.mock("@/services/wallet/transaction", () => ({
 
 import {
 	abrirDisputaNoContrato,
+	aceitarOrcamentoNoContrato,
+	avaliarServicoNoContrato,
 	autorizarPagamentoNoContrato,
+	carregarEstadoAvaliacaoNoContrato,
+	carregarEstadoConfirmacaoEntregaNoContrato,
+	concluirOrdemNoContrato,
 	confirmarEntregaNoContrato,
 	criarOrdemServicoNoContrato,
+	enviarOrcamentoNoContrato,
 } from "@/services/serviceRequests/serviceRequestBlockchain";
 
 describe("serviceRequestBlockchain", () => {
@@ -105,5 +111,50 @@ describe("serviceRequestBlockchain", () => {
 			args: [88],
 		});
 		expect(blockchainMocks.aguardarTransacao).toHaveBeenCalledWith({ hash: "0xghi" });
+	});
+
+	it("encaminha as demais operacoes ao contrato correto", async () => {
+		const writeContract = vi.fn().mockResolvedValue({ hash: "0xaaa" });
+		const buscarOrdem = vi.fn().mockResolvedValue({
+			id: 5,
+			estado: 2,
+			descricao: "teste",
+			cliente: "0xcliente",
+			tecnico: "0xtec",
+			clientRated: 1,
+			technicianRated: 0,
+		});
+		const verificarConfirmacaoDaEntrega = vi.fn().mockResolvedValue({ deliveryConfirmedAt: "2026-04-17T15:00:00.000Z" });
+		const escrowGateway = { writeContract, buscarOrdem, verificarConfirmacaoDaEntrega };
+		const tokenGateway = { writeContract };
+
+		blockchainMocks.criarRepairEscrowGateway.mockReturnValue(escrowGateway);
+		blockchainMocks.criarRepairTokenGateway.mockReturnValue(tokenGateway);
+		blockchainMocks.aguardarTransacao.mockResolvedValue({ mined: true });
+
+		await expect(enviarOrcamentoNoContrato({} as never, 1, 250)).resolves.toEqual({ mined: true });
+		await expect(avaliarServicoNoContrato({} as never, 2, 5)).resolves.toEqual({ mined: true });
+		await expect(aceitarOrcamentoNoContrato({} as never, 3)).resolves.toEqual({ mined: true });
+		await expect(concluirOrdemNoContrato({} as never, 4)).resolves.toEqual({ mined: true });
+		await expect(carregarEstadoAvaliacaoNoContrato({} as never, 5)).resolves.toEqual({
+			clientRated: true,
+			technicianRated: false,
+		});
+		await expect(carregarEstadoConfirmacaoEntregaNoContrato({} as never, 6)).resolves.toEqual({
+			deliveryConfirmedAt: "2026-04-17T15:00:00.000Z",
+		});
+	});
+
+	it("retorna null quando a ordem nao existe para carregar estado de avaliacao", async () => {
+		const buscarOrdem = vi.fn().mockResolvedValue(null);
+		const escrowGateway = {
+			writeContract: vi.fn(),
+			buscarOrdem,
+			verificarConfirmacaoDaEntrega: vi.fn().mockResolvedValue(null),
+		};
+
+		blockchainMocks.criarRepairEscrowGateway.mockReturnValue(escrowGateway);
+
+		await expect(carregarEstadoAvaliacaoNoContrato({} as never, 99)).resolves.toBeNull();
 	});
 });

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MantineProvider } from "@mantine/core";
@@ -29,6 +29,7 @@ describe("NetworkSelector", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.unstubAllEnvs();
   });
 
@@ -42,7 +43,7 @@ describe("NetworkSelector", () => {
 
     renderWithMantine(<NetworkSelector />);
 
-    const select = screen.getByLabelText("Selecionar rede RPC");
+    const select = screen.getAllByLabelText("Selecionar rede RPC")[0];
 
     expect((select as HTMLSelectElement).value).toBe("local");
 
@@ -51,6 +52,21 @@ describe("NetworkSelector", () => {
     expect(window.localStorage.getItem(CHAVE_REDE_RPC)).toBe("sepolia");
     expect(document.cookie).toContain(`${CHAVE_REDE_RPC}=sepolia`);
     expect(eventos).toContain("sepolia");
+
+    window.removeEventListener(EVENTO_REDE_RPC_ALTERADA, listener);
+  });
+
+  it("nao dispara evento quando a rede escolhida ja e a atual", () => {
+    const listener = vi.fn();
+    window.addEventListener(EVENTO_REDE_RPC_ALTERADA, listener);
+
+    renderWithMantine(<NetworkSelector />);
+
+    const select = screen.getByLabelText("Selecionar rede RPC");
+    fireEvent.change(select, { target: { value: "local" } });
+
+    expect(window.localStorage.getItem(CHAVE_REDE_RPC)).toBeNull();
+    expect(listener).not.toHaveBeenCalled();
 
     window.removeEventListener(EVENTO_REDE_RPC_ALTERADA, listener);
   });

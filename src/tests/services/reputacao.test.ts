@@ -6,6 +6,7 @@ import {
   ehDirecaoAvaliacaoValida,
   garantirDirecaoAvaliacao,
   nivelReputacaoDoTotalDePontos,
+  nomeNivelReputacao,
   reputacaoPodeCairAbaixoDoNivelUm,
   reputacaoValidaParaAvaliacao,
 } from "@/services/reputacao";
@@ -35,6 +36,9 @@ describe("reputacao", () => {
   it("calcula badge alinhado a reputacao e respeita elegibilidade", () => {
     expect(calcularNivelBadgePorReputacao(1)).toBe(1);
     expect(calcularNivelBadgePorReputacao(5)).toBe(5);
+    expect(nomeNivelReputacao(null)).toBe("None");
+    expect(nomeNivelReputacao(4)).toBe("Platinum");
+    expect(nomeNivelReputacao(99)).toBe("None");
     expect(badgePodeExistir(false, 2)).toBe(true);
     expect(badgePodeExistir(true, 1)).toBe(true);
     expect(badgePodeExistir(false, 1)).toBe(false);

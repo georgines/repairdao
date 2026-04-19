@@ -275,6 +275,27 @@ describe("serviceRequestRepository", () => {
 		expect(prismaMocks.serviceRequest.update).not.toHaveBeenCalled();
 	});
 
+	it("rejeita quando a ordem nao esta apta para aceitar", async () => {
+		prismaMocks.serviceRequest.findUnique.mockResolvedValue({
+			id: 2,
+			clientAddress: "0xcliente",
+			clientName: "Cliente",
+			technicianAddress: "0xtec",
+			technicianName: "Tecnico",
+			description: "Servico",
+			status: "CONCLUIDA",
+			budgetAmount: null,
+			acceptedAt: null,
+			budgetSentAt: null,
+			clientAcceptedAt: null,
+			createdAt: new Date("2026-04-17T10:00:00.000Z"),
+			updatedAt: new Date("2026-04-17T10:00:00.000Z"),
+		});
+
+		await expect(acceptServiceRequest({ id: 2, technicianAddress: "0xTEC" })).rejects.toBeInstanceOf(RepairDAODominioError);
+		expect(prismaMocks.serviceRequest.update).not.toHaveBeenCalled();
+	});
+
 	it("aceita o orcamento quando pertence ao cliente e a ordem esta orcada", async () => {
 		prismaMocks.serviceRequest.findUnique.mockResolvedValue({
 			id: 3,
@@ -387,6 +408,13 @@ describe("serviceRequestRepository", () => {
 		prismaMocks.serviceRequest.findUnique.mockResolvedValue(null);
 
 		await expect(acceptServiceBudget({ id: 3, clientAddress: "0xcliente" })).rejects.toBeInstanceOf(RepairDAODominioError);
+		expect(prismaMocks.serviceRequest.update).not.toHaveBeenCalled();
+	});
+
+	it("rejeita quando a ordem nao existe ao concluir", async () => {
+		prismaMocks.serviceRequest.findUnique.mockResolvedValue(null);
+
+		await expect(completeServiceRequest({ id: 4, technicianAddress: "0xTEC" })).rejects.toBeInstanceOf(RepairDAODominioError);
 		expect(prismaMocks.serviceRequest.update).not.toHaveBeenCalled();
 	});
 
@@ -515,6 +543,19 @@ describe("serviceRequestRepository", () => {
 			openServiceDispute({
 				id: 9,
 				actorAddress: "0xoutsider",
+				disputeReason: "falha",
+			}),
+		).rejects.toBeInstanceOf(RepairDAODominioError);
+		expect(prismaMocks.serviceRequest.update).not.toHaveBeenCalled();
+	});
+
+	it("rejeita quando a ordem nao existe ao abrir disputa", async () => {
+		prismaMocks.serviceRequest.findUnique.mockResolvedValue(null);
+
+		await expect(
+			openServiceDispute({
+				id: 10,
+				actorAddress: "0xcliente",
 				disputeReason: "falha",
 			}),
 		).rejects.toBeInstanceOf(RepairDAODominioError);

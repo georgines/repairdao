@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   mapearDisputaDoContrato,
+  mapearEvidenciaDoContrato,
   mapearEstadoDisputaDoContrato,
   mapearEstadoOrdemDoContrato,
   mapearEstadoPropostaDoContrato,
@@ -145,6 +146,95 @@ describe("adapters blockchain", () => {
         estado: 1,
         descricao: "nova regra",
         duracaoEmDias: 7.5,
+      }),
+    ).toThrow(/inteiro valido/);
+  });
+
+  it("cobre ramos opcionais e validacoes de conversao", () => {
+    expect(
+      mapearDisputaDoContrato({
+        id: 5,
+        estado: 0,
+        ordemId: 12,
+        motivo: "  motivo  ",
+        openedBy: "0xcliente",
+        opposingParty: "0xtec",
+        votesForOpener: 2,
+        votesForOpposing: "3",
+        deadline: 1710000000,
+        resolved: true,
+      }),
+    ).toEqual({
+      id: "5",
+      estado: "aberta",
+      ordemId: "12",
+      motivo: "motivo",
+      openedBy: "0xcliente",
+      opposingParty: "0xtec",
+      votesForOpener: 2n,
+      votesForOpposing: 3n,
+      deadline: "2024-03-09T16:00:00.000Z",
+      resolved: true,
+    });
+
+    expect(
+      mapearDisputaDoContrato({
+        id: 6,
+        estado: 1,
+        ordemId: 13,
+        votesForOpener: undefined,
+        votesForOpposing: null,
+        deadline: null,
+        resolved: undefined,
+      }),
+    ).toEqual({
+      id: "6",
+      estado: "janela_votacao",
+      ordemId: "13",
+      motivo: undefined,
+      openedBy: undefined,
+      opposingParty: undefined,
+      votesForOpener: undefined,
+      votesForOpposing: undefined,
+      deadline: undefined,
+      resolved: undefined,
+    });
+
+    expect(
+      mapearEvidenciaDoContrato({
+        submittedBy: " 0xabc ",
+        content: " evidencia ",
+        timestamp: 1710000000,
+      }),
+    ).toEqual({
+      submittedBy: "0xabc",
+      content: "evidencia",
+      timestamp: "2024-03-09T16:00:00.000Z",
+    });
+
+    expect(() =>
+      mapearEvidenciaDoContrato({
+        submittedBy: "",
+        content: "evidencia",
+        timestamp: 1710000000,
+      }),
+    ).toThrow(/autor da evidencia/);
+
+    expect(() =>
+      mapearDisputaDoContrato({
+        id: 7,
+        estado: 0,
+        ordemId: 14,
+        votesForOpener: 1.5,
+      }),
+    ).toThrow(/inteiro valido/);
+
+    expect(() =>
+      mapearDisputaDoContrato({
+        id: 8,
+        estado: 0,
+        ordemId: 15,
+        votesForOpposing: "abc",
       }),
     ).toThrow(/inteiro valido/);
   });

@@ -78,5 +78,6 @@ describe("papeis", () => {
     expect(papelPodeEnviarEvidencia({ papel: "cliente", depositoAtivo: true, envolvidoEmDisputa: true })).toBe(true);
     expect(papelPodeEnviarEvidencia({ papel: "cliente", depositoAtivo: true, envolvidoEmDisputa: false })).toBe(false);
     expect(garantirPodeEnviarEvidencia({ papel: "tecnico", depositoAtivo: true, envolvidoEmDisputa: true })).toBe(true);
+    expect(() => garantirPodeEnviarEvidencia({ papel: "outsider", depositoAtivo: true, envolvidoEmDisputa: true })).toThrow(/evidencia da disputa/);
   });
 });

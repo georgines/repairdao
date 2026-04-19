@@ -129,4 +129,45 @@ describe("hooks/useRatingSummary", () => {
 		});
 		expect(ratingMocks.carregarMetricasDaConta).toHaveBeenCalledWith("0xabc");
 	});
+
+	it("reseta o estado quando nao ha address", async () => {
+		ratingMocks.carregarMetricasDaConta.mockClear();
+		renderHarness(<Harness address={null} />);
+
+		await waitFor(() => {
+			expect(window.document.body.dataset.loading).toBe("false");
+			expect(window.document.body.dataset.value).toBe("0:0");
+		});
+		expect(ratingMocks.carregarMetricasDaConta).not.toHaveBeenCalled();
+	});
+
+	it("normaliza valores invalidos vindos do service", async () => {
+		ratingMocks.carregarMetricasDaConta.mockResolvedValueOnce({
+			depositRaw: 0n,
+			deposit: "0",
+			rewardsRaw: 0n,
+			rewards: "0",
+			isActive: true,
+			perfilAtivo: "tecnico",
+			badgeLevel: "Bronze",
+			reputationLevel: 1,
+			totalPointsRaw: 0n,
+			totalPoints: "0",
+			positiveRatingsRaw: 0n,
+			positiveRatings: "0",
+			negativeRatingsRaw: 0n,
+			negativeRatings: "0",
+			totalRatingsRaw: 0n,
+			totalRatings: "abc",
+			ratingSumRaw: 0n,
+			ratingSum: "0",
+			averageRating: "1,7",
+		});
+
+		renderHarness(<Harness address="0xdef" />);
+
+		await waitFor(() => {
+			expect(window.document.body.dataset.value).toBe("1.7:0");
+		});
+	});
 });

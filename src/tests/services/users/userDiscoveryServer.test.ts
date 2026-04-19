@@ -138,4 +138,10 @@ describe("userDiscoveryServer", () => {
 			},
 		]);
 	});
+
+	it("retorna null quando o usuario nao existe", async () => {
+		serviceMocks.getUserDetails.mockResolvedValueOnce(null);
+
+		await expect(loadUserDetails("0x404")).resolves.toBeNull();
+	});
 });

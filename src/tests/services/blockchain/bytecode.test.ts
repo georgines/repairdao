@@ -35,4 +35,8 @@ describe("bytecode", () => {
 
     expect(bytecodeIgualIgnorandoImutaveis(bytecodeEsperado, bytecodeObtido, [enderecoEscrow])).toBe(false);
   });
+
+  it("ignora enderecos vazios e duplicados na normalizacao", () => {
+    expect(normalizarBytecodeIgnorandoImutaveis("0x6000deadbeef", ["", "0xabc", "0xabc"])).toBe("0x6000deadbeef");
+  });
 });
