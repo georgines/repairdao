@@ -30,15 +30,13 @@ export function WalletStatus({
 			withBorder
 			radius="sm"
 			p="xs"
-			sx={(theme) => ({
+			style={{
 				background: "rgba(255, 255, 255, 0.92)",
 				width: "100%",
 				minWidth: 0,
 				boxSizing: "border-box",
 				overflow: "hidden",
-				paddingInline: theme.spacing.xs,
-				paddingBlock: theme.spacing.xs,
-			})}
+			}}
 		>
 			<Flex align="center" justify="space-between" wrap="nowrap" gap="xs" style={{ minWidth: 0 }}>
 				<Flex align="center" gap={8} wrap="nowrap" style={{ minWidth: 0, flex: "1 1 auto" }}>
