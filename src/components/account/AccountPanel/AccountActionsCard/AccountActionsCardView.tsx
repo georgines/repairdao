@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
 import { Button, Card, Group, Stack, Text } from "@mantine/core";
+import styles from "./AccountActionsCardView.module.css";
 
-export type AccountActionsCardProps = {
+export type AccountActionsCardViewProps = {
 	walletNotice: string | null;
 	withdrawingDeposit: boolean;
 	withdrawingRewards: boolean;
@@ -12,12 +14,7 @@ export type AccountActionsCardProps = {
 	connected: boolean;
 };
 
-const cardStyle = {
-	background: "rgba(255,255,255,0.92)",
-	borderColor: "rgba(15, 23, 42, 0.08)",
-};
-
-export function AccountActionsCard({
+export function AccountActionsCardView({
 	walletNotice,
 	withdrawingDeposit,
 	withdrawingRewards,
@@ -27,9 +24,30 @@ export function AccountActionsCard({
 	onWithdrawDeposit,
 	onWithdrawRewards,
 	connected,
-}: AccountActionsCardProps) {
+}: AccountActionsCardViewProps) {
+	const walletNoticeNode = walletNotice ? (
+		<Text size="sm" c="dimmed">
+			{walletNotice}
+		</Text>
+	) : null;
+
+	let connectionWarningNode: ReactNode = null;
+	if (!connected) {
+		connectionWarningNode = (
+			<Text size="sm" c="red" role="status" aria-live="polite">
+				Conecte a carteira para carregar e sacar os valores da conta.
+			</Text>
+		);
+	}
+
+	const errorNode = error ? (
+		<Text size="sm" c="red" role="status" aria-live="assertive">
+			{error}
+		</Text>
+	) : null;
+
 	return (
-		<Card withBorder shadow="none" padding="md" radius="md" style={cardStyle}>
+		<Card withBorder shadow="none" padding="md" radius="md" className={styles.card}>
 			<Stack gap="sm">
 				<Stack gap={2}>
 					<Text size="xs" tt="uppercase" fw={700} c="dimmed">
@@ -58,23 +76,9 @@ export function AccountActionsCard({
 					Sacar o deposito desativa a conta e reinicia o nivel. Sacar os rendimentos mantem o deposito ativo.
 				</Text>
 
-				{walletNotice ? (
-					<Text size="sm" c="dimmed">
-						{walletNotice}
-					</Text>
-				) : null}
-
-				{connected ? null : (
-					<Text size="sm" c="red" role="status" aria-live="polite">
-						Conecte a carteira para carregar e sacar os valores da conta.
-					</Text>
-				)}
-
-				{error ? (
-					<Text size="sm" c="red" role="status" aria-live="assertive">
-						{error}
-					</Text>
-				) : null}
+				{walletNoticeNode}
+				{connectionWarningNode}
+				{errorNode}
 			</Stack>
 		</Card>
 	);

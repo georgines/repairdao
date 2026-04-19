@@ -1,9 +1,10 @@
-import { Badge, Card, Grid, Group, Stack, Text, Title } from "@mantine/core";
-import { BalanceSummary } from "@/components/balance/BalanceSummary";
-import { AccountActionsCard } from "@/components/account/AccountPanel/AccountActionsCard";
-import { AccountMetricCard } from "@/components/account/AccountPanel/AccountMetricCard";
-import { AccountRatingsCard } from "@/components/account/AccountPanel/AccountRatingsCard";
-import { formatarNumeroCompleto } from "@/services/wallet/formatters";
+import { Card, Stack } from "@mantine/core";
+import { AccountBalanceCard } from "@/components/account/AccountPanel/AccountBalanceCard/AccountBalanceCard";
+import { AccountActionsCard } from "@/components/account/AccountPanel/AccountActionsCard/AccountActionsCard";
+import { AccountRatingsCard } from "@/components/account/AccountPanel/AccountRatingsCard/AccountRatingsCard";
+import { AccountPanelHeader } from "@/components/account/AccountPanel/AccountPanelHeader/AccountPanelHeader";
+import { AccountMetricsGrid } from "@/components/account/AccountPanel/AccountMetricsGrid/AccountMetricsGrid";
+import styles from "./AccountPanelView.module.css";
 
 export type AccountPanelViewProps = {
 	walletAddress: string | null;
@@ -70,77 +71,30 @@ export function AccountPanelView({
 			withBorder
 			shadow="none"
 			padding="lg"
-			style={{
-				background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 100%)",
-				borderColor: "rgba(15, 23, 42, 0.08)",
-			}}
+			className={styles.card}
 		>
 			<Stack gap="lg">
-				<Stack gap={6}>
-					<Text size="xs" tt="uppercase" fw={700} c="dimmed">
-						Conta
-					</Text>
-					<Title order={1}>Meu dinheiro depositado, rendimento, nivel e minhas avaliacoes</Title>
-					<Text size="sm" c="dimmed">
-						Resumo centralizado para acompanhar o saldo travado, os rendimentos acumulados, o nivel atual e o historico de avaliacoes.
-					</Text>
-				</Stack>
+				<AccountPanelHeader badgeLevel={badgeLevel} isActive={isActive} perfilAtivo={perfilAtivo} />
 
-				<Group gap="xs">
-					<Badge variant="light" color={isActive ? "teal" : "gray"}>
-						{isActive ? "Conta ativa" : "Conta inativa"}
-					</Badge>
-					<Badge variant="light" color="blue">
-						Nivel {badgeLevel}
-					</Badge>
-					{perfilAtivo ? (
-						<Badge variant="light" color="orange">
-							Perfil {perfilAtivo}
-						</Badge>
-					) : null}
-					</Group>
+				<AccountBalanceCard
+					rptBalance={rptBalance}
+					tokensPerEth={tokensPerEth}
+					ethUsdPrice={ethUsdPrice}
+					ethBalance={ethBalance}
+					usdBalance={usdBalance}
+					walletNotice={walletNotice}
+				/>
 
-				<Card withBorder shadow="none" radius="md" padding="md" style={{ background: "rgba(255,255,255,0.92)", borderColor: "rgba(15, 23, 42, 0.08)" }}>
-					<BalanceSummary
-						rptBalance={rptBalance}
-						tokensPerEth={tokensPerEth}
-						ethUsdPrice={ethUsdPrice}
-						ethBalance={ethBalance}
-						usdBalance={usdBalance}
-						note={walletNotice}
-					/>
-				</Card>
-
-				<Grid>
-					<Grid.Col span={{ base: 12, sm: 6, lg: 3 }}>
-						<AccountMetricCard
-							label="Deposito"
-							value={`RPT ${formatarNumeroCompleto(deposit, 2)}`}
-							description="Valor atualmente travado no contrato."
-						/>
-					</Grid.Col>
-					<Grid.Col span={{ base: 12, sm: 6, lg: 3 }}>
-						<AccountMetricCard
-							label="Rendimento"
-							value={`RPT ${formatarNumeroCompleto(rewards, 2)}`}
-							description="Valor liberado para saque sem afetar o deposito."
-						/>
-					</Grid.Col>
-					<Grid.Col span={{ base: 12, sm: 6, lg: 3 }}>
-						<AccountMetricCard
-							label="Nivel"
-							value={`${reputationLevelName}`}
-							description={`Pontos acumulados: ${totalPoints}`}
-						/>
-					</Grid.Col>
-					<Grid.Col span={{ base: 12, sm: 6, lg: 3 }}>
-						<AccountMetricCard
-							label="Avaliacoes"
-							value={`${averageRating}/5`}
-							description={`${positiveRatings} positivas, ${negativeRatings} negativas, ${totalRatings} total.`}
-						/>
-					</Grid.Col>
-				</Grid>
+				<AccountMetricsGrid
+					deposit={deposit}
+					rewards={rewards}
+					reputationLevelName={reputationLevelName}
+					totalPoints={totalPoints}
+					averageRating={averageRating}
+					positiveRatings={positiveRatings}
+					negativeRatings={negativeRatings}
+					totalRatings={totalRatings}
+				/>
 
 				<AccountRatingsCard
 					walletAddress={walletAddress}

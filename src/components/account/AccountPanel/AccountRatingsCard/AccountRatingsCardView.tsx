@@ -1,18 +1,14 @@
 import { Card, Group, Progress, RingProgress, Stack, Text } from "@mantine/core";
 import { RatingSummary } from "@/components/ratings/RatingSummary";
+import styles from "./AccountRatingsCardView.module.css";
 
-export type AccountRatingsCardProps = {
+export type AccountRatingsCardViewProps = {
 	walletAddress: string | null;
 	averageRating: string;
 	positiveRatings: string;
 	negativeRatings: string;
 	totalRatings: string;
 	ratingSum: string;
-};
-
-const cardStyle = {
-	background: "rgba(255,255,255,0.92)",
-	borderColor: "rgba(15, 23, 42, 0.08)",
 };
 
 function calcularTaxaPositiva(positiveRatings: string, totalRatings: string) {
@@ -31,14 +27,14 @@ function calcularTaxaPositiva(positiveRatings: string, totalRatings: string) {
 	return Math.round((positivas / total) * 100);
 }
 
-export function AccountRatingsCard({
+export function AccountRatingsCardView({
 	walletAddress,
 	averageRating,
 	positiveRatings,
 	negativeRatings,
 	totalRatings,
 	ratingSum,
-}: AccountRatingsCardProps) {
+}: AccountRatingsCardViewProps) {
 	const positiveRate = calcularTaxaPositiva(positiveRatings, totalRatings);
 	const ringSections =
 		positiveRate > 0
@@ -49,7 +45,7 @@ export function AccountRatingsCard({
 			: [{ value: 100, color: "gray" }];
 
 	return (
-		<Card withBorder shadow="none" padding="md" radius="md" style={cardStyle}>
+		<Card withBorder shadow="none" padding="md" radius="md" className={styles.card}>
 			<Stack gap="md">
 				<Group justify="space-between" align="flex-start" wrap="wrap">
 					<Stack gap={2}>
@@ -65,7 +61,7 @@ export function AccountRatingsCard({
 				</Group>
 
 				<Group align="center" justify="space-between" wrap="wrap">
-					<Stack gap={0} style={{ flex: "1 1 180px" }}>
+					<Stack gap={0} className={styles.summary}>
 						<Text size="xl" fw={800}>
 							{averageRating}/5
 						</Text>

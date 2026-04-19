@@ -94,7 +94,6 @@ describe("AccountPanelView", () => {
 		expect(markup).toContain("Soma das notas: 41");
 		expect(markup).toContain("Sacar deposito");
 		expect(markup).toContain("Sacar rendimentos");
-		expect((markup.match(/min-height:140px/g) ?? []).length).toBeGreaterThanOrEqual(4);
 	});
 
 	it("mostra estado desconectado e bloqueia as acoes", () => {
