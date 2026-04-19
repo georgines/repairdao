@@ -19,6 +19,7 @@ describe("WalletStatus", () => {
 					connected={false}
 					loading={false}
 					address={null}
+					chainLabel="Sepolia"
 					ethBalance="0"
 					usdBalance="0"
 					actionLabel="Conectar carteira"
@@ -29,6 +30,7 @@ describe("WalletStatus", () => {
 
 		expect(markup).toContain("Conectar carteira");
 		expect(markup).toContain("LOCAL");
+		expect(markup).toContain("Carteira Sepolia");
 		expect(markup).toContain("ETH");
 		expect(markup).toContain("USD");
 	});
@@ -38,6 +40,7 @@ describe("WalletStatus", () => {
 			connected: true,
 			loading: true,
 			address: "0x1234567890abcdef1234567890abcdef12345678",
+			chainLabel: "Local",
 			ethBalance: "0.5",
 			usdBalance: "1000",
 			actionLabel: "Desconectar carteira",
@@ -52,6 +55,7 @@ describe("WalletStatus", () => {
 
 		expect(markup).toContain("Desconectar carteira");
 		expect(markup).toContain("LOCAL");
+		expect(markup).toContain("Carteira Local");
 		expect(markup).toContain("0x1234...5678");
 	});
 });

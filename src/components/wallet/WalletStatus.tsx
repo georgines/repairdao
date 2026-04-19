@@ -8,6 +8,7 @@ export type WalletStatusProps = {
 	connected: boolean;
 	loading: boolean;
 	address: string | null;
+	chainLabel: string;
 	ethBalance: string;
 	usdBalance: string;
 	actionLabel: string;
@@ -18,6 +19,7 @@ export function WalletStatus({
 	connected,
 	loading,
 	address,
+	chainLabel,
 	ethBalance,
 	usdBalance,
 	actionLabel,
@@ -39,8 +41,11 @@ export function WalletStatus({
 			})}
 		>
 			<Flex align="center" justify="space-between" wrap="nowrap" gap="xs" style={{ minWidth: 0 }}>
-				<Flex align="center" gap={6} wrap="nowrap" style={{ minWidth: 0, flex: "1 1 auto" }}>
+				<Flex align="center" gap={8} wrap="nowrap" style={{ minWidth: 0, flex: "1 1 auto" }}>
 					<NetworkSelector />
+					<Text size="xs" fw={600} c="dimmed" truncate>
+						Carteira {chainLabel}
+					</Text>
 					<Text size="xs" c="dimmed" truncate>
 						{formatarEnderecoCurto(address)}
 					</Text>
