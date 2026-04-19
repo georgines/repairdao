@@ -1,7 +1,8 @@
 import type { RepairDAOContractClient } from "@/services/blockchain/contractClient";
 import type { DisputaContratoBruta, EvidenciaContratoBruta, OrdemContratoBruta } from "@/services/blockchain/adapters";
 import { criarGatewayContrato, normalizarEndereco, normalizarNumero, normalizarTextoOpcional, obterTextoDeContrato, obterValorDeContrato, garantirEscritaDisponivel, type GatewayContratoBase } from "@/services/blockchain/gateways/shared";
-import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
+import { obterRepairDAOContractos } from "@/services/blockchain/gateways/contracts";
+import type { RedeBlockchain } from "@/services/blockchain/rpcConfig";
 
 export interface RepairEscrowGateway extends GatewayContratoBase {
   criarOrdem(input: { descricao: string; cliente: string }): Promise<unknown>;
@@ -133,8 +134,9 @@ function normalizarDisputaContrato(registro: Record<string, unknown>): DisputaCo
   };
 }
 
-export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient): RepairEscrowGateway {
-  const base = criarGatewayContrato(contractClient, REPAIRDAO_CONTRACTOS.escrow);
+export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient, rede?: RedeBlockchain): RepairEscrowGateway {
+  const contrato = obterRepairDAOContractos(rede).escrow;
+  const base = criarGatewayContrato(contractClient, contrato);
 
   return {
     ...base,
@@ -142,8 +144,8 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
       garantirEscritaDisponivel(contractClient);
 
       return contractClient.writeContract({
-        address: REPAIRDAO_CONTRACTOS.escrow.address,
-        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        address: contrato.address,
+        abi: contrato.abi,
         functionName: "createOrder",
         args: [input.descricao],
       });
@@ -153,8 +155,8 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
       garantirEscritaDisponivel(contractClient);
 
       return contractClient.writeContract({
-        address: REPAIRDAO_CONTRACTOS.escrow.address,
-        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        address: contrato.address,
+        abi: contrato.abi,
         functionName: "submitBudget",
         args: [input.ordemId, input.valor],
       });
@@ -164,8 +166,8 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
       garantirEscritaDisponivel(contractClient);
 
       return contractClient.writeContract({
-        address: REPAIRDAO_CONTRACTOS.escrow.address,
-        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        address: contrato.address,
+        abi: contrato.abi,
         functionName: "completeOrder",
         args: [input.ordemId],
       });
@@ -175,8 +177,8 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
       garantirEscritaDisponivel(contractClient);
 
       return contractClient.writeContract({
-        address: REPAIRDAO_CONTRACTOS.escrow.address,
-        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        address: contrato.address,
+        abi: contrato.abi,
         functionName: "confirmCompletion",
         args: [input.ordemId],
       });
@@ -186,8 +188,8 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
       garantirEscritaDisponivel(contractClient);
 
       return contractClient.writeContract({
-        address: REPAIRDAO_CONTRACTOS.escrow.address,
-        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        address: contrato.address,
+        abi: contrato.abi,
         functionName: "rateUser",
         args: [input.ordemId, input.nota],
       });
@@ -197,8 +199,8 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
       garantirEscritaDisponivel(contractClient);
 
       return contractClient.writeContract({
-        address: REPAIRDAO_CONTRACTOS.escrow.address,
-        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        address: contrato.address,
+        abi: contrato.abi,
         functionName: "openDispute",
         args: [input.ordemId, input.motivo],
       });
@@ -208,8 +210,8 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
       garantirEscritaDisponivel(contractClient);
 
       return contractClient.writeContract({
-        address: REPAIRDAO_CONTRACTOS.escrow.address,
-        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        address: contrato.address,
+        abi: contrato.abi,
         functionName: "submitEvidence",
         args: [input.ordemId, input.conteudo],
       });
@@ -219,8 +221,8 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
       garantirEscritaDisponivel(contractClient);
 
       return contractClient.writeContract({
-        address: REPAIRDAO_CONTRACTOS.escrow.address,
-        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        address: contrato.address,
+        abi: contrato.abi,
         functionName: "voteOnDispute",
         args: [input.ordemId, input.apoiandoAbertura],
       });
@@ -230,8 +232,8 @@ export function criarRepairEscrowGateway(contractClient: RepairDAOContractClient
       garantirEscritaDisponivel(contractClient);
 
       return contractClient.writeContract({
-        address: REPAIRDAO_CONTRACTOS.escrow.address,
-        abi: REPAIRDAO_CONTRACTOS.escrow.abi,
+        address: contrato.address,
+        abi: contrato.abi,
         functionName: "resolveDispute",
         args: [input.ordemId],
       });

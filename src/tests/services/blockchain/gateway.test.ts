@@ -1,8 +1,22 @@
-import { describe, expect, it, vi } from "vitest";
-import { contratos } from "@/contracts";
+// @vitest-environment jsdom
+
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { contratos, obterContratos } from "@/contracts";
 import { criarGatewaysRepairDAO } from "@/services/blockchain/gateway";
+import { CHAVE_REDE_RPC, definirRedeSelecionadaNoCliente } from "@/services/blockchain/rpcConfig";
 
 describe("gateways repairdao", () => {
+	beforeEach(() => {
+		window.localStorage.clear();
+		document.cookie = `${CHAVE_REDE_RPC}=; path=/; max-age=0`;
+		vi.stubEnv("NEXT_PUBLIC_NETWORK", "local");
+		definirRedeSelecionadaNoCliente("local");
+	});
+
+	afterEach(() => {
+		vi.unstubAllEnvs();
+	});
+
 	it("expõe um gateway para cada contrato", async () => {
 		const contractClient = {
 			readContract: vi.fn().mockResolvedValue("ok"),
@@ -10,6 +24,7 @@ describe("gateways repairdao", () => {
 		};
 
 		const gateways = criarGatewaysRepairDAO(contractClient);
+		const contratosAtuais = obterContratos();
 
 		await expect(gateways.token.writeContract({ functionName: "buy" })).resolves.toBe("tx");
 		await expect(gateways.badge.writeContract({ functionName: "mintBadge" })).resolves.toBe("tx");
@@ -19,35 +34,31 @@ describe("gateways repairdao", () => {
 		await expect(gateways.governance.writeContract({ functionName: "createProposal" })).resolves.toBe("tx");
 
 		expect(contractClient.writeContract).toHaveBeenCalledWith(
-			expect.objectContaining({ address: contratos.RepairToken, functionName: "buy" }),
+			expect.objectContaining({ address: contratosAtuais.RepairToken, functionName: "buy" }),
 		);
 		expect(contractClient.writeContract).toHaveBeenCalledWith(
-			expect.objectContaining({ address: contratos.RepairBadge, functionName: "mintBadge" }),
+			expect.objectContaining({ address: contratosAtuais.RepairBadge, functionName: "mintBadge" }),
 		);
 		expect(contractClient.readContract).toHaveBeenCalledWith(
-			expect.objectContaining({ address: contratos.RepairDeposit, functionName: "getEthUsdPrice" }),
+			expect.objectContaining({ address: contratosAtuais.RepairDeposit, functionName: "getEthUsdPrice" }),
 		);
 		expect(contractClient.writeContract).toHaveBeenCalledWith(
-			expect.objectContaining({ address: contratos.RepairReputation, functionName: "registerUser" }),
+			expect.objectContaining({ address: contratosAtuais.RepairReputation, functionName: "registerUser" }),
 		);
 		expect(contractClient.writeContract).toHaveBeenCalledWith(
-			expect.objectContaining({ address: contratos.RepairEscrow, functionName: "createOrder" }),
+			expect.objectContaining({ address: contratosAtuais.RepairEscrow, functionName: "createOrder" }),
 		);
 		expect(contractClient.writeContract).toHaveBeenCalledWith(
-			expect.objectContaining({ address: contratos.RepairGovernance, functionName: "createProposal" }),
+			expect.objectContaining({ address: contratosAtuais.RepairGovernance, functionName: "createProposal" }),
 		);
 	});
 
-	it("recarrega os contratos quando a rede muda", async () => {
-		const previousNetwork = process.env.NEXT_PUBLIC_NETWORK;
-		process.env.NEXT_PUBLIC_NETWORK = "sepolia";
-		vi.resetModules();
+	it("muda os enderecos quando a rede selecionada muda", () => {
+		const contratoInicial = contratos.RepairToken;
 
-		const { contratos: contratosSepolia } = await import("@/contracts");
+		definirRedeSelecionadaNoCliente("sepolia");
 
-		expect(contratosSepolia).toBeDefined();
-		expect(contratosSepolia).not.toBe(contratos);
-
-		process.env.NEXT_PUBLIC_NETWORK = previousNetwork;
+		expect(contratos.RepairToken).not.toBe(contratoInicial);
+		expect(contratos.RepairToken).toBe(obterContratos().RepairToken);
 	});
 });

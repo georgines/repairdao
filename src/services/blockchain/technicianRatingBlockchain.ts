@@ -2,6 +2,7 @@
 
 import { criarRepairDAOContractClient } from "@/services/blockchain/contractClient";
 import { criarRepairReputationGateway } from "@/services/blockchain/gateways/reputationGateway";
+import { obterConfiguracaoRpc, obterRedeSelecionadaNoCliente } from "@/services/blockchain/rpcConfig";
 
 type TechnicianRatingSummary = {
 	averageRating: number;
@@ -15,10 +16,6 @@ type CachedSummaryEntry = {
 
 const RATING_SUMMARY_CACHE = new Map<string, CachedSummaryEntry>();
 const RATING_SUMMARY_CACHE_TTL_MS = 10_000;
-
-function obterRpcUrlPublica() {
-	return process.env.NEXT_PUBLIC_RPC_URL?.trim() ?? "";
-}
 
 function normalizarEndereco(address: string) {
 	return address.trim().toLowerCase();
@@ -72,13 +69,14 @@ export async function carregarResumoAvaliacaoDoTecnicoNoContrato(address: string
 	}
 
 	const promise = (async () => {
-		const rpcUrl = obterRpcUrlPublica();
+		const configuracaoRpc = obterConfiguracaoRpc(obterRedeSelecionadaNoCliente());
+		const rpcUrl = configuracaoRpc.rpcUrl;
 		if (!rpcUrl) {
 			return null;
 		}
 
 		const contractClient = criarRepairDAOContractClient({ rpcUrl });
-		const gateway = criarRepairReputationGateway(contractClient);
+		const gateway = criarRepairReputationGateway(contractClient, configuracaoRpc.rede);
 
 		try {
 			const reputation = await gateway.readContract<unknown>({

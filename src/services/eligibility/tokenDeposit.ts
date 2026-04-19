@@ -2,7 +2,8 @@ import { BrowserProvider } from "ethers";
 import { RepairDAODominioError } from "@/erros/errors";
 import { criarRepairDAOBrowserContractClient } from "@/services/blockchain/browserContractClient";
 import { criarGatewaysRepairDAO } from "@/services/blockchain/gateway";
-import { REPAIRDAO_CONTRACTOS } from "@/services/blockchain/gateways/contracts";
+import { obterRepairDAOContractos } from "@/services/blockchain/gateways/contracts";
+import { obterRedeSelecionadaNoCliente } from "@/services/blockchain/rpcConfig";
 import type { EthereumProvider } from "@/services/wallet/provider";
 import { aguardarTransacao } from "@/services/wallet/transaction";
 
@@ -16,11 +17,12 @@ export async function depositarTokens(
 	}
 
 	const provider = new BrowserProvider(ethereum as never);
-	const gateways = criarGatewaysRepairDAO(criarRepairDAOBrowserContractClient(provider));
+	const rede = obterRedeSelecionadaNoCliente();
+	const gateways = criarGatewaysRepairDAO(criarRepairDAOBrowserContractClient(provider), rede);
 
 	await aguardarTransacao(await gateways.token.writeContract({
 		functionName: "approve",
-		args: [REPAIRDAO_CONTRACTOS.deposit.address, quantidade],
+		args: [obterRepairDAOContractos(rede).deposit.address, quantidade],
 	}));
 
 	return aguardarTransacao(await gateways.deposit.writeContract({
@@ -31,7 +33,7 @@ export async function depositarTokens(
 
 export async function sacarDeposito(ethereum: EthereumProvider): Promise<unknown> {
 	const provider = new BrowserProvider(ethereum as never);
-	const gateways = criarGatewaysRepairDAO(criarRepairDAOBrowserContractClient(provider));
+	const gateways = criarGatewaysRepairDAO(criarRepairDAOBrowserContractClient(provider), obterRedeSelecionadaNoCliente());
 	return aguardarTransacao(await gateways.deposit.writeContract({
 		functionName: "withdrawDeposit",
 	}));

@@ -1,12 +1,13 @@
 import { BrowserProvider } from "ethers";
 import { criarRepairDAOBrowserContractClient } from "@/services/blockchain/browserContractClient";
 import { criarRepairDepositGateway } from "@/services/blockchain/gateways/depositGateway";
+import { obterRedeSelecionadaNoCliente } from "@/services/blockchain/rpcConfig";
 import type { EthereumProvider } from "@/services/wallet/provider";
 import { aguardarTransacao } from "@/services/wallet/transaction";
 
 function obterContratoDeDeposito(ethereum: EthereumProvider) {
 	const provider = new BrowserProvider(ethereum as never);
-	return criarRepairDepositGateway(criarRepairDAOBrowserContractClient(provider));
+	return criarRepairDepositGateway(criarRepairDAOBrowserContractClient(provider), obterRedeSelecionadaNoCliente());
 }
 
 export async function sacarDeposito(ethereum: EthereumProvider): Promise<unknown> {

@@ -5,6 +5,7 @@ import { carregarCarteira, obterRedeAtual } from "@/services/wallet/walletReader
 import { definirReconexaoAutomatica, reconexaoAutomaticaHabilitada } from "@/services/wallet/preferences";
 import { ESTADO_INICIAL_CARTEIRA } from "@/services/wallet/walletSnapshot";
 import { obterEthereumProvider } from "@/services/wallet/provider";
+import { EVENTO_REDE_RPC_ALTERADA } from "@/services/blockchain/rpcConfig";
 import {
 	assinarEstadoCarteira,
 	atualizarEstadoCarteira,
@@ -18,6 +19,34 @@ const selecionarEstado = () => obterEstadoCarteira();
 export function useWalletStatus() {
 	const state = useSyncExternalStore<WalletStoreState>(assinarEstadoCarteira, selecionarEstado, selecionarEstado);
 	const ethereum = useMemo(() => obterEthereumProvider(), []);
+
+	async function conectar() {
+		if (!ethereum) {
+			return;
+		}
+
+		const estadoAnterior = obterEstadoCarteira();
+		atualizarEstadoCarteira({ ...estadoAnterior, loading: true });
+
+		try {
+			const dados = await carregarCarteira(ethereum, true);
+			definirReconexaoAutomatica(true);
+			atualizarEstadoCarteira({
+				...dados,
+				loading: false,
+			});
+		} catch {
+			atualizarEstadoCarteira({
+				...estadoAnterior,
+				loading: false,
+			});
+		}
+	}
+
+	function desconectar() {
+		definirReconexaoAutomatica(false);
+		redefinirEstadoCarteira();
+	}
 
 	useEffect(() => {
 		if (!ethereum) {
@@ -70,41 +99,15 @@ export function useWalletStatus() {
 
 		ethereum.on?.("accountsChanged", handleAccountsChanged);
 		ethereum.on?.("chainChanged", handleChainChanged);
+		window.addEventListener(EVENTO_REDE_RPC_ALTERADA, desconectar);
 
 		return () => {
 			ativo = false;
 			ethereum.removeListener?.("accountsChanged", handleAccountsChanged);
 			ethereum.removeListener?.("chainChanged", handleChainChanged);
+			window.removeEventListener(EVENTO_REDE_RPC_ALTERADA, desconectar);
 		};
 	}, [ethereum]);
-
-	async function conectar() {
-		if (!ethereum) {
-			return;
-		}
-
-		const estadoAnterior = obterEstadoCarteira();
-		atualizarEstadoCarteira({ ...estadoAnterior, loading: true });
-
-		try {
-			const dados = await carregarCarteira(ethereum, true);
-			definirReconexaoAutomatica(true);
-			atualizarEstadoCarteira({
-				...dados,
-				loading: false,
-			});
-		} catch {
-			atualizarEstadoCarteira({
-				...estadoAnterior,
-				loading: false,
-			});
-		}
-	}
-
-	function desconectar() {
-		definirReconexaoAutomatica(false);
-		redefinirEstadoCarteira();
-	}
 
 	return {
 		state,

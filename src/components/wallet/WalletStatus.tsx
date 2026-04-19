@@ -1,13 +1,13 @@
 "use client";
 
-import { Badge, Button, Flex, Paper, Text } from "@mantine/core";
+import { Button, Flex, Paper, Text } from "@mantine/core";
 import { formatarEnderecoCurto, formatarNumero, formatarUSD } from "@/services/wallet/formatters";
+import { NetworkSelector } from "@/components/wallet/NetworkSelector";
 
 export type WalletStatusProps = {
 	connected: boolean;
 	loading: boolean;
 	address: string | null;
-	chainLabel: string;
 	ethBalance: string;
 	usdBalance: string;
 	actionLabel: string;
@@ -18,7 +18,6 @@ export function WalletStatus({
 	connected,
 	loading,
 	address,
-	chainLabel,
 	ethBalance,
 	usdBalance,
 	actionLabel,
@@ -39,17 +38,15 @@ export function WalletStatus({
 				paddingBlock: theme.spacing.xs,
 			})}
 		>
-			<Flex align="center" justify="space-between" wrap="nowrap" gap="xs" sx={{ minWidth: 0 }}>
-				<Flex align="center" gap={6} wrap="nowrap" sx={{ minWidth: 0, flex: "1 1 auto" }}>
-					<Badge color={connected ? "teal" : "gray"} variant="light" radius="sm" size="sm">
-						{chainLabel}
-					</Badge>
+			<Flex align="center" justify="space-between" wrap="nowrap" gap="xs" style={{ minWidth: 0 }}>
+				<Flex align="center" gap={6} wrap="nowrap" style={{ minWidth: 0, flex: "1 1 auto" }}>
+					<NetworkSelector />
 					<Text size="xs" c="dimmed" truncate>
 						{formatarEnderecoCurto(address)}
 					</Text>
 				</Flex>
 
-				<Flex align="center" gap={10} wrap="nowrap" sx={{ flex: "0 0 auto", whiteSpace: "nowrap" }}>
+				<Flex align="center" gap={10} wrap="nowrap" style={{ flex: "0 0 auto", whiteSpace: "nowrap" }}>
 					<Text size="xs" fw={700}>
 						ETH {formatarNumero(ethBalance, 4)}
 					</Text>
@@ -63,7 +60,7 @@ export function WalletStatus({
 					variant={connected ? "light" : "filled"}
 					onClick={onAction}
 					loading={loading}
-					sx={{ flex: "0 0 auto", whiteSpace: "nowrap" }}
+					style={{ flex: "0 0 auto", whiteSpace: "nowrap" }}
 				>
 					{actionLabel}
 				</Button>

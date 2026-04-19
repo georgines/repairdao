@@ -1,6 +1,7 @@
 import { formatUnits } from "ethers";
 import { criarGatewaysRepairDAO } from "@/services/blockchain/gateway";
 import { criarRepairDAOContractClient } from "@/services/blockchain/contractClient";
+import { obterConfiguracaoRpcNoServidor } from "@/services/blockchain/rpcConfig.server";
 
 export type EligibilityMetrics = {
 	rptBalanceRaw: bigint;
@@ -14,13 +15,10 @@ export type EligibilityMetrics = {
 	minDeposit: string;
 };
 
-function obterRpcUrl() {
-	return process.env.RPC_URL?.trim() || process.env.NEXT_PUBLIC_RPC_URL?.trim() || "http://127.0.0.1:8545";
-}
-
 export async function carregarMetricasElegibilidadeNoServidor(address?: string | null): Promise<EligibilityMetrics> {
-	const contractClient = criarRepairDAOContractClient({ rpcUrl: obterRpcUrl() });
-	const gateways = criarGatewaysRepairDAO(contractClient);
+	const configuracaoRpc = await obterConfiguracaoRpcNoServidor();
+	const contractClient = criarRepairDAOContractClient({ rpcUrl: configuracaoRpc.rpcUrl });
+	const gateways = criarGatewaysRepairDAO(contractClient, configuracaoRpc.rede);
 
 	const rptBalanceRaw = address ? await gateways.token.readContract<bigint>({ functionName: "balanceOf", args: [address] }).catch(() => 0n) : 0n;
 	const tokensPerEthRaw = await gateways.token.readContract<bigint>({ functionName: "tokensPerEth" }).catch(() => 0n);

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const ethersMocks = vi.hoisted(() => ({
 	jsonRpcProviderInstances: [] as Array<{ rpcUrl: string }>,
@@ -50,8 +50,13 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 			}
 			return "0";
 		});
+		vi.stubEnv("NEXT_PUBLIC_NETWORK", "local");
 		delete process.env.RPC_URL;
 		delete process.env.NEXT_PUBLIC_RPC_URL;
+	});
+
+	afterEach(() => {
+		vi.unstubAllEnvs();
 	});
 
 	it("lê saldo, atividade e nível quando há endereço", async () => {

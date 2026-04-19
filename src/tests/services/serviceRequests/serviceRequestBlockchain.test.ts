@@ -28,10 +28,14 @@ vi.mock("@/services/blockchain/gateways/tokenGateway", () => ({
 }));
 
 vi.mock("@/services/blockchain/gateways/contracts", () => ({
-	REPAIRDAO_CONTRACTOS: {
-		escrow: { address: "0xescrow" },
-		token: { address: "0xtoken" },
-	},
+	obterRepairDAOContractos: vi.fn(() => ({
+		escrow: { address: "0xescrow", abi: [] },
+		token: { address: "0xtoken", abi: [] },
+	})),
+}));
+
+vi.mock("@/services/blockchain/rpcConfig", () => ({
+	obterRedeSelecionadaNoCliente: vi.fn(() => "local"),
 }));
 
 vi.mock("@/services/wallet/transaction", () => ({

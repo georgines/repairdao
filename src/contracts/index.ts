@@ -1,8 +1,25 @@
-import hardhat from './deploy/local.json';
-import sepolia from './deploy/sepolia.json';
+import {
+  obterContratosDaRede,
+  obterRedeSelecionadaNoCliente,
+  obterRedePadrao,
+  type ContratosRepairDAO,
+  type RedeBlockchain,
+} from "@/services/blockchain/rpcConfig";
 
-const network = process.env.NEXT_PUBLIC_NETWORK;
+function obterRedeAtivaParaContratos(): RedeBlockchain {
+  if (typeof window === "undefined") {
+    return obterRedePadrao();
+  }
 
-const config = network === 'sepolia' ? sepolia : hardhat;
+  return obterRedeSelecionadaNoCliente();
+}
 
-export const contratos = config.contracts;
+export function obterContratos() {
+  return obterContratosDaRede(obterRedeAtivaParaContratos());
+}
+
+export const contratos = new Proxy({} as ContratosRepairDAO, {
+  get(_target, propriedade: string) {
+    return obterContratos()[propriedade as keyof ContratosRepairDAO];
+  },
+}) as ContratosRepairDAO;

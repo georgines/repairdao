@@ -1,4 +1,4 @@
-import { contratos } from "@/contracts";
+import { obterContratosDaRede, type RedeBlockchain } from "@/services/blockchain/rpcConfig";
 import type { InterfaceAbi } from "ethers";
 
 export const REPAIR_TOKEN_ABI = [
@@ -219,11 +219,15 @@ export const REPAIR_GOVERNANCE_ABI = [
   { type: "function", name: "setQuorum", stateMutability: "nonpayable", inputs: [{ name: "newQuorum", type: "uint256" }], outputs: [] },
 ] as const satisfies InterfaceAbi;
 
-export const REPAIRDAO_CONTRACTOS = {
-  token: { address: contratos.RepairToken, abi: REPAIR_TOKEN_ABI },
-  badge: { address: contratos.RepairBadge, abi: REPAIR_BADGE_ABI },
-  deposit: { address: contratos.RepairDeposit, abi: REPAIR_DEPOSIT_ABI },
-  reputation: { address: contratos.RepairReputation, abi: REPAIR_REPUTATION_ABI },
-  escrow: { address: contratos.RepairEscrow, abi: REPAIR_ESCROW_ABI },
-  governance: { address: contratos.RepairGovernance, abi: REPAIR_GOVERNANCE_ABI },
-} as const;
+export function obterRepairDAOContractos(rede?: RedeBlockchain) {
+  const contratos = obterContratosDaRede(rede);
+
+  return {
+    token: { address: contratos.RepairToken, abi: REPAIR_TOKEN_ABI },
+    badge: { address: contratos.RepairBadge, abi: REPAIR_BADGE_ABI },
+    deposit: { address: contratos.RepairDeposit, abi: REPAIR_DEPOSIT_ABI },
+    reputation: { address: contratos.RepairReputation, abi: REPAIR_REPUTATION_ABI },
+    escrow: { address: contratos.RepairEscrow, abi: REPAIR_ESCROW_ABI },
+    governance: { address: contratos.RepairGovernance, abi: REPAIR_GOVERNANCE_ABI },
+  } as const;
+}

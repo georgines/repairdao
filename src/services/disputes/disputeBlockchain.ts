@@ -3,13 +3,14 @@ import { criarRepairDAOBrowserContractClient } from "@/services/blockchain/brows
 import { criarRepairEscrowGateway } from "@/services/blockchain/gateways/escrowGateway";
 import { mapearDisputaDoContrato, mapearEvidenciaDoContrato } from "@/services/blockchain/adapters";
 import { garantirPodeEnviarEvidencia, garantirPodeVotarEmDisputa } from "@/services/papeis";
+import { obterRedeSelecionadaNoCliente } from "@/services/blockchain/rpcConfig";
 import type { ContextoPapelRepairDAO } from "@/types";
 import type { EthereumProvider } from "@/services/wallet/provider";
 import { aguardarTransacao } from "@/services/wallet/transaction";
 
 function obterGateway(ethereum: EthereumProvider) {
 	const provider = new BrowserProvider(ethereum as never);
-	return criarRepairEscrowGateway(criarRepairDAOBrowserContractClient(provider));
+	return criarRepairEscrowGateway(criarRepairDAOBrowserContractClient(provider), obterRedeSelecionadaNoCliente());
 }
 
 export async function carregarDisputaNoContrato(ethereum: EthereumProvider, ordemId: bigint | number | string) {

@@ -1,6 +1,7 @@
 import { BrowserProvider, formatEther } from "ethers";
 import { criarRepairDAOBrowserContractClient } from "@/services/blockchain/browserContractClient";
 import { criarRepairDepositGateway } from "@/services/blockchain/gateways/depositGateway";
+import { obterRedeSelecionadaNoCliente } from "@/services/blockchain/rpcConfig";
 import { formatarBlockchain, normalizarPrecoEthUsd } from "@/services/wallet/formatters";
 import { ESTADO_INICIAL_CARTEIRA, type WalletSnapshot } from "@/services/wallet/walletSnapshot";
 import type { EthereumProvider } from "@/services/wallet/provider";
@@ -26,7 +27,7 @@ export async function carregarCarteira(ethereum: EthereumProvider, solicitarPerm
 		};
 	}
 
-	const depositContract = criarRepairDepositGateway(criarRepairDAOBrowserContractClient(provider));
+	const depositContract = criarRepairDepositGateway(criarRepairDAOBrowserContractClient(provider), obterRedeSelecionadaNoCliente());
 
 	const [balanceWei, ethUsdPriceRaw] = await Promise.all([
 		provider.getBalance(address),

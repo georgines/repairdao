@@ -63,7 +63,6 @@ export default function AppShell({ children }: AppShellProps) {
                                 connected={state.connected}
                                 loading={state.loading}
                                 address={state.address}
-                                chainLabel={state.chainLabel}
                                 ethBalance={state.ethBalance}
                                 usdBalance={state.usdBalance}
                                 actionLabel={actionLabel}

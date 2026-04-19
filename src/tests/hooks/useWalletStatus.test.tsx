@@ -38,6 +38,7 @@ vi.mock("@/services/wallet/walletSnapshot", () => ({
 }));
 
 import { useWalletStatus } from "@/hooks/useWalletStatus";
+import { EVENTO_REDE_RPC_ALTERADA } from "@/services/blockchain/rpcConfig";
 import { redefinirEstadoCarteira } from "@/services/wallet/walletStatusStore";
 
 async function flush() {
@@ -307,6 +308,38 @@ describe("useWalletStatus", () => {
 
 		await act(async () => {
 			getLatest()?.actionHandler();
+			await flush();
+		});
+
+		expect(serviceMocks.definirReconexaoAutomatica).toHaveBeenCalledWith(false);
+		expect(getLatest()?.state.connected).toBe(false);
+		expect(getLatest()?.state.address).toBeNull();
+	});
+
+	it("desconecta a carteira quando a rede selecionada muda", async () => {
+		const ethereum = {
+			on: vi.fn(),
+			removeListener: vi.fn(),
+		};
+
+		serviceMocks.obterEthereumProvider.mockReturnValue(ethereum);
+		serviceMocks.reconexaoAutomaticaHabilitada.mockReturnValue(true);
+		serviceMocks.carregarCarteira.mockResolvedValue({
+			connected: true,
+			address: "0x123",
+			chainLabel: "Local",
+			ethBalance: "8",
+			usdBalance: "9",
+			ethUsdPrice: "1.125",
+		});
+
+		await act(async () => {
+			root.render(<Probe />);
+			await flush();
+		});
+
+		await act(async () => {
+			window.dispatchEvent(new CustomEvent(EVENTO_REDE_RPC_ALTERADA, { detail: { rede: "sepolia" } }));
 			await flush();
 		});
 

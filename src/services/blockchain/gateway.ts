@@ -12,14 +12,15 @@ import { criarRepairReputationGateway } from "@/services/blockchain/gateways/rep
 import { criarRepairEscrowGateway } from "@/services/blockchain/gateways/escrowGateway";
 import { criarRepairGovernanceGateway } from "@/services/blockchain/gateways/governanceGateway";
 import type { RepairDAOContractClient } from "@/services/blockchain/contractClient";
+import type { RedeBlockchain } from "@/services/blockchain/rpcConfig";
 
-export function criarGatewaysRepairDAO(contractClient: RepairDAOContractClient) {
+export function criarGatewaysRepairDAO(contractClient: RepairDAOContractClient, rede?: RedeBlockchain) {
   return {
-    token: criarRepairTokenGateway(contractClient),
-    badge: criarRepairBadgeGateway(contractClient),
-    deposit: criarRepairDepositGateway(contractClient),
-    reputation: criarRepairReputationGateway(contractClient),
-    escrow: criarRepairEscrowGateway(contractClient),
-    governance: criarRepairGovernanceGateway(contractClient),
+    token: criarRepairTokenGateway(contractClient, rede),
+    badge: criarRepairBadgeGateway(contractClient, rede),
+    deposit: criarRepairDepositGateway(contractClient, rede),
+    reputation: criarRepairReputationGateway(contractClient, rede),
+    escrow: criarRepairEscrowGateway(contractClient, rede),
+    governance: criarRepairGovernanceGateway(contractClient, rede),
   };
 }

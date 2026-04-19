@@ -1,6 +1,7 @@
 import { formatUnits } from "ethers";
 import { criarGatewaysRepairDAO } from "@/services/blockchain/gateway";
 import { criarRepairDAOContractClient } from "@/services/blockchain/contractClient";
+import { obterConfiguracaoRpcNoServidor } from "@/services/blockchain/rpcConfig.server";
 import { formatarNumeroCompleto } from "@/services/wallet/formatters";
 import { nomeNivelReputacao } from "@/services/reputacao";
 
@@ -28,10 +29,6 @@ export type AccountMetrics = {
 	averageRating: string;
 };
 
-function obterRpcUrl() {
-	return process.env.RPC_URL?.trim() || process.env.NEXT_PUBLIC_RPC_URL?.trim() || "http://127.0.0.1:8545";
-}
-
 function lerValorNumerico(valor: unknown, chave: string, indice: number): bigint {
 	const item = valor && typeof valor === "object" ? (valor as Record<string, unknown>) : {};
 	const candidato = item[chave] ?? item[String(indice)];
@@ -57,8 +54,9 @@ function calcularMediaAvaliacao(ratingSumRaw: bigint, totalRatingsRaw: bigint) {
 }
 
 export async function carregarMetricasDaContaNoServidor(address?: string | null): Promise<AccountMetrics> {
-	const contractClient = criarRepairDAOContractClient({ rpcUrl: obterRpcUrl() });
-	const gateways = criarGatewaysRepairDAO(contractClient);
+	const configuracaoRpc = await obterConfiguracaoRpcNoServidor();
+	const contractClient = criarRepairDAOContractClient({ rpcUrl: configuracaoRpc.rpcUrl });
+	const gateways = criarGatewaysRepairDAO(contractClient, configuracaoRpc.rede);
 
 	const deposito = address ? await gateways.deposit.readContract<unknown>({ functionName: "getDeposit", args: [address] }).catch(() => null) : null;
 	const rewardsRaw = address ? await gateways.deposit.readContract<bigint>({ functionName: "getRewards", args: [address] }).catch(() => 0n) : 0n;

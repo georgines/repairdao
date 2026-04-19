@@ -87,7 +87,7 @@ describe("AccountPanelView", () => {
 		expect(markup).toContain("Perfil tecnico");
 		expect(markup).toContain("RPT 150,00");
 		expect(markup).toContain("RPT 5,00");
-		expect(markup).toContain("Nivel Platinum");
+		expect(markup).toContain("Platinum");
 		expect(markup).toContain("4,6/5");
 		expect(markup).toContain("Taxa positiva");
 		expect(markup).toContain("89%");
