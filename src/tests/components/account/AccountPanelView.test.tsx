@@ -51,6 +51,11 @@ describe("AccountPanelView", () => {
 			<AccountPanelView
 				walletAddress="0x1234567890abcdef1234567890abcdef12345678"
 				walletNotice={null}
+				ethBalance="0.5"
+				usdBalance="1000"
+				ethUsdPrice="2000"
+				tokensPerEth="250"
+				rptBalance="155"
 				deposit="150"
 				rewards="5"
 				badgeLevel="Ouro"
@@ -75,6 +80,8 @@ describe("AccountPanelView", () => {
 		);
 
 		expect(markup).toContain("Meu dinheiro depositado, rendimento, nivel e minhas avaliacoes");
+		expect(markup).toContain("Saldo atual");
+		expect(markup).toContain("RPT 155,00");
 		expect(markup).toContain("Conta ativa");
 		expect(markup).toContain("Nivel Ouro");
 		expect(markup).toContain("Perfil tecnico");
@@ -95,6 +102,11 @@ describe("AccountPanelView", () => {
 			<AccountPanelView
 				walletAddress={null}
 				walletNotice="Carteira desconectada"
+				ethBalance="0"
+				usdBalance="0"
+				ethUsdPrice="0"
+				tokensPerEth="0"
+				rptBalance="0"
 				deposit="0"
 				rewards="0"
 				badgeLevel="Sem carteira"
@@ -130,6 +142,11 @@ describe("AccountPanelView", () => {
 			<AccountPanelView
 				walletAddress={null}
 				walletNotice={null}
+				ethBalance="0"
+				usdBalance="0"
+				ethUsdPrice="0"
+				tokensPerEth="0"
+				rptBalance="0"
 				deposit="0"
 				rewards="0"
 				badgeLevel="Sem carteira"
@@ -168,6 +185,11 @@ describe("AccountPanelView", () => {
 					<AccountPanelView
 						walletAddress="0x1234567890abcdef1234567890abcdef12345678"
 						walletNotice={null}
+						ethBalance="0.5"
+						usdBalance="1000"
+						ethUsdPrice="2000"
+						tokensPerEth="250"
+						rptBalance="155"
 						deposit="150"
 						rewards="5"
 						badgeLevel="Ouro"

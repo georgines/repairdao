@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const serviceMocks = vi.hoisted(() => ({
 	carregarMetricasDaConta: vi.fn(),
+	carregarMetricasElegibilidade: vi.fn(),
 	sacarDeposito: vi.fn(),
 	sacarRendimento: vi.fn(),
 	obterEthereumProvider: vi.fn(),
@@ -15,6 +16,10 @@ const serviceMocks = vi.hoisted(() => ({
 
 vi.mock("@/services/account/accountMetrics", () => ({
 	carregarMetricasDaConta: serviceMocks.carregarMetricasDaConta,
+}));
+
+vi.mock("@/services/eligibility/eligibilityMetrics", () => ({
+	carregarMetricasElegibilidade: serviceMocks.carregarMetricasElegibilidade,
 }));
 
 vi.mock("@/services/account/accountActions", () => ({
@@ -95,6 +100,17 @@ describe("useAccountPanel", () => {
 			ratingSum: "41",
 			averageRating: "4,6",
 		});
+		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
+			rptBalanceRaw: 155000000000000000000n,
+			rptBalance: "155",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
+			badgeLevel: "Ouro",
+			isActive: true,
+			perfilAtivo: "tecnico",
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
+		});
 	});
 
 	afterEach(async () => {
@@ -113,6 +129,11 @@ describe("useAccountPanel", () => {
 		});
 
 		expect(getLatest()?.connected).toBe(true);
+		expect(getLatest()?.ethBalance).toBe("0.5");
+		expect(getLatest()?.usdBalance).toBe("1000");
+		expect(getLatest()?.ethUsdPrice).toBe("2000");
+		expect(getLatest()?.tokensPerEth).toBe("250");
+		expect(getLatest()?.rptBalance).toBe("155");
 		expect(getLatest()?.deposit).toBe("150");
 		expect(getLatest()?.rewards).toBe("5");
 		expect(getLatest()?.badgeLevel).toBe("Ouro");

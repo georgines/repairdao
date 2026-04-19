@@ -10,6 +10,11 @@ export function AccountPanel() {
 		<AccountPanelView
 			walletAddress={panel.walletAddress}
 			walletNotice={panel.walletNotice}
+			ethBalance={panel.ethBalance}
+			usdBalance={panel.usdBalance}
+			ethUsdPrice={panel.ethUsdPrice}
+			tokensPerEth={panel.tokensPerEth}
+			rptBalance={panel.rptBalance}
 			deposit={panel.deposit}
 			rewards={panel.rewards}
 			badgeLevel={panel.badgeLevel}

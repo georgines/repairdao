@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useWalletStatus } from "@/hooks/useWalletStatus";
 import { obterEthereumProvider } from "@/services/wallet/provider";
 import { carregarMetricasDaConta, type AccountMetrics } from "@/services/account/accountMetrics";
+import { carregarMetricasElegibilidade, type EligibilityMetrics } from "@/services/eligibility/eligibilityMetrics";
 import { sacarDeposito, sacarRendimento } from "@/services/account/accountActions";
 import { deleteUserProfile } from "@/services/users/userClient";
 
@@ -11,6 +12,11 @@ type UseAccountPanelResult = {
 	connected: boolean;
 	walletAddress: string | null;
 	walletNotice: string | null;
+	ethBalance: string;
+	usdBalance: string;
+	ethUsdPrice: string;
+	tokensPerEth: string;
+	rptBalance: string;
 	deposit: string;
 	rewards: string;
 	badgeLevel: string;
@@ -54,10 +60,23 @@ const METRICAS_PADRAO: AccountMetrics = {
 	averageRating: "0,0",
 };
 
+const METRICAS_ELEGIBILIDADE_PADRAO: EligibilityMetrics = {
+	rptBalanceRaw: 0n,
+	rptBalance: "0",
+	tokensPerEthRaw: 0n,
+	tokensPerEth: "0",
+	badgeLevel: "Sem carteira",
+	isActive: false,
+	perfilAtivo: null,
+	minDepositRaw: 0n,
+	minDeposit: "0",
+};
+
 export function useAccountPanel(): UseAccountPanelResult {
 	const { state } = useWalletStatus();
 	const ethereum = useMemo(() => obterEthereumProvider(), []);
 	const [metricas, setMetricas] = useState<AccountMetrics>(METRICAS_PADRAO);
+	const [metricasElegibilidade, setMetricasElegibilidade] = useState<EligibilityMetrics>(METRICAS_ELEGIBILIDADE_PADRAO);
 	const [refreshIndex, setRefreshIndex] = useState(0);
 	const [withdrawingDeposit, setWithdrawingDeposit] = useState(false);
 	const [withdrawingRewards, setWithdrawingRewards] = useState(false);
@@ -97,6 +116,30 @@ export function useAccountPanel(): UseAccountPanelResult {
 			window.clearInterval(intervalo);
 		};
 	}, [connected, state.address, refreshIndex]);
+
+	useEffect(() => {
+		let ativo = true;
+
+		async function sincronizarMetricasElegibilidade() {
+			try {
+				const dados = await carregarMetricasElegibilidade(connected ? state.address : null);
+
+				if (ativo) {
+					setMetricasElegibilidade(dados);
+				}
+			} catch {
+				if (ativo) {
+					setMetricasElegibilidade(METRICAS_ELEGIBILIDADE_PADRAO);
+				}
+			}
+		}
+
+		void sincronizarMetricasElegibilidade();
+
+		return () => {
+			ativo = false;
+		};
+	}, [connected, state.address]);
 
 	async function executarSaque(
 		acao: () => Promise<unknown>,
@@ -169,6 +212,11 @@ export function useAccountPanel(): UseAccountPanelResult {
 		connected,
 		walletAddress,
 		walletNotice,
+		ethBalance: connected ? state.ethBalance : "0",
+		usdBalance: connected ? state.usdBalance : "0",
+		ethUsdPrice: connected ? state.ethUsdPrice : "0",
+		tokensPerEth: connected ? metricasElegibilidade.tokensPerEth : "0",
+		rptBalance: connected ? metricasElegibilidade.rptBalance : "0",
 		deposit: connected ? metricas.deposit : "0",
 		rewards: connected ? metricas.rewards : "0",
 		badgeLevel: connected ? metricas.badgeLevel : "Sem carteira",

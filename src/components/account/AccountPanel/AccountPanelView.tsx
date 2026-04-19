@@ -1,4 +1,5 @@
 import { Badge, Card, Grid, Group, Stack, Text, Title } from "@mantine/core";
+import { BalanceSummary } from "@/components/balance/BalanceSummary";
 import { AccountActionsCard } from "@/components/account/AccountPanel/AccountActionsCard";
 import { AccountMetricCard } from "@/components/account/AccountPanel/AccountMetricCard";
 import { AccountRatingsCard } from "@/components/account/AccountPanel/AccountRatingsCard";
@@ -7,6 +8,11 @@ import { formatarNumeroCompleto } from "@/services/wallet/formatters";
 export type AccountPanelViewProps = {
 	walletAddress: string | null;
 	walletNotice: string | null;
+	ethBalance: string;
+	usdBalance: string;
+	ethUsdPrice: string;
+	tokensPerEth: string;
+	rptBalance: string;
 	deposit: string;
 	rewards: string;
 	badgeLevel: string;
@@ -32,6 +38,11 @@ export type AccountPanelViewProps = {
 export function AccountPanelView({
 	walletAddress,
 	walletNotice,
+	ethBalance,
+	usdBalance,
+	ethUsdPrice,
+	tokensPerEth,
+	rptBalance,
 	deposit,
 	rewards,
 	badgeLevel,
@@ -87,7 +98,16 @@ export function AccountPanelView({
 							Perfil {perfilAtivo}
 						</Badge>
 					) : null}
-				</Group>
+					</Group>
+
+				<BalanceSummary
+					rptBalance={rptBalance}
+					tokensPerEth={tokensPerEth}
+					ethUsdPrice={ethUsdPrice}
+					ethBalance={ethBalance}
+					usdBalance={usdBalance}
+					note={walletNotice}
+				/>
 
 				<Grid>
 					<Grid.Col span={{ base: 12, sm: 6, lg: 3 }}>
