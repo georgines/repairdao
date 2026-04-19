@@ -158,8 +158,11 @@ describe("components/disputes/DisputesPanelView", () => {
 		);
 
 		expect(screen.getByText("Acompanhe as disputas em uma lista unica")).toBeDefined();
-		expect(screen.getByRole("textbox", { name: "Buscar ordem" })).toBeDefined();
-		expect(screen.getByRole("columnheader", { name: "Tecnico" })).toBeDefined();
+		expect(screen.getByRole("textbox", { name: "Buscar disputa" })).toBeDefined();
+		expect(screen.getByRole("columnheader", { name: "Disputa" })).toBeDefined();
+		expect(screen.getByRole("columnheader", { name: "Motivo" })).toBeDefined();
+		expect(screen.getByRole("columnheader", { name: "Status" })).toBeDefined();
+		expect(screen.getByRole("columnheader", { name: "Acoes" })).toBeDefined();
 		expect(screen.getByRole("heading", { name: "Enviar evidência" })).toBeDefined();
 		expect(screen.queryByText("Votar na disputa")).toBeNull();
 		expect(screen.getByText("Fotos do defeito")).toBeDefined();
@@ -280,13 +283,13 @@ describe("components/disputes/DisputesPanelView", () => {
 			/>,
 		);
 
-		expect(screen.getByRole("textbox", { name: "Buscar ordem" })).toBeDefined();
+		expect(screen.getByRole("textbox", { name: "Buscar disputa" })).toBeDefined();
 		expect(screen.getByRole("combobox", { name: "Status" })).toBeDefined();
 		expect(screen.getByRole("button", { name: "Limpar" })).toBeDefined();
-		expect(screen.getByRole("columnheader", { name: "Descricao" })).toBeDefined();
+		expect(screen.getByRole("columnheader", { name: "Motivo" })).toBeDefined();
 		expect(screen.getByRole("button", { name: "Detalhes" })).toBeDefined();
 
-		fireEvent.change(screen.getByRole("textbox", { name: "Buscar ordem" }), {
+		fireEvent.change(screen.getByRole("textbox", { name: "Buscar disputa" }), {
 			target: { value: "tomadas" },
 		});
 		expect(onQueryChange).toHaveBeenCalledWith("tomadas");
@@ -327,8 +330,8 @@ describe("components/disputes/DisputesPanelView", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Cliente")).toBeDefined();
-		expect(screen.getAllByText("Tecnico").length).toBeGreaterThan(1);
+		expect(screen.getAllByText("Cliente").length).toBeGreaterThan(0);
+		expect(screen.getAllByText("Tecnico").length).toBeGreaterThan(0);
 		expect(screen.getByText("Fotos do defeito").closest('[data-evidence-side="left"]')).not.toBeNull();
 		expect(screen.getByText("Resposta do tecnico").closest('[data-evidence-side="right"]')).not.toBeNull();
 	});

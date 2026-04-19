@@ -63,7 +63,6 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				selectedTechnician={technician}
 				contractedTechnician={null}
 				hasOpenOrder={false}
-				canHire
 				technicianModalMode={null}
 				technicianModalOpened={false}
 				hasResults
@@ -84,7 +83,6 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 		expect(screen.getByText("Encontre tecnicos elegiveis")).toBeDefined();
 		expect(screen.getByText("Bruno Silva")).toBeDefined();
 		expect(screen.getByRole("button", { name: "Detalhes" })).toBeDefined();
-		expect(screen.getByRole("button", { name: "Contratar" })).toBeDefined();
 		expect(screen.queryByRole("button", { name: "Servicos" })).toBeNull();
 	});
 
@@ -98,7 +96,6 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				selectedTechnician={technician}
 				contractedTechnician={technician}
 				hasOpenOrder
-				canHire={false}
 				technicianModalMode={null}
 				technicianModalOpened={false}
 				hasResults
@@ -116,7 +113,6 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 			/>,
 		);
 
-		expect(screen.queryByRole("button", { name: "Contratar" })).toBeNull();
 		expect(screen.getByText("ordem aberta: Bruno Silva")).toBeDefined();
 	});
 
@@ -130,7 +126,6 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				selectedTechnician={technician}
 				contractedTechnician={null}
 				hasOpenOrder={false}
-				canHire
 				technicianModalMode="details"
 				technicianModalOpened
 				hasResults
@@ -164,7 +159,6 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				selectedTechnician={technician}
 				contractedTechnician={null}
 				hasOpenOrder={false}
-				canHire
 				technicianModalMode="hire"
 				technicianModalOpened
 				hasResults
@@ -203,7 +197,6 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				selectedTechnician={null}
 				contractedTechnician={null}
 				hasOpenOrder={false}
-				canHire
 				technicianModalMode={null}
 				technicianModalOpened={false}
 				hasResults
@@ -228,13 +221,12 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 			target: { value: "15" },
 		});
 		fireEvent.click(screen.getByRole("button", { name: "Detalhes" }));
-		fireEvent.click(screen.getByRole("button", { name: "Contratar" }));
 
 		expect(onQueryChange).toHaveBeenCalledWith("ana");
 		expect(onMinReputationChange).toHaveBeenCalled();
 		expect(onSelectTechnician).toHaveBeenCalledWith("0xbbb");
-		expect(onHireTechnician).toHaveBeenCalledWith("0xbbb");
 		expect(onCloseTechnicianModal).not.toHaveBeenCalled();
+		expect(onHireTechnician).not.toHaveBeenCalled();
 	});
 
 	it("propaga a descricao e a confirmacao da contratacao", () => {
@@ -253,7 +245,6 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 					selectedTechnician={technician}
 					contractedTechnician={null}
 					hasOpenOrder={false}
-					canHire
 					technicianModalMode="hire"
 					technicianModalOpened
 					hasResults

@@ -25,7 +25,6 @@ export type TechnicianDiscoveryPanelViewProps = {
 	selectedTechnician: UserSummary | null;
 	contractedTechnician: UserSummary | null;
 	hasOpenOrder: boolean;
-	canHire: boolean;
 	technicianModalMode: "details" | "hire" | null;
 	technicianModalOpened: boolean;
 	hasResults: boolean;
@@ -70,7 +69,6 @@ export function TechnicianDiscoveryPanelView({
 	selectedTechnician,
 	contractedTechnician,
 	hasOpenOrder,
-	canHire,
 	technicianModalMode,
 	technicianModalOpened,
 	hasResults,
@@ -155,11 +153,11 @@ export function TechnicianDiscoveryPanelView({
 								<Table.Tr>
 									<Table.Th>Nome</Table.Th>
 									<Table.Th>Area</Table.Th>
-									<Table.Th>Papel</Table.Th>
-									<Table.Th>Nivel</Table.Th>
-									<Table.Th>Avaliacoes do tecnico</Table.Th>
-									<Table.Th>Status</Table.Th>
-									<Table.Th>Acoes</Table.Th>
+								<Table.Th>Papel</Table.Th>
+								<Table.Th>Nivel</Table.Th>
+								<Table.Th>Avaliacoes do tecnico</Table.Th>
+								<Table.Th>Status</Table.Th>
+								<Table.Th>Acoes</Table.Th>
 								</Table.Tr>
 							</Table.Thead>
 							<Table.Tbody>
@@ -184,16 +182,9 @@ export function TechnicianDiscoveryPanelView({
 										</Table.Td>
 										<Table.Td>{formatSituation(technician)}</Table.Td>
 										<Table.Td>
-											<Group gap="xs" wrap="nowrap">
-												<Button size="xs" variant="light" onClick={() => onSelectTechnician(technician.address)}>
-													Detalhes
-												</Button>
-												{canHire ? (
-													<Button size="xs" onClick={() => onHireTechnician(technician.address)}>
-														Contratar
-													</Button>
-												) : null}
-											</Group>
+											<Button size="xs" variant="light" onClick={() => onSelectTechnician(technician.address)}>
+												Detalhes
+											</Button>
 										</Table.Td>
 									</Table.Tr>
 								))}

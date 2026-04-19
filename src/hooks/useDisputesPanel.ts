@@ -241,12 +241,15 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 						dispute.request.technicianAddress,
 						dispute.request.clientName,
 						dispute.request.clientAddress,
-						dispute.request.description,
 						dispute.request.disputeReason ?? "",
 						formatarStatusContrato(dispute.contract?.estado ?? null),
 						dispute.contract?.motivo ?? "",
-						dispute.request.budgetAmount?.toString() ?? "",
+						dispute.contract?.openedBy ?? "",
+						dispute.contract?.opposingParty ?? "",
+						dispute.contract?.votesForOpener?.toString() ?? "",
+						dispute.contract?.votesForOpposing?.toString() ?? "",
 						dispute.request.id.toString(),
+						dispute.contract?.ordemId ?? "",
 					].join(" "),
 				);
 

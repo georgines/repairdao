@@ -116,59 +116,6 @@ const STATUS_FILTER_OPTIONS = [
 	{ value: "resolvida", label: "Resolvida" },
 ] as const;
 
-function formatBudget(value?: number | null) {
-	if (value === null || value === undefined) {
-		return "-";
-	}
-
-	return `RPT ${new Intl.NumberFormat("pt-BR", {
-		minimumFractionDigits: 0,
-		maximumFractionDigits: 0,
-	}).format(value)}`;
-}
-
-function shortAddress(address: string) {
-	if (address.length <= 12) {
-		return address;
-	}
-
-	return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
-
-function secondaryActionLabel(status?: DisputaContratoDominio["estado"]) {
-	switch (status) {
-		case "aberta":
-			return "Acompanhar";
-		case "janela_votacao":
-			return "Votar";
-		case "encerrada":
-			return "Resolver";
-		case "resolvida":
-			return "Finalizada";
-		default:
-			return "Detalhes";
-	}
-}
-
-function secondaryActionColor(status?: DisputaContratoDominio["estado"]) {
-	switch (status) {
-		case "aberta":
-			return "teal";
-		case "janela_votacao":
-			return "yellow";
-		case "encerrada":
-			return "red";
-		case "resolvida":
-			return "gray";
-		default:
-			return "blue";
-	}
-}
-
-function secondaryActionDisabled(status?: DisputaContratoDominio["estado"]) {
-	return status === "resolvida";
-}
-
 function getEvidenceSide(
 	evidence: EvidenciaContratoDominio,
 	dispute: DisputeItem | null,
@@ -443,9 +390,9 @@ export function DisputesPanelView({
 				<Stack gap="md">
 					<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
 						<TextInput
-							label="Buscar ordem"
-							description="Pesquise por tecnico, descricao, status ou valor."
-							placeholder="Ex.: troca de tomadas, 0xtec, aberta"
+							label="Buscar disputa"
+							description="Pesquise por motivo, participantes, status ou RPT."
+							placeholder="Ex.: janela, cliente, 3 RPT"
 							value={query}
 							onChange={(event) => onQueryChange(event.currentTarget.value)}
 						/>
@@ -477,13 +424,12 @@ export function DisputesPanelView({
 
 					{visibleDisputes.length > 0 ? (
 						<Box style={{ overflowX: "auto" }}>
-							<Table withTableBorder withColumnBorders highlightOnHover miw={920}>
+							<Table withTableBorder withColumnBorders highlightOnHover miw={760}>
 								<Table.Thead>
 									<Table.Tr>
-										<Table.Th>Tecnico</Table.Th>
-										<Table.Th>Descricao</Table.Th>
+										<Table.Th>Disputa</Table.Th>
+										<Table.Th>Motivo</Table.Th>
 										<Table.Th>Status</Table.Th>
-										<Table.Th>Orcamento (RPT)</Table.Th>
 										<Table.Th>Acoes</Table.Th>
 									</Table.Tr>
 								</Table.Thead>
@@ -491,48 +437,31 @@ export function DisputesPanelView({
 									{visibleDisputes.map((dispute) => {
 										const active = dispute.request.id === selectedDisputeId;
 										const estado = dispute.contract?.estado;
-										const secondaryLabel = secondaryActionLabel(estado);
-										const secondaryDisabled = secondaryActionDisabled(estado);
 
 										return (
 											<Table.Tr key={dispute.request.id} data-selected={active || undefined}>
 												<Table.Td>
 													<Stack gap={0}>
-														<Text fw={600}>{dispute.request.technicianName}</Text>
+														<Text fw={600}>Disputa #{dispute.request.id}</Text>
 														<Text size="xs" c="dimmed">
-															{shortAddress(dispute.request.technicianAddress)}
+															Ordem #{dispute.contract?.ordemId ?? dispute.request.id}
 														</Text>
 													</Stack>
 												</Table.Td>
 												<Table.Td>
-													<Stack gap={0}>
-														<Text fw={500} lineClamp={2}>
-															{dispute.request.description}
-														</Text>
-														<Text size="xs" c="dimmed">
-															{dispute.request.clientName}
-														</Text>
-													</Stack>
+													<Text fw={500} lineClamp={2}>
+														{dispute.contract?.motivo ?? dispute.request.disputeReason ?? "-"}
+													</Text>
 												</Table.Td>
 												<Table.Td>
 													<Badge variant="light" color={statusColor(estado)}>
 														{statusLabel(estado)}
 													</Badge>
 												</Table.Td>
-												<Table.Td>{formatBudget(dispute.request.budgetAmount)}</Table.Td>
 												<Table.Td>
 													<Group gap="xs" wrap="nowrap">
 														<Button size="xs" variant="light" onClick={() => void onSelectDispute(dispute.request.id)}>
 															Detalhes
-														</Button>
-														<Button
-															size="xs"
-															variant="light"
-															color={secondaryActionColor(estado)}
-															disabled={secondaryDisabled}
-															onClick={() => void onSelectDispute(dispute.request.id)}
-														>
-															{secondaryLabel}
 														</Button>
 													</Group>
 												</Table.Td>
