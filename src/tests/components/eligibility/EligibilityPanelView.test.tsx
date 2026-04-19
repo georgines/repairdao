@@ -117,6 +117,69 @@ describe("EligibilityPanelView", () => {
 		expect(markup).toContain("0,00");
 	});
 
+	it("mantem o botao desativado enquanto a quantidade nao for informada", async () => {
+		await act(async () => {
+			root.render(
+				<MantineProvider>
+					<EligibilityPanelView
+						{...baseProps}
+						quantidadeRpt={null}
+						quantidadeErro={null}
+						nome="Ana"
+					/>
+				</MantineProvider>,
+			);
+			await Promise.resolve();
+		});
+
+		expect((screen.getByRole("button", { name: "Ativar como cliente" }) as HTMLButtonElement).disabled).toBe(true);
+	});
+
+	it("mantem o botao desativado quando a quantidade ainda esta abaixo do minimo", async () => {
+		await act(async () => {
+			root.render(
+				<MantineProvider>
+					<EligibilityPanelView
+						{...baseProps}
+						quantidadeRpt={10}
+						quantidadeErro={null}
+						nome="Ana"
+					/>
+				</MantineProvider>,
+			);
+			await Promise.resolve();
+		});
+
+		expect((screen.getByRole("button", { name: "Ativar como cliente" }) as HTMLButtonElement).disabled).toBe(true);
+	});
+
+	it("exibe o botao quando o cliente ativo preenche nome, area e valor", async () => {
+		await act(async () => {
+			root.render(
+				<MantineProvider>
+					<EligibilityPanelView
+						{...baseProps}
+						isActive={true}
+						perfilAtivo="cliente"
+						mostrarSeletoresPapel={false}
+						perfilConfirmacao="tecnico"
+						areaAtuacao="Eletrica"
+						acaoLabel="Trocar para tecnico"
+						mensagemAcao="Ao trocar para tecnico, o saldo atual sera sacado, a confirmacao sera aguardada e o cadastro sera salvo depois da confirmacao."
+						quantidadeRpt={150}
+						quantidadeErro={null}
+						nome="Ana"
+					/>
+				</MantineProvider>,
+			);
+			await Promise.resolve();
+		});
+
+		expect(screen.getByRole("button", { name: "Trocar para tecnico" })).toBeTruthy();
+		expect((screen.getByRole("textbox", { name: "Nome do usuario" }) as HTMLInputElement).readOnly).toBe(false);
+		expect(screen.getByPlaceholderText("Ex.: eletrica residencial")).toBeTruthy();
+	});
+
 	it("exibe saldo de RPT grande sem abreviacao", () => {
 		const markup = renderWithMantine(
 			<EligibilityPanelView
@@ -125,7 +188,6 @@ describe("EligibilityPanelView", () => {
 				perfilAtivo="cliente"
 				mostrarSeletoresPapel={false}
 				perfilConfirmacao="tecnico"
-				areaAtuacao="Eletrica"
 				rptBalance="1000000"
 				tokensPerEth="1000000"
 				acaoLabel="Trocar para tecnico"
@@ -147,14 +209,13 @@ describe("EligibilityPanelView", () => {
 					<EligibilityPanelView
 						{...baseProps}
 						isActive={true}
-						perfilAtivo="cliente"
+						perfilAtivo="tecnico"
 						mostrarSeletoresPapel={false}
-						perfilConfirmacao="tecnico"
-						areaAtuacao="Eletrica"
-						quantidadeRpt={2}
+						perfilConfirmacao="cliente"
+						quantidadeRpt={200}
 						quantidadeErro={null}
-						acaoLabel="Trocar para tecnico"
-						mensagemAcao="Ao trocar para tecnico, o saldo atual sera sacado, a confirmacao sera aguardada e o cadastro sera salvo depois da confirmacao."
+						acaoLabel="Trocar para cliente"
+						mensagemAcao="Ao trocar para cliente, o saldo atual sera sacado, a confirmacao sera aguardada e o cadastro sera salvo depois da confirmacao."
 						error="falha no deposito"
 						onPerfilChange={onPerfilChange}
 						onDeposit={onDeposit}
@@ -167,11 +228,12 @@ describe("EligibilityPanelView", () => {
 		const buttons = Array.from(container.querySelectorAll("button"));
 		const clienteButton = buttons.find((button) => button.textContent?.includes("Cliente"));
 		const tecnicoButton = buttons.find((button) => button.textContent?.includes("Tecnico"));
-		const depositButton = buttons.find((button) => button.textContent?.includes("Trocar para tecnico"));
+		const depositButton = buttons.find((button) => button.textContent?.includes("Trocar para cliente"));
 
 		if (clienteButton || tecnicoButton || !depositButton) {
 			throw new Error("Botoes esperados nao encontrados.");
 		}
+		expect(screen.queryByPlaceholderText("Ex.: eletrica residencial")).toBeNull();
 
 		await act(async () => {
 			depositButton.click();

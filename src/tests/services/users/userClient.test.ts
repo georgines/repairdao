@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deleteUserProfile, persistUserProfile } from "@/services/users/userClient";
+import { deleteUserProfile, loadUserProfile, persistUserProfile } from "@/services/users/userClient";
 
 describe("userClient", () => {
 	afterEach(() => {
@@ -66,6 +66,46 @@ describe("userClient", () => {
 		);
 	});
 
+	it("loads the saved profile by address", async () => {
+		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+			new Response(
+				JSON.stringify({
+					address: "0xabc",
+					name: "Ana",
+					expertiseArea: "Eletrica",
+					role: "tecnico",
+					badgeLevel: "bronze",
+					reputation: 0,
+					depositLevel: 1,
+					isActive: true,
+					isEligible: true,
+					updatedAt: "2026-04-17T10:00:00.000Z",
+					syncedAt: "2026-04-17T10:01:00.000Z",
+				}),
+				{ status: 200, headers: { "Content-Type": "application/json" } },
+			),
+		);
+
+		await expect(loadUserProfile("0xabc")).resolves.toMatchObject({
+			address: "0xabc",
+			name: "Ana",
+			expertiseArea: "Eletrica",
+		});
+
+		expect(fetchMock).toHaveBeenCalledWith(
+			"/api/users?address=0xabc",
+			expect.objectContaining({
+				cache: "no-store",
+			}),
+		);
+	});
+
+	it("retorna null quando o perfil nao existe", async () => {
+		vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 404 }));
+
+		await expect(loadUserProfile("0xabc")).resolves.toBeNull();
+	});
+
 	it("usa a mensagem da API quando o salvamento falha", async () => {
 		vi.spyOn(globalThis, "fetch").mockResolvedValue(
 			new Response(JSON.stringify({ message: "Falha ao salvar." }), {
@@ -116,5 +156,11 @@ describe("userClient", () => {
 		vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("erro bruto", { status: 500 }));
 
 		await expect(deleteUserProfile("0xabc")).rejects.toThrow("Nao foi possivel remover o usuario.");
+	});
+
+	it("usa a mensagem padrao quando o carregamento falha sem mensagem", async () => {
+		vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("erro bruto", { status: 500 }));
+
+		await expect(loadUserProfile("0xabc")).rejects.toThrow("Nao foi possivel carregar o usuario.");
 	});
 });

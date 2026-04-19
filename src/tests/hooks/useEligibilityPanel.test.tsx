@@ -9,6 +9,7 @@ const serviceMocks = vi.hoisted(() => ({
 	carregarMetricasDaConta: vi.fn(),
 	carregarMetricasElegibilidade: vi.fn(),
 	depositarTokens: vi.fn(),
+	loadUserProfile: vi.fn(),
 	sacarDeposito: vi.fn(),
 	persistUserProfile: vi.fn(),
 	obterEthereumProvider: vi.fn(),
@@ -29,6 +30,7 @@ vi.mock("@/services/eligibility/tokenDeposit", () => ({
 }));
 
 vi.mock("@/services/users/userClient", () => ({
+	loadUserProfile: serviceMocks.loadUserProfile,
 	persistUserProfile: serviceMocks.persistUserProfile,
 }));
 
@@ -113,6 +115,19 @@ describe("useEligibilityPanel", () => {
 			minDepositRaw: 100000000000000000000n,
 			minDeposit: "100",
 		});
+		serviceMocks.loadUserProfile.mockResolvedValue({
+			address: "0x1234567890abcdef1234567890abcdef12345678",
+			name: "Ana",
+			expertiseArea: null,
+			role: "cliente",
+			badgeLevel: "bronze",
+			reputation: 0,
+			depositLevel: 5,
+			isActive: true,
+			isEligible: true,
+			updatedAt: "2026-04-17T10:00:00.000Z",
+			syncedAt: "2026-04-17T10:01:00.000Z",
+		});
 	});
 
 	afterEach(async () => {
@@ -124,7 +139,7 @@ describe("useEligibilityPanel", () => {
 		vi.useRealTimers();
 	});
 
-	it("expõe os dados da carteira e deposita como cliente por padrão", async () => {
+	it("carrega o perfil salvo e permite editar o nome quando a conta esta ativa como cliente", async () => {
 		await act(async () => {
 			root.render(<Probe />);
 			await flush();
@@ -139,12 +154,56 @@ describe("useEligibilityPanel", () => {
 		expect(getLatest()?.mostrarSeletoresPapel).toBe(false);
 		expect(getLatest()?.perfilSelecionado).toBe("cliente");
 		expect(getLatest()?.perfilConfirmacao).toBe("tecnico");
-		expect(getLatest()?.quantidadeRpt).toBeNull();
-		expect(getLatest()?.quantidadeErro).toBeNull();
+		expect(getLatest()?.nome).toBe("Ana");
+		expect(getLatest()?.areaAtuacao).toBe("");
 		expect(getLatest()?.acaoLabel).toBe("Trocar para tecnico");
 		expect(getLatest()?.identificadorCarteira).toBe("0x1234567890abcdef1234567890abcdef12345678");
 
-		serviceMocks.persistUserProfile.mockResolvedValue({
+		await act(async () => {
+			getLatest()?.handleNomeChange("Maria");
+			await flush();
+		});
+
+		expect(getLatest()?.nome).toBe("Maria");
+		expect(getLatest()?.areaAtuacao).toBe("");
+		expect(serviceMocks.loadUserProfile).toHaveBeenCalledWith("0x1234567890abcdef1234567890abcdef12345678");
+	});
+
+	it("carrega a area de atuacao quando a conta ativa pertence a um tecnico", async () => {
+		serviceMocks.carregarMetricasDaConta.mockResolvedValue({
+			depositRaw: 0n,
+			deposit: "0",
+			rewardsRaw: 0n,
+			rewards: "0",
+			isActive: true,
+			perfilAtivo: "tecnico",
+			badgeLevel: "bronze",
+			reputationLevel: 0,
+			reputationLevelName: "None",
+			totalPointsRaw: 0n,
+			totalPoints: "0",
+			positiveRatingsRaw: 0n,
+			positiveRatings: "0",
+			negativeRatingsRaw: 0n,
+			negativeRatings: "0",
+			totalRatingsRaw: 0n,
+			totalRatings: "0",
+			ratingSumRaw: 0n,
+			ratingSum: "0",
+			averageRating: "0,0",
+		});
+		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
+			rptBalanceRaw: 5500000000000000000n,
+			rptBalance: "5.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
+			badgeLevel: "bronze",
+			isActive: true,
+			perfilAtivo: "tecnico",
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
+		});
+		serviceMocks.loadUserProfile.mockResolvedValue({
 			address: "0x1234567890abcdef1234567890abcdef12345678",
 			name: "Ana",
 			expertiseArea: "Eletrica",
@@ -157,30 +216,26 @@ describe("useEligibilityPanel", () => {
 			updatedAt: "2026-04-17T10:00:00.000Z",
 			syncedAt: "2026-04-17T10:01:00.000Z",
 		});
-		serviceMocks.depositarTokens.mockResolvedValue("ok");
 
 		await act(async () => {
-			getLatest()?.handleNomeChange("Ana");
-			getLatest()?.handleAreaAtuacaoChange("Eletrica");
-			getLatest()?.handleQuantidadeChange(150);
+			root.render(<Probe />);
 			await flush();
 		});
 
+		expect(getLatest()?.perfilAtivo).toBe("tecnico");
+		expect(getLatest()?.perfilConfirmacao).toBe("cliente");
+		expect(getLatest()?.nome).toBe("Ana");
+		expect(getLatest()?.areaAtuacao).toBe("Eletrica");
+		expect(getLatest()?.acaoLabel).toBe("Trocar para cliente");
+
 		await act(async () => {
-			await getLatest()?.handleDeposit();
+			getLatest()?.handleNomeChange("Maria");
+			getLatest()?.handleAreaAtuacaoChange("Redes");
 			await flush();
 		});
 
-		expect(serviceMocks.sacarDeposito).toHaveBeenCalledTimes(1);
-		expect(serviceMocks.depositarTokens).toHaveBeenCalledWith(expect.any(Object), 150000000000000000000n, true);
-		expect(serviceMocks.persistUserProfile).toHaveBeenCalledWith(
-			expect.objectContaining({
-				address: "0x1234567890abcdef1234567890abcdef12345678",
-				name: "Ana",
-				role: "tecnico",
-				expertiseArea: "Eletrica",
-			}),
-		);
+		expect(getLatest()?.nome).toBe("Maria");
+		expect(getLatest()?.areaAtuacao).toBe("Redes");
 	});
 
 	it("mantem o papel registrado e permite trocar para cliente quando o nivel ativo e tecnico", async () => {
@@ -377,6 +432,17 @@ describe("useEligibilityPanel", () => {
 	});
 
 	it("usa mensagem padrao quando a transferencia falha com valor nao tipado", async () => {
+		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
+			rptBalanceRaw: 5500000000000000000n,
+			rptBalance: "5.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
+			badgeLevel: "bronze",
+			isActive: false,
+			perfilAtivo: null,
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
+		});
 		serviceMocks.depositarTokens.mockRejectedValue("falha bruta");
 
 		await act(async () => {
@@ -400,6 +466,17 @@ describe("useEligibilityPanel", () => {
 	});
 
 	it("usa a mensagem do erro quando a transferencia falha com Error", async () => {
+		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
+			rptBalanceRaw: 5500000000000000000n,
+			rptBalance: "5.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
+			badgeLevel: "bronze",
+			isActive: false,
+			perfilAtivo: null,
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
+		});
 		serviceMocks.depositarTokens.mockRejectedValue(new Error("falha de deposito"));
 
 		await act(async () => {
@@ -423,6 +500,17 @@ describe("useEligibilityPanel", () => {
 	});
 
 	it("valida os dados antes de depositar", async () => {
+		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
+			rptBalanceRaw: 5500000000000000000n,
+			rptBalance: "5.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
+			badgeLevel: "bronze",
+			isActive: false,
+			perfilAtivo: null,
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
+		});
 		serviceMocks.persistUserProfile.mockResolvedValue({
 			address: "0x1234567890abcdef1234567890abcdef12345678",
 			name: "Ana",
@@ -459,6 +547,17 @@ describe("useEligibilityPanel", () => {
 	});
 
 	it("faz rollback quando o endereco desaparece apos o deposito", async () => {
+		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
+			rptBalanceRaw: 5500000000000000000n,
+			rptBalance: "5.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
+			badgeLevel: "bronze",
+			isActive: false,
+			perfilAtivo: null,
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
+		});
 		serviceMocks.persistUserProfile.mockResolvedValue({
 			address: "0x1234567890abcdef1234567890abcdef12345678",
 			name: "Ana",
@@ -505,10 +604,21 @@ describe("useEligibilityPanel", () => {
 		});
 
 		expect(getLatest()?.error).toBe("Endereco da carteira indisponivel.");
-		expect(serviceMocks.sacarDeposito).toHaveBeenCalledTimes(2);
+		expect(serviceMocks.sacarDeposito).toHaveBeenCalledTimes(1);
 	});
 
 	it("ignora a falha do rollback quando o endereco desaparece apos o deposito", async () => {
+		serviceMocks.carregarMetricasElegibilidade.mockResolvedValue({
+			rptBalanceRaw: 5500000000000000000n,
+			rptBalance: "5.5",
+			tokensPerEthRaw: 250n,
+			tokensPerEth: "250",
+			badgeLevel: "bronze",
+			isActive: false,
+			perfilAtivo: null,
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
+		});
 		serviceMocks.persistUserProfile.mockResolvedValue({
 			address: "0x1234567890abcdef1234567890abcdef12345678",
 			name: "Ana",
@@ -557,7 +667,7 @@ describe("useEligibilityPanel", () => {
 		});
 
 		expect(getLatest()?.error).toBe("Endereco da carteira indisponivel.");
-		expect(serviceMocks.sacarDeposito).toHaveBeenCalledTimes(2);
+		expect(serviceMocks.sacarDeposito).toHaveBeenCalledTimes(1);
 	});
 
 	it("usa a mensagem padrao quando a validacao falha com valor nao tipado", async () => {

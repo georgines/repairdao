@@ -62,14 +62,26 @@ export function EligibilityPanelView({
 	onDeposit,
 	connected,
 }: EligibilityPanelViewProps) {
+	const quantidadeTexto =
+		typeof quantidadeRpt === "number"
+			? String(quantidadeRpt)
+			: typeof quantidadeRpt === "string"
+				? quantidadeRpt.trim()
+				: "";
+	const quantidadeNumerica = Number(quantidadeTexto.replace(",", "."));
+	const quantidadeValida =
+		quantidadeTexto !== "" && Number.isFinite(quantidadeNumerica) && quantidadeNumerica >= quantidadeMinima;
+	const precisaAreaAtuacao = isActive ? perfilAtivo === "cliente" : perfilConfirmacao === "tecnico";
 	const podeDepositar =
 		connected &&
 		!depositing &&
+		quantidadeValida &&
 		quantidadeErro === null &&
 		nome.trim().length > 0 &&
-		(perfilConfirmacao !== "tecnico" || areaAtuacao.trim().length > 0);
+		(!precisaAreaAtuacao || areaAtuacao.trim().length > 0);
+	const mostrarBotaoAcao = !isActive || podeDepositar;
 	const perfilExibido = perfilAtivo ?? perfilSelecionado;
-	const exibirAreaAtuacao = perfilConfirmacao === "tecnico";
+	const exibirAreaAtuacao = precisaAreaAtuacao;
 
 	return (
 		<Card
@@ -213,9 +225,11 @@ export function EligibilityPanelView({
 						{mensagemAcao}
 					</Text>
 
-					<Button onClick={onDeposit} disabled={!podeDepositar} loading={depositing}>
-						{acaoLabel}
-					</Button>
+					{mostrarBotaoAcao ? (
+						<Button onClick={onDeposit} disabled={!podeDepositar} loading={depositing}>
+							{acaoLabel}
+						</Button>
+					) : null}
 
 					{error ? (
 						<Text size="sm" c="red" role="status" aria-live="assertive">

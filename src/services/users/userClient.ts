@@ -30,6 +30,23 @@ export async function persistUserProfile(payload: UserActivationPayload): Promis
 	return (await response.json()) as UserDetails;
 }
 
+export async function loadUserProfile(address: string): Promise<UserDetails | null> {
+	const params = new URLSearchParams({ address });
+	const response = await fetch(`/api/users?${params.toString()}`, {
+		cache: "no-store",
+	});
+
+	if (response.status === 404) {
+		return null;
+	}
+
+	if (!response.ok) {
+		throw new Error(await readErrorMessage(response, "Nao foi possivel carregar o usuario."));
+	}
+
+	return (await response.json()) as UserDetails;
+}
+
 export async function deleteUserProfile(address: string): Promise<void> {
 	const response = await fetch("/api/users", {
 		method: "DELETE",

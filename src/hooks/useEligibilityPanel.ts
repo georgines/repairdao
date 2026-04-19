@@ -8,7 +8,7 @@ import { useWalletStatus } from "@/hooks/useWalletStatus";
 import { obterEthereumProvider } from "@/services/wallet/provider";
 import { depositarTokens, sacarDeposito } from "@/services/eligibility/tokenDeposit";
 import { carregarMetricasElegibilidade, type EligibilityMetrics } from "@/services/eligibility/eligibilityMetrics";
-import { persistUserProfile } from "@/services/users/userClient";
+import { loadUserProfile, persistUserProfile } from "@/services/users/userClient";
 import { validateUserActivationForm } from "@/services/users/userValidation";
 
 const VALOR_MINIMO_DEPOSITO_PADRAO = 100;
@@ -155,6 +155,38 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 			window.clearInterval(intervalo);
 		};
 	}, [connected, state.address]);
+
+	useEffect(() => {
+		let ativo = true;
+
+		async function sincronizarPerfilSalvo() {
+			if (!connected || !state.address || !metricas.isActive) {
+				return;
+			}
+
+			try {
+				const perfilSalvo = await loadUserProfile(state.address);
+
+				if (!ativo) {
+					return;
+				}
+
+				setNome(perfilSalvo?.name ?? "");
+				setAreaAtuacao(perfilSalvo?.expertiseArea ?? "");
+			} catch {
+				if (ativo) {
+					setNome("");
+					setAreaAtuacao("");
+				}
+			}
+		}
+
+		void sincronizarPerfilSalvo();
+
+		return () => {
+			ativo = false;
+		};
+	}, [connected, metricas.isActive, state.address]);
 
 	function handleQuantidadeChange(value: QuantidadeRpt) {
 		setQuantidadeRpt(value);
