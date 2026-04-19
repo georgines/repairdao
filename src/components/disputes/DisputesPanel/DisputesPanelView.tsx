@@ -427,10 +427,10 @@ export function DisputesPanelView({
 							<Table withTableBorder withColumnBorders highlightOnHover miw={760}>
 								<Table.Thead>
 									<Table.Tr>
-										<Table.Th>Disputa</Table.Th>
-										<Table.Th>Motivo</Table.Th>
-										<Table.Th>Status</Table.Th>
-										<Table.Th>Acoes</Table.Th>
+										<Table.Th style={{ textAlign: "left", verticalAlign: "middle" }}>Disputa</Table.Th>
+										<Table.Th style={{ textAlign: "center", verticalAlign: "middle" }}>Motivo</Table.Th>
+										<Table.Th style={{ textAlign: "center", verticalAlign: "middle" }}>Status</Table.Th>
+										<Table.Th style={{ textAlign: "center", verticalAlign: "middle" }}>Acoes</Table.Th>
 									</Table.Tr>
 								</Table.Thead>
 								<Table.Tbody>
@@ -440,8 +440,8 @@ export function DisputesPanelView({
 
 										return (
 											<Table.Tr key={dispute.request.id} data-selected={active || undefined}>
-												<Table.Td>
-													<Stack gap={0}>
+												<Table.Td style={{ textAlign: "left", verticalAlign: "middle" }}>
+													<Stack gap={0} align="flex-start">
 														<Text fw={600}>Disputa #{dispute.request.id}</Text>
 														<Text size="xs" c="dimmed">
 															{dispute.request.description}
@@ -451,18 +451,18 @@ export function DisputesPanelView({
 														</Text>
 													</Stack>
 												</Table.Td>
-												<Table.Td>
+												<Table.Td style={{ textAlign: "center", verticalAlign: "middle" }}>
 													<Text fw={500} lineClamp={2}>
 														{dispute.contract?.motivo ?? dispute.request.disputeReason ?? "-"}
 													</Text>
 												</Table.Td>
-												<Table.Td>
+												<Table.Td style={{ textAlign: "center", verticalAlign: "middle" }}>
 													<Badge variant="light" color={statusColor(estado)}>
 														{statusLabel(estado)}
 													</Badge>
 												</Table.Td>
-												<Table.Td>
-													<Group gap="xs" wrap="nowrap">
+												<Table.Td style={{ textAlign: "center", verticalAlign: "middle" }}>
+													<Group gap="xs" wrap="nowrap" justify="center">
 														<Button size="xs" variant="light" onClick={() => void onSelectDispute(dispute.request.id)}>
 															Detalhes
 														</Button>
