@@ -1,0 +1,28 @@
+.card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.94) 100%);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.content {
+  width: 100%;
+}
+
+.summaryRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: var(--mantine-spacing-md);
+}
+
+.balanceSummary {
+  flex: 1 1 280px;
+}
+
+.statusSummary {
+  flex: 0 1 240px;
+  min-width: 220px;
+  margin-left: auto;
+  text-align: right;
+  display: flex;
+  align-items: flex-end;
+}
