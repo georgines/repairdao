@@ -1,5 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
@@ -9,44 +7,36 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+
+# local workspace files
 .github
 .mcp.json
 .codex
 .vscode
 AGENTS.md
 
-# testing
+# testing and build output
 /coverage
-
-# next.js
 /.next/
 /out/
-
-# production
 /build
+/.playwright-mcp/
 
-# misc
+# generated app files
+next-env.d.ts
+*.tsbuildinfo
+
+# runtime data
+.env*
+.vercel
 .DS_Store
 *.pem
 /dev.db
 /prisma/dev.db*
-/.playwright-mcp/
+src/contracts/deploy/
 
-# debug
+# logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-
-src/contracts/deploy/
