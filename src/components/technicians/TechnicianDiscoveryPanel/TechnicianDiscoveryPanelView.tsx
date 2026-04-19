@@ -25,6 +25,7 @@ export type TechnicianDiscoveryPanelViewProps = {
 	selectedTechnician: UserSummary | null;
 	contractedTechnician: UserSummary | null;
 	hasOpenOrder: boolean;
+	canHire: boolean;
 	technicianModalMode: "details" | "hire" | null;
 	technicianModalOpened: boolean;
 	hasResults: boolean;
@@ -69,6 +70,7 @@ export function TechnicianDiscoveryPanelView({
 	selectedTechnician,
 	contractedTechnician,
 	hasOpenOrder,
+	canHire,
 	technicianModalMode,
 	technicianModalOpened,
 	hasResults,
@@ -182,9 +184,23 @@ export function TechnicianDiscoveryPanelView({
 										</Table.Td>
 										<Table.Td>{formatSituation(technician)}</Table.Td>
 										<Table.Td>
-											<Button size="xs" variant="light" onClick={() => onSelectTechnician(technician.address)}>
-												Detalhes
-											</Button>
+											<Group gap="xs" wrap="nowrap">
+												<Button size="xs" variant="light" onClick={() => onSelectTechnician(technician.address)}>
+													Detalhes
+												</Button>
+												<Button
+													size="xs"
+													onClick={() => onHireTechnician(technician.address)}
+													disabled={!canHire}
+													title={
+														canHire
+															? "Abrir a contratacao deste tecnico"
+															: "A contratacao fica disponivel apenas para clientes sem ordem aberta"
+													}
+												>
+													Contratar tecnico
+												</Button>
+											</Group>
 										</Table.Td>
 									</Table.Tr>
 								))}

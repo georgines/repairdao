@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useState } from "react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import type { ReactElement } from "react";
 import type { UserSummary } from "@/services/users";
@@ -63,6 +63,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				selectedTechnician={technician}
 				contractedTechnician={null}
 				hasOpenOrder={false}
+				canHire
 				technicianModalMode={null}
 				technicianModalOpened={false}
 				hasResults
@@ -83,6 +84,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 		expect(screen.getByText("Encontre tecnicos elegiveis")).toBeDefined();
 		expect(screen.getByText("Bruno Silva")).toBeDefined();
 		expect(screen.getByRole("button", { name: "Detalhes" })).toBeDefined();
+		expect(screen.getAllByRole("button", { name: "Contratar tecnico" })).toHaveLength(1);
 		expect(screen.queryByRole("button", { name: "Servicos" })).toBeNull();
 	});
 
@@ -96,6 +98,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				selectedTechnician={technician}
 				contractedTechnician={technician}
 				hasOpenOrder
+				canHire={false}
 				technicianModalMode={null}
 				technicianModalOpened={false}
 				hasResults
@@ -114,6 +117,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 		);
 
 		expect(screen.getByText("ordem aberta: Bruno Silva")).toBeDefined();
+		expect((screen.getByRole("button", { name: "Contratar tecnico" }) as HTMLButtonElement).disabled).toBe(true);
 	});
 
 	it("abre o modal com os detalhes do tecnico selecionado", () => {
@@ -126,6 +130,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				selectedTechnician={technician}
 				contractedTechnician={null}
 				hasOpenOrder={false}
+				canHire
 				technicianModalMode="details"
 				technicianModalOpened
 				hasResults
@@ -159,6 +164,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				selectedTechnician={technician}
 				contractedTechnician={null}
 				hasOpenOrder={false}
+				canHire
 				technicianModalMode="hire"
 				technicianModalOpened
 				hasResults
@@ -178,7 +184,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 
 		expect(screen.getByText("Confirmar contratacao")).toBeDefined();
 		expect(screen.getByText("Descricao do servico")).toBeDefined();
-		expect(screen.getByRole("button", { name: "Contratar tecnico" })).toBeDefined();
+		expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Contratar tecnico" })).toBeDefined();
 	});
 
 	it("propaga as interacoes da tabela e do modal", () => {
@@ -197,6 +203,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 				selectedTechnician={null}
 				contractedTechnician={null}
 				hasOpenOrder={false}
+				canHire
 				technicianModalMode={null}
 				technicianModalOpened={false}
 				hasResults
@@ -245,6 +252,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 					selectedTechnician={technician}
 					contractedTechnician={null}
 					hasOpenOrder={false}
+					canHire
 					technicianModalMode="hire"
 					technicianModalOpened
 					hasResults
@@ -276,7 +284,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 		fireEvent.change(textarea, {
 			target: { value: "Troca de cabo" },
 		});
-		fireEvent.click(screen.getByRole("button", { name: "Contratar tecnico" }));
+		fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Contratar tecnico" }));
 
 		expect(onServiceDescriptionChange).toHaveBeenCalledWith("Troca de cabo");
 		expect(onConfirmTechnicianHire).toHaveBeenCalledTimes(1);
