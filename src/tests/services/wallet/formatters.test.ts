@@ -22,10 +22,8 @@ describe('formatters', () => {
 
   it('formatarNumero cobre casos: non-finite, compact e padrão', () => {
     expect(formatarNumero('NaN')).toContain('0');
-    // compact
     const big = formatarNumero('2000000', 2);
     expect(typeof big).toBe('string');
-    // padrão
     expect(formatarNumero('123.456', 2)).toContain('123');
   });
 
