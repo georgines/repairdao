@@ -327,11 +327,11 @@ describe("useDisputesPanel", () => {
 		expect(getLatest()?.visibleDisputes).toHaveLength(1);
 
 		await act(async () => {
-			getLatest()?.onQueryChange("janela");
+			getLatest()?.onQueryChange("votação");
 			await flush();
 		});
 
-		expect(getLatest()?.query).toBe("janela");
+		expect(getLatest()?.query).toBe("votação");
 		expect(getLatest()?.visibleDisputes).toHaveLength(1);
 
 		await act(async () => {

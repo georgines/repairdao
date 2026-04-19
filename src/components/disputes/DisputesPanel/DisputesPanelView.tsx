@@ -67,7 +67,7 @@ function statusLabel(status?: DisputaContratoDominio["estado"]) {
 		case "aberta":
 			return "Aberta";
 		case "janela_votacao":
-			return "Janela de votação";
+			return "Votação aberta";
 		case "encerrada":
 			return "Encerrada";
 		case "resolvida":
@@ -111,8 +111,8 @@ function renderEmptyState(message: string) {
 const STATUS_FILTER_OPTIONS = [
 	{ value: "all", label: "Todas" },
 	{ value: "aberta", label: "Aberta" },
-	{ value: "janela_votacao", label: "Janela de votação" },
-	{ value: "encerrada", label: "Encerrada" },
+	{ value: "janela_votacao", label: "Votação aberta" },
+	{ value: "encerrada", label: "Votação encerrada" },
 	{ value: "resolvida", label: "Resolvida" },
 ] as const;
 
@@ -505,9 +505,9 @@ export function DisputesPanelView({
 									{selectedResolved
 										? "Resolvida"
 										: selectedEncerrada
-											? "Janela encerrada"
+											? "Votação encerrada"
 											: selectedVotingWindow
-												? "Janela de votação aberta"
+												? "Votação aberta"
 												: "Aguardando janela"}
 								</Text>
 							</Group>

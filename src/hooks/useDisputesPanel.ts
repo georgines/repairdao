@@ -82,9 +82,9 @@ function formatarStatusContrato(status: DisputaContratoDominio["estado"] | null)
 		case "aberta":
 			return "Aberta";
 		case "janela_votacao":
-			return "Janela de votacao";
+			return "Votação aberta";
 		case "encerrada":
-			return "Encerrada";
+			return "Votação encerrada";
 		case "resolvida":
 			return "Resolvida";
 		default:
