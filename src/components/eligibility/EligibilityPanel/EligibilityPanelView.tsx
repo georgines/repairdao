@@ -201,7 +201,7 @@ export function EligibilityPanelView({
 					<NumberInput
 						label="Quanto RPT deseja depositar"
 						description={`Valor minimo: ${quantidadeMinima} RPT.`}
-						placeholder={`${quantidadeMinima}`}
+						placeholder="Digite um valor"
 						value={quantidadeRpt}
 						onChange={onQuantidadeChange}
 						step={0.1}

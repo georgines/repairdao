@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useDebouncedValue } from "@mantine/hooks";
 import { parseUnits } from "ethers";
 import { useWalletStatus } from "@/hooks/useWalletStatus";
 import { obterEthereumProvider } from "@/services/wallet/provider";
@@ -59,6 +60,30 @@ function obterPerfilOposto(perfil: "cliente" | "tecnico"): "cliente" | "tecnico"
 	return perfil === "cliente" ? "tecnico" : "cliente";
 }
 
+function validarQuantidadeRpt(quantidadeRpt: QuantidadeRpt, quantidadeMinima: number) {
+	const quantidadeTexto = typeof quantidadeRpt === "number"
+		? String(quantidadeRpt)
+		: typeof quantidadeRpt === "string"
+			? quantidadeRpt.trim()
+			: "";
+
+	if (quantidadeTexto === "") {
+		return "Informe um valor para depositar.";
+	}
+
+	const quantidadeNumerica = Number(quantidadeTexto.replace(",", "."));
+
+	if (Number.isNaN(quantidadeNumerica) || !Number.isFinite(quantidadeNumerica)) {
+		return "Informe um valor para depositar.";
+	}
+
+	if (quantidadeNumerica < quantidadeMinima) {
+		return `O valor para deposito deve ser maior ou igual a ${quantidadeMinima} RPT.`;
+	}
+
+	return null;
+}
+
 async function carregarMetricasAtualizadas(address?: string | null) {
 	try {
 		return await carregarMetricasElegibilidade(address ?? null);
@@ -74,6 +99,7 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 	const [nome, setNome] = useState("");
 	const [areaAtuacao, setAreaAtuacao] = useState("");
 	const [quantidadeRpt, setQuantidadeRpt] = useState<QuantidadeRpt>(null);
+	const [quantidadeRptDebounced] = useDebouncedValue(quantidadeRpt, 500);
 	const [depositing, setDepositing] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [metricas, setMetricas] = useState<EligibilityMetrics>(METRICAS_PADRAO);
@@ -87,16 +113,10 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 	const perfilConfirmacao = metricas.isActive ? obterPerfilOposto(perfilRegistrado) : perfilSelecionado;
 	const perfilConfirmacaoEhTecnico = perfilConfirmacao === "tecnico";
 	const quantidadeMinima = Number(metricas.minDeposit) > 0 ? Number(metricas.minDeposit) : VALOR_MINIMO_DEPOSITO_PADRAO;
-	const quantidadeTexto = typeof quantidadeRpt === "number"
-		? String(quantidadeRpt)
-		: typeof quantidadeRpt === "string"
-			? quantidadeRpt.trim()
-			: "";
-	const quantidadeNumerica = quantidadeTexto === "" ? null : Number(quantidadeTexto.replace(",", "."));
-	const quantidadeErro = quantidadeNumerica === null || Number.isNaN(quantidadeNumerica) || !Number.isFinite(quantidadeNumerica)
-		? "Informe um valor para depositar."
-		: quantidadeNumerica < quantidadeMinima
-			? `O valor para deposito deve ser maior ou igual a ${quantidadeMinima} RPT.`
+	const quantidadeErro = quantidadeRpt === null
+		? null
+		: quantidadeRpt === quantidadeRptDebounced
+			? validarQuantidadeRpt(quantidadeRptDebounced, quantidadeMinima)
 			: null;
 
 	const nomeTexto = nome.trim();
@@ -154,8 +174,10 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 			return;
 		}
 
-		if (quantidadeErro) {
-			setError(quantidadeErro);
+		const quantidadeErroValidacao = validarQuantidadeRpt(quantidadeRpt, quantidadeMinima);
+
+		if (quantidadeErroValidacao) {
+			setError(quantidadeErroValidacao);
 			return;
 		}
 
@@ -166,7 +188,12 @@ export function useEligibilityPanel(): UseEligibilityPanelResult {
 			return;
 		}
 
-		const quantidade = parseUnits(String(quantidadeNumerica), 18);
+		const quantidadeTexto = typeof quantidadeRpt === "number"
+			? String(quantidadeRpt)
+			: typeof quantidadeRpt === "string"
+				? quantidadeRpt.trim()
+				: "";
+		const quantidade = parseUnits(String(quantidadeTexto).replace(",", "."), 18);
 		const address = state.address?.trim();
 		let depositou = false;
 

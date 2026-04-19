@@ -113,7 +113,7 @@ describe("useEligibilityPanel", () => {
 		expect(getLatest()?.perfilSelecionado).toBe("cliente");
 		expect(getLatest()?.perfilConfirmacao).toBe("tecnico");
 		expect(getLatest()?.quantidadeRpt).toBeNull();
-		expect(getLatest()?.quantidadeErro).toBe("Informe um valor para depositar.");
+		expect(getLatest()?.quantidadeErro).toBeNull();
 		expect(getLatest()?.acaoLabel).toBe("Trocar para tecnico");
 		expect(getLatest()?.identificadorCarteira).toBe("0x1234567890abcdef1234567890abcdef12345678");
 
@@ -230,10 +230,19 @@ describe("useEligibilityPanel", () => {
 			await flush();
 		});
 
-		expect(getLatest()?.quantidadeErro).toBe("Informe um valor para depositar.");
+		expect(getLatest()?.quantidadeErro).toBeNull();
+
+		await act(async () => {
+			await getLatest()?.handleDeposit();
+			await flush();
+		});
+
+		expect(getLatest()?.error).toBe("Informe um valor para depositar.");
 	});
 
 	it("aceita quantidade informada como texto", async () => {
+		vi.useFakeTimers();
+
 		await act(async () => {
 			root.render(<Probe />);
 			await flush();
@@ -244,11 +253,18 @@ describe("useEligibilityPanel", () => {
 			await flush();
 		});
 
+		await act(async () => {
+			vi.advanceTimersByTime(500);
+			await flush();
+		});
+
 		expect(getLatest()?.quantidadeErro).toBeNull();
 		expect(getLatest()?.quantidadeRpt).toBe(" 150,5 ");
 	});
 
 	it("bloqueia o deposito quando o valor e menor que o minimo", async () => {
+		vi.useFakeTimers();
+
 		await act(async () => {
 			root.render(<Probe />);
 			await flush();
@@ -256,6 +272,11 @@ describe("useEligibilityPanel", () => {
 
 		await act(async () => {
 			getLatest()?.handleQuantidadeChange(0.5);
+			await flush();
+		});
+
+		await act(async () => {
+			vi.advanceTimersByTime(500);
 			await flush();
 		});
 
