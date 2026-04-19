@@ -6,7 +6,6 @@ import { AppShell, NavLink, ScrollArea, Stack } from "@mantine/core";
 import { useAccountProfile } from "@/hooks/useAccountProfile";
 
 const menuItems = [
-  { label: "Home", href: "/" },
   { label: "Minha conta", href: "/account" },
 	{ label: "Loja", href: "/store" },
 	{ label: "Elegibilidade", href: "/eligibility" },
@@ -32,7 +31,7 @@ export function NavBar({ onNavigate }: NavBarProps) {
 							return null;
 						}
 
-						const active = item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`);
+						const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
 						return (
 							<NavLink

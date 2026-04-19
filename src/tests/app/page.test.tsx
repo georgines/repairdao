@@ -1,21 +1,21 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import type { ReactElement } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { MantineProvider } from "@mantine/core";
 import Home from "@/app/page";
+
+vi.mock("@/components/account/AccountPanel/AccountPanel", () => ({
+	AccountPanel: () => <div>Account panel</div>,
+}));
 
 function renderWithMantine(node: ReactElement) {
 	return renderToStaticMarkup(<MantineProvider>{node}</MantineProvider>);
 }
 
 describe("app/page", () => {
-	it("renderiza a home com atalho para a loja", () => {
+	it("renderiza a conta na rota inicial", () => {
 		const markup = renderWithMantine(<Home />);
 
-		expect(markup).toContain("Economia inicial do RepairDAO");
-		expect(markup).toContain("Ir para a loja");
-		expect(markup).toContain("Ver servicos");
-		expect(markup).toContain('href="/store"');
-		expect(markup).toContain('href="/services"');
+		expect(markup).toContain("Account panel");
 	});
 });

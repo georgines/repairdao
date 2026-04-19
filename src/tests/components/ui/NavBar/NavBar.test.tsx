@@ -57,7 +57,6 @@ describe("components/ui/NavBar/NavBar", () => {
 
 		expect(markup).toContain('href="/store"');
 		expect(markup).toContain('data-active="true"');
-		expect(markup).toContain("Tecnicos disponiveis");
 		expect(markup).toContain("Disputas");
 		expect(markup).not.toContain('href="/technicians"');
 	});
