@@ -1,6 +1,8 @@
-import { Badge, Button, Card, Divider, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Card, Divider, Stack } from "@mantine/core";
 import { BalanceSummary } from "@/components/balance/BalanceSummary";
-import { formatarNumeroCompleto } from "@/services/wallet/formatters";
+import { StorePanelHeader } from "@/components/store/StorePanel/StorePanelHeader/StorePanelHeader";
+import { StorePanelPurchaseForm } from "@/components/store/StorePanel/StorePanelPurchaseForm/StorePanelPurchaseForm";
+import styles from "./StorePanelView.module.css";
 
 export type StorePanelViewProps = {
 	ethBalance: string;
@@ -33,35 +35,10 @@ export function StorePanelView({
 	onBuy,
 	connected,
 }: StorePanelViewProps) {
-	const podeComprar = connected && !buying;
-
 	return (
-		<Card
-			radius="sm"
-			withBorder
-			shadow="none"
-			padding="lg"
-			style={{
-				background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.94) 100%)",
-				borderColor: "rgba(15, 23, 42, 0.08)",
-			}}
-		>
-			<Stack gap="lg">
-				<Stack gap={6}>
-					<Text size="xs" tt="uppercase" fw={700} c="dimmed">
-						Loja
-					</Text>
-					<Title order={1}>Trocar ETH por RPT</Title>
-				</Stack>
-
-				<Stack gap={2}>
-					<Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-						Preço atual
-					</Text>
-					<Badge variant="light" color="green" size="lg">
-						1 ETH = {formatarNumeroCompleto(tokensPerEth, 2)} RPT
-					</Badge>
-				</Stack>
+		<Card radius="sm" withBorder shadow="none" padding="lg" className={styles.card}>
+			<Stack gap="lg" className={styles.content}>
+				<StorePanelHeader tokensPerEth={tokensPerEth} />
 
 				<BalanceSummary
 					rptBalance={rptBalance}
@@ -72,30 +49,17 @@ export function StorePanelView({
 					note={walletNotice}
 				/>
 
-				<Divider />
+				<Divider className={styles.divider} />
 
-				<Stack gap="sm">
-					<TextInput
-						label="Quanto ETH quer gastar"
-						placeholder="0,10"
-						inputMode="decimal"
-						value={quantityEth}
-						onChange={(event) => onQuantityEthChange(event.currentTarget.value)}
-					/>
-					<Text size="sm" c="dimmed">
-						Você receberá cerca de {formatarNumeroCompleto(rptPreview, 2)} RPT
-					</Text>
-
-					<Button onClick={onBuy} disabled={!podeComprar} loading={buying}>
-						Comprar RPT
-					</Button>
-				</Stack>
-
-				{error ? (
-					<Text size="sm" c="red" role="status" aria-live="assertive">
-						{error}
-					</Text>
-				) : null}
+				<StorePanelPurchaseForm
+					rptPreview={rptPreview}
+					quantityEth={quantityEth}
+					buying={buying}
+					error={error}
+					onQuantityEthChange={onQuantityEthChange}
+					onBuy={onBuy}
+					connected={connected}
+				/>
 			</Stack>
 		</Card>
 	);
