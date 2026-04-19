@@ -18,7 +18,7 @@ export type EligibilityMetrics = {
 
 export async function carregarMetricasElegibilidadeNoServidor(address?: string | null): Promise<EligibilityMetrics> {
 	const configuracaoRpc = await obterConfiguracaoRpcNoServidor();
-	const contractClient = criarRepairDAOContractClient({ rpcUrl: configuracaoRpc.rpcUrl });
+	const contractClient = criarRepairDAOContractClient({ rpcUrl: configuracaoRpc.rpcUrl, rede: configuracaoRpc.rede });
 	const gateways = criarGatewaysRepairDAO(contractClient, configuracaoRpc.rede);
 
 	const rptBalanceRaw = address ? await gateways.token.readContract<bigint>({ functionName: "balanceOf", args: [address] }).catch(() => 0n) : 0n;

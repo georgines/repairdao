@@ -75,7 +75,7 @@ export async function carregarResumoAvaliacaoDoTecnicoNoContrato(address: string
 			return null;
 		}
 
-		const contractClient = criarRepairDAOContractClient({ rpcUrl });
+		const contractClient = criarRepairDAOContractClient({ rpcUrl, rede: configuracaoRpc.rede });
 		const gateway = criarRepairReputationGateway(contractClient, configuracaoRpc.rede);
 
 		try {

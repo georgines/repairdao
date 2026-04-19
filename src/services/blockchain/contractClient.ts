@@ -1,6 +1,7 @@
 import { Contract, JsonRpcProvider, Wallet, type InterfaceAbi } from "ethers";
 import { RepairDAODominioError } from "@/erros/errors";
 import { executarFuncaoContrato } from "@/services/blockchain/contractExecutor";
+import type { RedeBlockchain } from "@/services/blockchain/rpcConfig";
 
 export interface ContractCallInput {
   address: string;
@@ -17,6 +18,7 @@ export interface RepairDAOContractClient {
 export interface CriarRepairDAOContractClientInput {
   rpcUrl: string;
   privateKey?: string;
+  rede?: RedeBlockchain;
 }
 
 function criarChaveContrato(call: ContractCallInput, contexto: "read" | "write") {
@@ -33,12 +35,27 @@ function garantirConfiguracaoValida(input: CriarRepairDAOContractClientInput): v
   }
 }
 
+function obterRedeJsonRpc(rede?: RedeBlockchain) {
+  if (rede === "sepolia") {
+    return { name: "sepolia", chainId: 11155111 };
+  }
+
+  if (rede === "local") {
+    return { name: "local", chainId: 31337 };
+  }
+
+  return null;
+}
+
 export function criarRepairDAOContractClient(
   input: CriarRepairDAOContractClientInput,
 ): RepairDAOContractClient {
   garantirConfiguracaoValida(input);
 
-  const provider = new JsonRpcProvider(input.rpcUrl);
+  const redeJsonRpc = obterRedeJsonRpc(input.rede);
+  const provider = redeJsonRpc
+    ? new JsonRpcProvider(input.rpcUrl, redeJsonRpc, { staticNetwork: true })
+    : new JsonRpcProvider(input.rpcUrl);
   const signer = input.privateKey ? new Wallet(input.privateKey, provider) : null;
   const contratosLeitura = new Map<string, Contract>();
   const contratosEscrita = new Map<string, Contract>();

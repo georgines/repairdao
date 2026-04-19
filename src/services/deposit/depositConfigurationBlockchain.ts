@@ -8,7 +8,7 @@ import { loadDepositConfiguration, upsertDepositConfiguration } from "@/services
 
 export async function carregarConfiguracaoDepositoDaBlockchainNoServidor(): Promise<DepositConfigurationSnapshot> {
 	const configuracaoRpc = await obterConfiguracaoRpcNoServidor();
-	const contractClient = criarRepairDAOContractClient({ rpcUrl: configuracaoRpc.rpcUrl });
+	const contractClient = criarRepairDAOContractClient({ rpcUrl: configuracaoRpc.rpcUrl, rede: configuracaoRpc.rede });
 	const gateways = criarGatewaysRepairDAO(contractClient, configuracaoRpc.rede);
 	const contrato = obterRepairDAOContractos(configuracaoRpc.rede).deposit;
 

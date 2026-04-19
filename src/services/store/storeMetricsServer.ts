@@ -12,7 +12,7 @@ export type StoreMetrics = {
 
 export async function carregarMetricasDaLojaNoServidor(address?: string | null): Promise<StoreMetrics> {
 	const configuracaoRpc = await obterConfiguracaoRpcNoServidor();
-	const contractClient = criarRepairDAOContractClient({ rpcUrl: configuracaoRpc.rpcUrl });
+	const contractClient = criarRepairDAOContractClient({ rpcUrl: configuracaoRpc.rpcUrl, rede: configuracaoRpc.rede });
 	const tokenContract = criarGatewaysRepairDAO(contractClient, configuracaoRpc.rede).token;
 
 	const tokensPerEthRaw = await tokenContract.readContract<bigint>({ functionName: "tokensPerEth" }).catch(() => 0n);

@@ -14,7 +14,9 @@ type ContratoBytecode = {
 };
 
 const artifactRoot = path.resolve(process.cwd(), "..", "repairdao-contracts", "artifacts", "contracts");
-const networkName = process.env.NEXT_PUBLIC_NETWORK?.trim() === "sepolia" ? "sepolia" : "local";
+const redeSelecionada = process.env.NEXT_PUBLIC_NETWORK?.trim().toLowerCase();
+const networkName = redeSelecionada === "sepolia" ? "sepolia" : "local";
+const executarBytecodeLocal = redeSelecionada === "local";
 const deploymentPath = path.resolve(process.cwd(), "src", "contracts", "deploy", `${networkName}.json`);
 const rpcUrl =
   process.env.REPAIRDAO_RPC_URL?.trim() ||
@@ -109,7 +111,9 @@ async function obterChainId(): Promise<bigint> {
   return BigInt(payload.result);
 }
 
-describe(`bytecode dos contratos locais (${networkName})`, () => {
+const describeBytecodeLocal = executarBytecodeLocal ? describe : describe.skip;
+
+describeBytecodeLocal(`bytecode dos contratos locais (${networkName})`, () => {
   let deployment: DeploymentFile;
 
   beforeAll(() => {

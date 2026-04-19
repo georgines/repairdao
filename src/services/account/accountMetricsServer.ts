@@ -55,7 +55,7 @@ function calcularMediaAvaliacao(ratingSumRaw: bigint, totalRatingsRaw: bigint) {
 
 export async function carregarMetricasDaContaNoServidor(address?: string | null): Promise<AccountMetrics> {
 	const configuracaoRpc = await obterConfiguracaoRpcNoServidor();
-	const contractClient = criarRepairDAOContractClient({ rpcUrl: configuracaoRpc.rpcUrl });
+	const contractClient = criarRepairDAOContractClient({ rpcUrl: configuracaoRpc.rpcUrl, rede: configuracaoRpc.rede });
 	const gateways = criarGatewaysRepairDAO(contractClient, configuracaoRpc.rede);
 
 	const deposito = address ? await gateways.deposit.readContract<unknown>({ functionName: "getDeposit", args: [address] }).catch(() => null) : null;

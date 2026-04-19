@@ -8,9 +8,9 @@ const { contractCtor, providerCtor, walletCtor, contractSpy, providerSpy, wallet
   class JsonRpcProviderMock {
     readonly rpcUrl: string;
 
-    constructor(rpcUrl: string) {
+    constructor(rpcUrl: string, network?: unknown, options?: unknown) {
       this.rpcUrl = rpcUrl;
-      providerSpy(rpcUrl);
+      providerSpy(rpcUrl, network, options);
     }
   }
 
@@ -66,6 +66,7 @@ describe("contractClient", () => {
     const client = criarRepairDAOContractClient({
       rpcUrl: "http://localhost:8545",
       privateKey: "0xabc123",
+      rede: "sepolia",
     });
 
     await expect(
@@ -93,7 +94,11 @@ describe("contractClient", () => {
       }),
     ).resolves.toBe("write-result");
 
-    expect(providerSpy).toHaveBeenCalledWith("http://localhost:8545");
+    expect(providerSpy).toHaveBeenCalledWith(
+      "http://localhost:8545",
+      { name: "sepolia", chainId: 11155111 },
+      { staticNetwork: true },
+    );
     expect(walletSpy).toHaveBeenCalledWith("0xabc123", expect.anything());
     expect(contractSpy).toHaveBeenCalledTimes(2);
     expect(readMock).toHaveBeenCalledWith();
@@ -104,6 +109,7 @@ describe("contractClient", () => {
   it("permite client read-only sem chave privada", async () => {
     const client = criarRepairDAOContractClient({
       rpcUrl: "http://localhost:8545",
+      rede: "local",
     });
 
     await expect(
@@ -116,7 +122,11 @@ describe("contractClient", () => {
 
     expect(client.writeContract).toBeUndefined();
     expect(walletSpy).not.toHaveBeenCalled();
-    expect(providerSpy).toHaveBeenCalledWith("http://localhost:8545");
+    expect(providerSpy).toHaveBeenCalledWith(
+      "http://localhost:8545",
+      { name: "local", chainId: 31337 },
+      { staticNetwork: true },
+    );
   });
 
   it("valida configuracoes vazias", () => {
