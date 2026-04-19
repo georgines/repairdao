@@ -444,6 +444,9 @@ export function DisputesPanelView({
 													<Stack gap={0}>
 														<Text fw={600}>Disputa #{dispute.request.id}</Text>
 														<Text size="xs" c="dimmed">
+															{dispute.request.description}
+														</Text>
+														<Text size="xs" c="dimmed">
 															Ordem #{dispute.contract?.ordemId ?? dispute.request.id}
 														</Text>
 													</Stack>

@@ -163,6 +163,7 @@ describe("components/disputes/DisputesPanelView", () => {
 		expect(screen.getByRole("columnheader", { name: "Motivo" })).toBeDefined();
 		expect(screen.getByRole("columnheader", { name: "Status" })).toBeDefined();
 		expect(screen.getByRole("columnheader", { name: "Acoes" })).toBeDefined();
+		expect(screen.getAllByText("Troca de tomadas").length).toBeGreaterThan(0);
 		expect(screen.getByRole("heading", { name: "Enviar evidência" })).toBeDefined();
 		expect(screen.queryByText("Votar na disputa")).toBeNull();
 		expect(screen.getByText("Fotos do defeito")).toBeDefined();
