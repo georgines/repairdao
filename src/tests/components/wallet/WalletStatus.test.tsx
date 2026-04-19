@@ -51,7 +51,8 @@ describe("WalletStatus", () => {
 		const element = WalletStatus(props);
 		const styles = element.props.sx({ spacing: { xs: "0.25rem" } });
 
-		expect(styles.maxWidth).toBe("min(500px, 100%)");
-		expect(styles.paddingRight).toBe("0.25rem");
+		expect(styles.width).toBe("100%");
+		expect(styles.overflow).toBe("hidden");
+		expect(styles.paddingInline).toBe("0.25rem");
 	});
 });

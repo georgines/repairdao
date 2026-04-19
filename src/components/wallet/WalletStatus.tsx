@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, Button, Group, Paper, Text } from "@mantine/core";
+import { Badge, Button, Flex, Paper, Text } from "@mantine/core";
 import { formatarEnderecoCurto, formatarNumero, formatarUSD } from "@/services/wallet/formatters";
 
 export type WalletStatusProps = {
@@ -31,39 +31,43 @@ export function WalletStatus({
 			p="xs"
 			sx={(theme) => ({
 				background: "rgba(255, 255, 255, 0.92)",
-				display: "flex",
-				alignItems: "center",
-				gap: 6,
-				flexWrap: "nowrap",
-				justifyContent: "flex-end",
-				minWidth: 120,
-				maxWidth: "min(500px, 100%)",
+				width: "100%",
+				minWidth: 0,
 				boxSizing: "border-box",
-				overflowX: "auto",
-				paddingRight: theme.spacing.xs,
+				overflow: "hidden",
+				paddingInline: theme.spacing.xs,
+				paddingBlock: theme.spacing.xs,
 			})}
 		>
-			<Group spacing={4} align="center" sx={{ flexWrap: "nowrap" }}>
-				<Badge color={connected ? "teal" : "gray"} variant="light" radius="sm">
-					{chainLabel}
-				</Badge>
-				<Text size="xs" c="dimmed">
-					{formatarEnderecoCurto(address)}
-				</Text>
-			</Group>
+			<Flex align="center" justify="space-between" wrap="nowrap" gap="xs" sx={{ minWidth: 0 }}>
+				<Flex align="center" gap={6} wrap="nowrap" sx={{ minWidth: 0, flex: "1 1 auto" }}>
+					<Badge color={connected ? "teal" : "gray"} variant="light" radius="sm" size="sm">
+						{chainLabel}
+					</Badge>
+					<Text size="xs" c="dimmed" truncate>
+						{formatarEnderecoCurto(address)}
+					</Text>
+				</Flex>
 
-			<Group spacing={6} align="center" sx={{ marginLeft: "auto", whiteSpace: "nowrap", minWidth: 0 }}>
-				<Text size="xs" fw={700}>
-					ETH {formatarNumero(ethBalance, 4)}
-				</Text>
-				<Text size="xs" fw={700}>
-					USD {formatarUSD(usdBalance)}
-				</Text>
-			</Group>
+				<Flex align="center" gap={10} wrap="nowrap" sx={{ flex: "0 0 auto", whiteSpace: "nowrap" }}>
+					<Text size="xs" fw={700}>
+						ETH {formatarNumero(ethBalance, 4)}
+					</Text>
+					<Text size="xs" fw={700}>
+						USD {formatarUSD(usdBalance)}
+					</Text>
+				</Flex>
 
-			<Button size="compact-xs" variant={connected ? "light" : "filled"} onClick={onAction} loading={loading}>
-				{actionLabel}
-			</Button>
+				<Button
+					size="compact-xs"
+					variant={connected ? "light" : "filled"}
+					onClick={onAction}
+					loading={loading}
+					sx={{ flex: "0 0 auto", whiteSpace: "nowrap" }}
+				>
+					{actionLabel}
+				</Button>
+			</Flex>
 		</Paper>
 	);
 }
