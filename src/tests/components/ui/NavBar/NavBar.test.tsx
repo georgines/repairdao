@@ -96,7 +96,7 @@ describe("components/ui/NavBar/NavBar", () => {
 		);
 
 		expect(markup).toContain("Configuracoes do sistema");
-		expect(markup).toContain('href="/eligibility/configuration"');
+		expect(markup).toContain('href="/configuration"');
 	});
 
 	it("mantem configuracoes do sistema por ultimo", () => {

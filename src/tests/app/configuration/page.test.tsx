@@ -18,14 +18,14 @@ vi.mock("@/components/system/SystemConfigurationPanel/SystemConfigurationPanel",
 	SystemConfigurationPanel: pageMocks.SystemConfigurationPanel,
 }));
 
-import SystemConfigurationPage from "@/app/eligibility/configuration/page";
+import SystemConfigurationPage from "@/app/configuration/page";
 
 async function flush() {
 	await Promise.resolve();
 	await Promise.resolve();
 }
 
-describe("app/eligibility/configuration/page", () => {
+describe("app/configuration/page", () => {
 	let container: HTMLDivElement;
 	let root: ReturnType<typeof createRoot>;
 

@@ -13,7 +13,7 @@ const menuItems = [
 	{ label: "Servicos", href: "/services" },
 	{ label: "Disputas", href: "/disputes" },
 	{ label: "Tecnicos disponiveis", href: "/technicians", visibleFor: "cliente" },
-	{ label: "Configuracoes do sistema", href: "/eligibility/configuration", ownerOnly: true },
+	{ label: "Configuracoes do sistema", href: "/configuration", ownerOnly: true },
 ];
 
 type NavBarProps = {
