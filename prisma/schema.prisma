@@ -59,6 +59,16 @@ model UserAuditEvent {
   @@index([address, eventType])
 }
 
+model DepositConfiguration {
+  network         String   @id
+  contractAddress String
+  ownerAddress    String
+  minDepositRaw   String
+  minDeposit      String
+  syncedAt        DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 model ServiceRequest {
   id                Int                  @id @default(autoincrement())
   clientAddress     String

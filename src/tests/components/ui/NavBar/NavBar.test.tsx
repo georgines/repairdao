@@ -6,6 +6,7 @@ import { NavBar } from "@/components/ui/NavBar/NavBar";
 
 const pathnameState = vi.hoisted(() => ({ value: "/" }));
 const profileState = vi.hoisted(() => ({ perfilAtivo: "cliente" as "cliente" | "tecnico" | null }));
+const depositAccessState = vi.hoisted(() => ({ isOwner: false }));
 
 vi.mock("next/navigation", () => ({
 	usePathname: () => pathnameState.value,
@@ -17,6 +18,20 @@ vi.mock("@/hooks/useAccountProfile", () => ({
 	}),
 }));
 
+vi.mock("@/hooks/useDepositConfigurationAccess", () => ({
+	useDepositConfigurationAccess: () => ({
+		isOwner: depositAccessState.isOwner,
+		loading: false,
+		error: null,
+		configuracao: null,
+		donoAtual: null,
+		donoAtualCurto: "Carteira desconectada",
+		connected: false,
+		walletAddress: null,
+		refresh: async () => null,
+	}),
+}));
+
 function renderWithMantine(node: ReactElement) {
 	return renderToStaticMarkup(<MantineProvider>{node}</MantineProvider>);
 }
@@ -25,6 +40,7 @@ describe("components/ui/NavBar/NavBar", () => {
 	it("destaca a rota ativa na navbar", () => {
 		pathnameState.value = "/account";
 		profileState.perfilAtivo = "cliente";
+		depositAccessState.isOwner = false;
 
 		const markup = renderWithMantine(
 			<MantineAppShell header={{ height: 4 }} navbar={{ width: 280, breakpoint: 0 }}>
@@ -46,6 +62,7 @@ describe("components/ui/NavBar/NavBar", () => {
 	it("mantem a rota pai ativa em subrotas", () => {
 		pathnameState.value = "/store/orders";
 		profileState.perfilAtivo = "tecnico";
+		depositAccessState.isOwner = false;
 
 		const markup = renderWithMantine(
 			<MantineAppShell header={{ height: 4 }} navbar={{ width: 280, breakpoint: 0 }}>
@@ -59,5 +76,22 @@ describe("components/ui/NavBar/NavBar", () => {
 		expect(markup).toContain('data-active="true"');
 		expect(markup).toContain("Disputas");
 		expect(markup).not.toContain('href="/technicians"');
+	});
+
+	it("exibe a configuracao do deposito somente para o dono", () => {
+		pathnameState.value = "/eligibility";
+		profileState.perfilAtivo = "cliente";
+		depositAccessState.isOwner = true;
+
+		const markup = renderWithMantine(
+			<MantineAppShell header={{ height: 4 }} navbar={{ width: 280, breakpoint: 0 }}>
+				<MantineAppShell.Navbar>
+					<NavBar />
+				</MantineAppShell.Navbar>
+			</MantineAppShell>,
+		);
+
+		expect(markup).toContain("Configuracao do deposito");
+		expect(markup).toContain('href="/eligibility/configuration"');
 	});
 });

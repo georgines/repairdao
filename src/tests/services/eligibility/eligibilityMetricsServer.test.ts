@@ -15,6 +15,10 @@ const ethersMocks = vi.hoisted(() => ({
 	formatUnitsMock: vi.fn(),
 }));
 
+const depositConfigurationMocks = vi.hoisted(() => ({
+	sincronizarConfiguracaoDepositoNoServidor: vi.fn(),
+}));
+
 vi.mock("ethers", () => ({
 	JsonRpcProvider: class {
 		rpcUrl: string;
@@ -33,6 +37,10 @@ vi.mock("ethers", () => ({
 	formatUnits: ethersMocks.formatUnitsMock,
 }));
 
+vi.mock("@/services/deposit/depositConfigurationBlockchain", () => ({
+	sincronizarConfiguracaoDepositoNoServidor: depositConfigurationMocks.sincronizarConfiguracaoDepositoNoServidor,
+}));
+
 import { carregarMetricasElegibilidadeNoServidor } from "@/services/eligibility/eligibilityMetricsServer";
 
 describe("carregarMetricasElegibilidadeNoServidor", () => {
@@ -49,6 +57,14 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 				return "100";
 			}
 			return "0";
+		});
+		depositConfigurationMocks.sincronizarConfiguracaoDepositoNoServidor.mockResolvedValue({
+			network: "local",
+			contractAddress: "0xdeposit",
+			ownerAddress: "0xowner",
+			minDepositRaw: 100000000000000000000n,
+			minDeposit: "100",
+			syncedAt: new Date().toISOString(),
 		});
 		vi.stubEnv("NEXT_PUBLIC_NETWORK", "local");
 		delete process.env.RPC_URL;
@@ -206,6 +222,7 @@ describe("carregarMetricasElegibilidadeNoServidor", () => {
 			getLevelName: vi.fn().mockResolvedValue("bronze"),
 		};
 
+		depositConfigurationMocks.sincronizarConfiguracaoDepositoNoServidor.mockRejectedValueOnce(new Error("falha no sync"));
 		ethersMocks.nextContracts.push(tokenContract, depositContract, badgeContract);
 
 		await expect(carregarMetricasElegibilidadeNoServidor("0xabc")).resolves.toEqual({

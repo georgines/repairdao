@@ -2,6 +2,7 @@ import { formatUnits } from "ethers";
 import { criarGatewaysRepairDAO } from "@/services/blockchain/gateway";
 import { criarRepairDAOContractClient } from "@/services/blockchain/contractClient";
 import { obterConfiguracaoRpcNoServidor } from "@/services/blockchain/rpcConfig.server";
+import { sincronizarConfiguracaoDepositoNoServidor } from "@/services/deposit/depositConfigurationBlockchain";
 
 export type EligibilityMetrics = {
 	rptBalanceRaw: bigint;
@@ -25,7 +26,8 @@ export async function carregarMetricasElegibilidadeNoServidor(address?: string |
 	const isActive = address ? await gateways.deposit.readContract<boolean>({ functionName: "isActive", args: [address] }).catch(() => false) : false;
 	const deposito = address ? await gateways.deposit.readContract<unknown>({ functionName: "getDeposit", args: [address] }).catch(() => null) : null;
 	const badgeLevel = address ? await gateways.badge.readContract<string>({ functionName: "getLevelName", args: [address] }).catch(() => "Sem badge") : "Sem carteira";
-	const minDepositRaw = await gateways.deposit.readContract<bigint>({ functionName: "minDeposit" }).catch(() => 0n);
+	const configuracaoDeposito = await sincronizarConfiguracaoDepositoNoServidor().catch(() => null);
+	const minDepositRaw = configuracaoDeposito?.minDepositRaw ?? await gateways.deposit.readContract<bigint>({ functionName: "minDeposit" }).catch(() => 0n);
 	const perfilAtivo = isActive && deposito
 		? ((deposito as { isTechnician?: boolean; [index: number]: unknown }).isTechnician
 			?? (deposito as { [index: number]: unknown })[5])
