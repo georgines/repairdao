@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useWalletStatus } from "@/hooks/useWalletStatus";
 import { obterEthereumProvider } from "@/services/wallet/provider";
 import { carregarMetricasElegibilidade, type EligibilityMetrics } from "@/services/eligibility/eligibilityMetrics";
-import { loadServiceRequests, type ServiceRequestSummary } from "@/services/serviceRequests/serviceRequestClient";
+import { loadServiceRequests } from "@/services/serviceRequests/serviceRequestClient";
+import type { ServiceRequestSummary } from "@/services/serviceRequests/serviceRequestTypes";
 import type { DisputaContratoDominio, EvidenciaContratoDominio } from "@/services/blockchain/adapters";
 import { normalizarEnderecoComparacao } from "@/services/wallet/formatters";
 import {

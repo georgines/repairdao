@@ -22,9 +22,9 @@ import {
 	loadServiceRequests,
 	openServiceDispute,
 	sendServiceBudget,
-	type ServiceRequestSummary,
 } from "@/services/serviceRequests/serviceRequestClient";
 import type { ServiceRequestStatus } from "@/services/serviceRequests";
+import type { ServiceRequestSummary } from "@/services/serviceRequests/serviceRequestTypes";
 
 type RequestModalAction = "details" | "budget" | "pay" | "complete" | "confirm" | "rate" | "dispute";
 
@@ -32,6 +32,7 @@ type UseServiceRequestsPanelResult = {
 	connected: boolean;
 	walletAddress: string | null;
 	walletNotice: string | null;
+	perfilAtivo: "cliente" | "tecnico" | null;
 	loading: boolean;
 	error: string | null;
 	clientRequests: ServiceRequestSummary[];
@@ -99,6 +100,11 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 
 			for (const request of [...asClient, ...asTechnician]) {
 				requestsById.set(request.id, request);
+			}
+
+			if (!ethereum) {
+				setClientRequests(Array.from(requestsById.values()).sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || right.id - left.id));
+				return;
 			}
 
 			const requestsWithRatings = await Promise.all(
@@ -224,6 +230,11 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 	}
 
 	async function onSubmitBudget() {
+		if (!ethereum) {
+			setError("Conecte a carteira para enviar o orcamento.");
+			return;
+		}
+
 		if (!walletAddress) {
 			setError("Conecte a carteira para enviar o orcamento.");
 			return;
@@ -275,6 +286,11 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 	}
 
 	async function onPayBudget() {
+		if (!ethereum) {
+			setError("Conecte a carteira para pagar o orcamento.");
+			return;
+		}
+
 		if (!walletAddress) {
 			setError("Conecte a carteira para pagar o orcamento.");
 			return;
@@ -320,6 +336,11 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 	}
 
 	async function onCompleteOrder() {
+		if (!ethereum) {
+			setError("Conecte a carteira para concluir a ordem.");
+			return;
+		}
+
 		if (!walletAddress) {
 			setError("Conecte a carteira para concluir a ordem.");
 			return;
@@ -364,6 +385,11 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 	}
 
 	async function onConfirmDelivery() {
+		if (!ethereum) {
+			setError("Conecte a carteira para confirmar a entrega.");
+			return;
+		}
+
 		if (!walletAddress) {
 			setError("Conecte a carteira para confirmar a entrega.");
 			return;
@@ -412,6 +438,11 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 	}
 
 	async function onRateService() {
+		if (!ethereum) {
+			setError("Conecte a carteira para avaliar o servico.");
+			return;
+		}
+
 		if (!walletAddress) {
 			setError("Conecte a carteira para avaliar o servico.");
 			return;
@@ -462,6 +493,11 @@ export function useServiceRequestsPanel(): UseServiceRequestsPanelResult {
 	}
 
 	async function onOpenDispute() {
+		if (!ethereum) {
+			setError("Conecte a carteira para abrir a disputa.");
+			return;
+		}
+
 		if (!walletAddress) {
 			setError("Conecte a carteira para abrir a disputa.");
 			return;

@@ -4,14 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import { useAccountProfile } from "@/hooks/useAccountProfile";
 import { useWalletStatus } from "@/hooks/useWalletStatus";
 import { obterEthereumProvider } from "@/services/wallet/provider";
-import type { UserSearchFilters, UserSummary } from "@/services/users";
+import type { UserSearchFilters } from "@/services/users/userSearch";
 import {
 	filterUsersByReputation,
 	findUserDetails,
 	searchUsers,
 	sortUsers,
-} from "@/services/users";
-import { createServiceRequest, loadServiceRequests, type ServiceRequestSummary } from "@/services/serviceRequests/serviceRequestClient";
+} from "@/services/users/userSearch";
+import type { UserSummary } from "@/services/users/userTypes";
+import { createServiceRequest, loadServiceRequests } from "@/services/serviceRequests/serviceRequestClient";
+import type { ServiceRequestSummary } from "@/services/serviceRequests/serviceRequestTypes";
 import { criarOrdemServicoNoContrato } from "@/services/serviceRequests/serviceRequestBlockchain";
 
 type UseTechnicianDiscoveryPanelProps = {
@@ -148,6 +150,11 @@ export function useTechnicianDiscoveryPanel({
 
 	async function onConfirmTechnicianHire() {
 		if (!selectedTechnician) {
+			return;
+		}
+
+		if (!ethereum) {
+			setRequestError("Conecte a carteira para contratar o servico.");
 			return;
 		}
 

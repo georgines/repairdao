@@ -14,5 +14,5 @@ export async function executarFuncaoContrato<T>(
     });
   }
 
-  return await fn.apply(contract, args);
+  return await fn.apply(contract, [...args]);
 }

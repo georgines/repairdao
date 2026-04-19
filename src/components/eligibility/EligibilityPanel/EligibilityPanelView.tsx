@@ -16,7 +16,7 @@ export type EligibilityPanelViewProps = {
 	nome: string;
 	areaAtuacao: string;
 	identificadorCarteira: string;
-	quantidadeRpt: string | number;
+	quantidadeRpt: string | number | null;
 	quantidadeErro: string | null;
 	quantidadeMinima: number;
 	acaoLabel: string;
@@ -214,7 +214,7 @@ export function EligibilityPanelView({
 						label="Quanto RPT deseja depositar"
 						description={`Valor minimo: ${quantidadeMinima} RPT.`}
 						placeholder="Digite um valor"
-						value={quantidadeRpt}
+						value={quantidadeRpt ?? undefined}
 						onChange={onQuantidadeChange}
 						step={0.1}
 						hideControls

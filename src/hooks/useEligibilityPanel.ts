@@ -55,6 +55,8 @@ const METRICAS_PADRAO: EligibilityMetrics = {
 	badgeLevel: "Sem carteira",
 	isActive: false,
 	perfilAtivo: null,
+	minDepositRaw: 0n,
+	minDeposit: "0",
 };
 
 function obterPerfilOposto(perfil: "cliente" | "tecnico"): "cliente" | "tecnico" {

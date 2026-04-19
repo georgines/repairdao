@@ -49,17 +49,21 @@ export function useWalletStatus() {
 	}
 
 	useEffect(() => {
-		if (!ethereum) {
+		const provider = ethereum;
+
+		if (!provider) {
 			redefinirEstadoCarteira();
 			return;
 		}
+
+		const ethereumProvider = provider as NonNullable<typeof provider>;
 
 		let ativo = true;
 
 		async function sincronizar() {
 			try {
 				if (!reconexaoAutomaticaHabilitada()) {
-					const chainLabel = await obterRedeAtual(ethereum).catch(() => ESTADO_INICIAL_CARTEIRA.chainLabel);
+					const chainLabel = await obterRedeAtual(ethereumProvider).catch(() => ESTADO_INICIAL_CARTEIRA.chainLabel);
 
 					if (ativo) {
 						atualizarEstadoCarteira({
@@ -72,7 +76,7 @@ export function useWalletStatus() {
 					return;
 				}
 
-				const dados = await carregarCarteira(ethereum, false);
+				const dados = await carregarCarteira(ethereumProvider, false);
 
 				if (ativo) {
 					atualizarEstadoCarteira({
@@ -97,14 +101,14 @@ export function useWalletStatus() {
 			void sincronizar();
 		};
 
-		ethereum.on?.("accountsChanged", handleAccountsChanged);
-		ethereum.on?.("chainChanged", handleChainChanged);
+		ethereumProvider.on?.("accountsChanged", handleAccountsChanged);
+		ethereumProvider.on?.("chainChanged", handleChainChanged);
 		window.addEventListener(EVENTO_REDE_RPC_ALTERADA, desconectar);
 
 		return () => {
 			ativo = false;
-			ethereum.removeListener?.("accountsChanged", handleAccountsChanged);
-			ethereum.removeListener?.("chainChanged", handleChainChanged);
+			ethereumProvider.removeListener?.("accountsChanged", handleAccountsChanged);
+			ethereumProvider.removeListener?.("chainChanged", handleChainChanged);
 			window.removeEventListener(EVENTO_REDE_RPC_ALTERADA, desconectar);
 		};
 	}, [ethereum]);
