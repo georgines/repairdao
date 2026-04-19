@@ -26,7 +26,7 @@ vi.mock("@/hooks/useWalletStatus", () => ({
 	useWalletStatus: eligibilityMocks.useWalletStatus,
 }));
 
-import EligibilityPage from "@/app/eligibility/page";
+import EligibilityPage from "@/app/(pages)/eligibility/page";
 
 function renderWithMantine(node: ReactElement) {
 	return renderToStaticMarkup(<MantineProvider>{node}</MantineProvider>);

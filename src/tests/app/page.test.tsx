@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { MantineProvider } from "@mantine/core";
-import Home from "@/app/page";
+import Home from "@/app/(pages)/page";
 
 vi.mock("@/components/account/AccountPanel/AccountPanel", () => ({
 	AccountPanel: () => <div>Account panel</div>,

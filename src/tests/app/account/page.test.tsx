@@ -7,7 +7,7 @@ vi.mock("@/components/account/AccountPanel/AccountPanel", () => ({
 	AccountPanel: () => <div>Minha conta</div>,
 }));
 
-import AccountPage from "@/app/account/page";
+import AccountPage from "@/app/(pages)/account/page";
 
 function renderWithMantine(node: ReactElement) {
 	return renderToStaticMarkup(<MantineProvider>{node}</MantineProvider>);

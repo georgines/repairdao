@@ -14,7 +14,7 @@ vi.mock("@/components/services/ServiceRequestsPanel/ServiceRequestsPanel", () =>
 	},
 }));
 
-import ServicesPage from "@/app/services/page";
+import ServicesPage from "@/app/(pages)/services/page";
 
 function renderWithMantine(node: ReactElement) {
 	return renderToStaticMarkup(<MantineProvider>{node}</MantineProvider>);

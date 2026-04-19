@@ -21,7 +21,7 @@ vi.mock("@/hooks/useWalletStatus", () => ({
 	useWalletStatus: storeMocks.useWalletStatus,
 }));
 
-import StorePage from "@/app/store/page";
+import StorePage from "@/app/(pages)/store/page";
 
 function renderWithMantine(node: ReactElement) {
 	return renderToStaticMarkup(<MantineProvider>{node}</MantineProvider>);

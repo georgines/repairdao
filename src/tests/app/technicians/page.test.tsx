@@ -17,7 +17,7 @@ vi.mock("@/components/technicians/TechnicianDiscoveryPanel/TechnicianDiscoveryPa
 	),
 }));
 
-import TechniciansPage from "@/app/technicians/page";
+import TechniciansPage from "@/app/(pages)/technicians/page";
 
 function renderWithMantine(node: ReactElement) {
 	return renderToStaticMarkup(<MantineProvider>{node}</MantineProvider>);

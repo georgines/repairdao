@@ -13,7 +13,7 @@ vi.mock("@/components/system/SystemConfigurationPanel/SystemConfigurationPanel",
 	SystemConfigurationPanel: pageMocks.SystemConfigurationPanel,
 }));
 
-import SystemConfigurationPage from "@/app/configuration/page";
+import SystemConfigurationPage from "@/app/(pages)/configuration/page";
 
 async function flush() {
 	await Promise.resolve();
