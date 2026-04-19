@@ -225,6 +225,20 @@ function getDisputeParticipantRoleLabel(address: string | null | undefined, disp
 	return null;
 }
 
+function isEnderecoLike(valor: string | null | undefined) {
+	return typeof valor === "string" && /^0x[a-fA-F0-9]{6,}$/.test(valor.trim());
+}
+
+function formatParticipantIdentity(name: string | null | undefined, address: string | null | undefined) {
+	const trimmedName = name?.trim();
+
+	if (trimmedName && !isEnderecoLike(trimmedName)) {
+		return trimmedName;
+	}
+
+	return address ?? "-";
+}
+
 function getVoteOptionLabels(dispute: DisputeItem | null) {
 	const openerRole = getDisputeParticipantRoleLabel(dispute?.contract?.openedBy, dispute);
 	const opposingRole = openerRole === "Cliente" ? "Tecnico" : openerRole === "Tecnico" ? "Cliente" : null;
@@ -569,17 +583,17 @@ export function DisputesPanelView({
 
 						<Stack gap={6}>
 							<Text size="sm">
-								Cliente: {selectedDispute.request.clientName} ({selectedDispute.request.clientAddress})
+								Cliente (quem abriu): {formatParticipantIdentity(selectedDispute.request.clientName, selectedDispute.request.clientAddress)}
 							</Text>
 							<Text size="sm">
-								Tecnico: {selectedDispute.request.technicianName} ({selectedDispute.request.technicianAddress})
+								Tecnico (outra parte): {formatParticipantIdentity(selectedDispute.request.technicianName, selectedDispute.request.technicianAddress)}
 							</Text>
 							<Text size="sm">Motivo: {selectedDispute.request.disputeReason ?? selectedDispute.contract?.motivo ?? "-"}</Text>
 							<Text size="sm">
-								Votos a favor de quem abriu: {formatVoteValue(selectedDispute.contract?.votesForOpener)}
+								Total de RPT a favor de quem abriu: {formatVoteValue(selectedDispute.contract?.votesForOpener)}
 							</Text>
 							<Text size="sm">
-								Votos a favor da outra parte: {formatVoteValue(selectedDispute.contract?.votesForOpposing)}
+								Total de RPT a favor da outra parte: {formatVoteValue(selectedDispute.contract?.votesForOpposing)}
 							</Text>
 							<Text size="sm">Prazo: {formatDateTime(selectedDispute.contract?.deadline)}</Text>
 						</Stack>
@@ -646,7 +660,8 @@ export function DisputesPanelView({
 								<Stack gap={2}>
 									<Title order={4}>Votar na disputa</Title>
 									<Text size="sm" c="dimmed">
-										Quem nao participa da ordem pode votar enquanto a janela estiver aberta.
+										Quem nao participa da ordem pode votar enquanto a janela estiver aberta. O contrato soma o saldo de RTP
+										do votante como peso do voto no momento do envio.
 									</Text>
 								</Stack>
 
@@ -676,7 +691,7 @@ export function DisputesPanelView({
 									{selectedVoteLocked
 										? "Seu voto ja foi registrado nesta disputa."
 										: hasVotingTokens
-										? "Seu voto sera enviado ao contrato e contabilizado de acordo com a posicao escolhida."
+										? "Seu voto sera enviado ao contrato e contabilizado pelo saldo de RTP do momento."
 										: "Voce precisa ter RPT para votar."}
 								</Text>
 
