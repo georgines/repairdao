@@ -18,6 +18,9 @@ export function SystemConfigurationPanelHeaderView({
 			<Group justify="space-between" align="flex-start">
 				<Stack gap={2}>
 					<Title order={3}>Configuracoes do sistema</Title>					
+					<Text size="sm" c="dimmed">
+						A blockchain e a fonte de verdade. O banco apenas espelha o estado dos contratos.
+					</Text>
 				</Stack>
 
 				<Badge variant="light" color={statusColor}>
@@ -27,4 +30,3 @@ export function SystemConfigurationPanelHeaderView({
 		</Stack>
 	);
 }
-

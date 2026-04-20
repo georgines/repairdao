@@ -26,8 +26,16 @@ export function SystemConfigurationPanelOverviewView({
 			</Text>
 			<Text size="sm">
 				Taxa atual: <strong>1 ETH = {tokensPerEth} RPT</strong>
-			</Text>	
+			</Text>
+			<Text size="sm" c="dimmed">
+				Dono do deposito: {donoDepositoAtualCurto}
+			</Text>
+			<Text size="sm" c="dimmed">
+				Dono da taxa de cambio: {donoTokenAtualCurto}
+			</Text>
+			<Text size="sm" c="dimmed">
+				Carteira conectada: {walletNotice}
+			</Text>
 		</Stack>
 	);
 }
-
