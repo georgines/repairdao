@@ -6,7 +6,6 @@ export function ServiceRequestsPanelModalActionsView({
 	requestModalAction,
 	requestModalRequest,
 	requestModalBudget,
-	requestModalRating,
 	requestModalDisputeReason,
 	busyRequestId,
 	onCloseRequestModal,

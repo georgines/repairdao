@@ -8,39 +8,72 @@ import { DisputesPanelView } from "@/components/disputes/DisputesPanel/DisputesP
 import type { DisputaContratoDominio, EvidenciaContratoDominio } from "@/services/blockchain/adapters";
 import type { ServiceRequestSummary } from "@/services/serviceRequests";
 
+type PanelProps = ComponentProps<typeof DisputesPanelView>;
+type PanelOverrides = {
+	error?: string | null;
+	header?: Partial<PanelProps["header"]>;
+	filters?: Partial<PanelProps["filters"]>;
+	table?: Partial<PanelProps["table"]>;
+	modal?: Partial<PanelProps["modal"]>;
+};
+
 function renderWithMantine(node: ReactElement) {
 	return render(<MantineProvider>{node}</MantineProvider>);
 }
 
-function baseProps(overrides: Partial<ComponentProps<typeof DisputesPanelView>> = {}) {
-	return {
+function createPanelProps(overrides: PanelOverrides = {}): PanelProps {
+	const header: PanelProps["header"] = {
+		disputes: [{ request: disputeRequest, contract: disputeContract }],
+		visibleDisputes: [{ request: disputeRequest, contract: disputeContract }],
 		connected: true,
 		walletAddress: "0xvotante",
 		walletNotice: null,
-		perfilAtivo: null as const,
-		hasVotingTokens: true,
+		perfilAtivo: null,
 		loading: false,
-		error: null,
-		disputes: [{ request: disputeRequest, contract: disputeContract }],
+		onRefresh: vi.fn(),
+	};
+
+	const filters: PanelProps["filters"] = {
+		query: "",
+		statusFilter: "all",
+		onQueryChange: vi.fn(),
+		onStatusFilterChange: vi.fn(),
+		onClearFilters: vi.fn(),
+	};
+
+	const table: PanelProps["table"] = {
 		visibleDisputes: [{ request: disputeRequest, contract: disputeContract }],
 		selectedDisputeId: 21,
+		onSelectDispute: vi.fn(),
+	};
+
+	const modal: PanelProps["modal"] = {
+		connected: true,
+		hasVotingTokens: true,
+		busyDisputeId: null,
 		selectedDispute: { request: disputeRequest, contract: disputeContract },
 		selectedEvidence: disputeEvidence,
 		evidenceDraft: "",
 		voteSupportOpener: true,
-		busyDisputeId: null,
 		votedDisputeIds: [],
 		votedDisputeChoices: {},
 		evidenceSubmittedDisputeIds: [],
-		onRefresh: vi.fn(),
-		onSelectDispute: vi.fn(),
 		onCloseDispute: vi.fn(),
 		onEvidenceDraftChange: vi.fn(),
 		onVoteSupportChange: vi.fn(),
 		onSubmitEvidence: vi.fn(),
 		onSubmitVote: vi.fn(),
 		onResolveDispute: vi.fn(),
-		...overrides,
+		walletAddress: "0xvotante",
+	};
+
+	return {
+		error: null,
+		header: { ...header, ...overrides.header },
+		filters: { ...filters, ...overrides.filters },
+		table: { ...table, ...overrides.table },
+		modal: { ...modal, ...overrides.modal },
+		...("error" in overrides ? { error: overrides.error ?? null } : {}),
 	};
 }
 
@@ -70,8 +103,8 @@ const disputeContract: DisputaContratoDominio = {
 	motivo: "Servico fora do combinado",
 	openedBy: "0xcliente",
 	opposingParty: "0xtec",
-	votesForOpener: 3,
-	votesForOpposing: 1,
+	votesForOpener: 3n,
+	votesForOpposing: 1n,
 	deadline: "2026-04-18T12:00:00.000Z",
 	resolved: false,
 };
@@ -128,32 +161,15 @@ describe("components/disputes/DisputesPanelView", () => {
 
 		renderWithMantine(
 			<DisputesPanelView
-				connected
-				walletAddress="0xCLIENTE"
-				walletNotice={null}
-				perfilAtivo="cliente"
-				hasVotingTokens
-				loading={false}
-				error={null}
-				disputes={[{ request: disputeRequest, contract: disputeContract }]}
-				visibleDisputes={[{ request: disputeRequest, contract: disputeContract }]}
-				selectedDisputeId={21}
-				selectedDispute={{ request: disputeRequest, contract: disputeContract }}
-				selectedEvidence={disputeEvidence}
-				evidenceDraft="Nova prova"
-				voteSupportOpener
-				busyDisputeId={null}
-				votedDisputeIds={[]}
-				votedDisputeChoices={{}}
-				evidenceSubmittedDisputeIds={[]}
-				onRefresh={vi.fn()}
-				onSelectDispute={vi.fn()}
-				onCloseDispute={vi.fn()}
-				onEvidenceDraftChange={vi.fn()}
-				onVoteSupportChange={vi.fn()}
-				onSubmitEvidence={onSubmitEvidence}
-				onSubmitVote={vi.fn()}
-				onResolveDispute={vi.fn()}
+				{...createPanelProps({
+					modal: {
+						selectedDispute: { request: disputeRequest, contract: disputeContract },
+						selectedEvidence: disputeEvidence,
+						evidenceDraft: "Nova prova",
+						walletAddress: "0xcliente",
+						onSubmitEvidence,
+					},
+				})}
 			/>,
 		);
 
@@ -176,32 +192,16 @@ describe("components/disputes/DisputesPanelView", () => {
 
 		renderWithMantine(
 			<DisputesPanelView
-				connected
-				walletAddress="0xTEC"
-				walletNotice={null}
-				perfilAtivo="tecnico"
-				hasVotingTokens
-				loading={false}
-				error={null}
-				disputes={[{ request: disputeRequest, contract: disputeContract }]}
-				visibleDisputes={[{ request: disputeRequest, contract: disputeContract }]}
-				selectedDisputeId={21}
-				selectedDispute={{ request: disputeRequest, contract: disputeContract }}
-				selectedEvidence={disputeEvidence}
-				evidenceDraft="Resposta do tecnico"
-				voteSupportOpener
-				busyDisputeId={null}
-				votedDisputeIds={[]}
-				votedDisputeChoices={{}}
-				evidenceSubmittedDisputeIds={[]}
-				onRefresh={vi.fn()}
-				onSelectDispute={vi.fn()}
-				onCloseDispute={vi.fn()}
-				onEvidenceDraftChange={vi.fn()}
-				onVoteSupportChange={vi.fn()}
-				onSubmitEvidence={onSubmitEvidence}
-				onSubmitVote={vi.fn()}
-				onResolveDispute={vi.fn()}
+				{...createPanelProps({
+					header: { perfilAtivo: "tecnico" },
+					modal: {
+						selectedDispute: { request: disputeRequest, contract: disputeContract },
+						selectedEvidence: disputeEvidence,
+						evidenceDraft: "Resposta do tecnico",
+						walletAddress: "0xtec",
+						onSubmitEvidence,
+					},
+				})}
 			/>,
 		);
 
@@ -217,19 +217,15 @@ describe("components/disputes/DisputesPanelView", () => {
 
 		renderWithMantine(
 			<DisputesPanelView
-				{...baseProps({
-					walletAddress: "0xvotante",
-					perfilAtivo: null,
-					selectedDispute: { request: disputeRequest, contract: disputeContract },
-					selectedDisputeId: 21,
-					selectedEvidence: disputeEvidence,
-					evidenceDraft: "",
-					voteSupportOpener: true,
-					hasVotingTokens: true,
-					votedDisputeIds: [],
-					votedDisputeChoices: {},
-					onVoteSupportChange,
-					onSubmitVote,
+				{...createPanelProps({
+					modal: {
+						selectedDispute: { request: disputeRequest, contract: disputeContract },
+						selectedEvidence: disputeEvidence,
+						evidenceDraft: "",
+						voteSupportOpener: true,
+						onVoteSupportChange,
+						onSubmitVote,
+					},
 				})}
 			/>,
 		);
@@ -249,37 +245,15 @@ describe("components/disputes/DisputesPanelView", () => {
 
 		renderWithMantine(
 			<DisputesPanelView
-				connected
-				walletAddress="0xcliente"
-				walletNotice={null}
-				perfilAtivo="cliente"
-				hasVotingTokens
-				loading={false}
-				error={null}
-				disputes={[{ request: disputeRequest, contract: disputeContract }]}
-				visibleDisputes={[{ request: disputeRequest, contract: disputeContract }]}
-				query=""
-				statusFilter="janela_votacao"
-				selectedDisputeId={null}
-				selectedDispute={null}
-				selectedEvidence={[]}
-				evidenceDraft=""
-				voteSupportOpener
-				busyDisputeId={null}
-				votedDisputeIds={[]}
-				votedDisputeChoices={{}}
-				evidenceSubmittedDisputeIds={[]}
-				onRefresh={vi.fn()}
-				onQueryChange={onQueryChange}
-				onStatusFilterChange={vi.fn()}
-				onClearFilters={onClearFilters}
-				onSelectDispute={vi.fn()}
-				onCloseDispute={vi.fn()}
-				onEvidenceDraftChange={vi.fn()}
-				onVoteSupportChange={vi.fn()}
-				onSubmitEvidence={vi.fn()}
-				onSubmitVote={vi.fn()}
-				onResolveDispute={vi.fn()}
+				{...createPanelProps({
+					filters: { query: "", statusFilter: "janela_votacao", onQueryChange, onClearFilters },
+					table: { selectedDisputeId: null },
+					modal: {
+						selectedDispute: null,
+						selectedEvidence: [],
+						evidenceDraft: "",
+					},
+				})}
 			/>,
 		);
 
@@ -301,32 +275,13 @@ describe("components/disputes/DisputesPanelView", () => {
 	it("posiciona a evidência do autor à esquerda e a outra parte à direita", () => {
 		renderWithMantine(
 			<DisputesPanelView
-				connected
-				walletAddress="0xcliente"
-				walletNotice={null}
-				perfilAtivo="cliente"
-				hasVotingTokens
-				loading={false}
-				error={null}
-				disputes={[{ request: disputeRequest, contract: disputeContract }]}
-				visibleDisputes={[{ request: disputeRequest, contract: disputeContract }]}
-				selectedDisputeId={21}
-				selectedDispute={{ request: disputeRequest, contract: disputeContract }}
-				selectedEvidence={pairedEvidence}
-				evidenceDraft="Nova prova"
-				voteSupportOpener
-				busyDisputeId={null}
-				votedDisputeIds={[]}
-				votedDisputeChoices={{}}
-				evidenceSubmittedDisputeIds={[]}
-				onRefresh={vi.fn()}
-				onSelectDispute={vi.fn()}
-				onCloseDispute={vi.fn()}
-				onEvidenceDraftChange={vi.fn()}
-				onVoteSupportChange={vi.fn()}
-				onSubmitEvidence={vi.fn()}
-				onSubmitVote={vi.fn()}
-				onResolveDispute={vi.fn()}
+				{...createPanelProps({
+					modal: {
+						selectedDispute: { request: disputeRequest, contract: disputeContract },
+						selectedEvidence: pairedEvidence,
+						evidenceDraft: "Nova prova",
+					},
+				})}
 			/>,
 		);
 
@@ -342,32 +297,15 @@ describe("components/disputes/DisputesPanelView", () => {
 
 		renderWithMantine(
 			<DisputesPanelView
-				connected
-				walletAddress="0xvotante"
-				walletNotice={null}
-				perfilAtivo={null}
-				hasVotingTokens
-				loading={false}
-				error={null}
-				disputes={[{ request: disputeRequest, contract: disputeContract }]}
-				visibleDisputes={[{ request: disputeRequest, contract: disputeContract }]}
-				selectedDisputeId={21}
-				selectedDispute={{ request: disputeRequest, contract: disputeContract }}
-				selectedEvidence={disputeEvidence}
-				evidenceDraft=""
-				voteSupportOpener={true}
-				busyDisputeId={null}
-				votedDisputeIds={[]}
-				votedDisputeChoices={{}}
-				evidenceSubmittedDisputeIds={[]}
-				onRefresh={vi.fn()}
-				onSelectDispute={vi.fn()}
-				onCloseDispute={vi.fn()}
-				onEvidenceDraftChange={vi.fn()}
-				onVoteSupportChange={onVoteSupportChange}
-				onSubmitEvidence={vi.fn()}
-				onSubmitVote={onSubmitVote}
-				onResolveDispute={vi.fn()}
+				{...createPanelProps({
+					modal: {
+						selectedDispute: { request: disputeRequest, contract: disputeContract },
+						selectedEvidence: disputeEvidence,
+						evidenceDraft: "",
+						onVoteSupportChange,
+						onSubmitVote,
+					},
+				})}
 			/>,
 		);
 
@@ -381,32 +319,19 @@ describe("components/disputes/DisputesPanelView", () => {
 	it("mostra a acao de resolucao quando a janela termina", () => {
 		renderWithMantine(
 			<DisputesPanelView
-				connected
-				walletAddress="0xvotante"
-				walletNotice={null}
-				perfilAtivo={null}
-				hasVotingTokens
-				loading={false}
-				error={null}
-				disputes={[{ request: disputeRequest, contract: { ...disputeContract, estado: "encerrada" } }]}
-				visibleDisputes={[{ request: disputeRequest, contract: { ...disputeContract, estado: "encerrada" } }]}
-				selectedDisputeId={21}
-				selectedDispute={{ request: disputeRequest, contract: { ...disputeContract, estado: "encerrada" } }}
-				selectedEvidence={disputeEvidence}
-				evidenceDraft=""
-				voteSupportOpener={true}
-				busyDisputeId={null}
-				votedDisputeIds={[]}
-				votedDisputeChoices={{ 21: true }}
-				evidenceSubmittedDisputeIds={[]}
-				onRefresh={vi.fn()}
-				onSelectDispute={vi.fn()}
-				onCloseDispute={vi.fn()}
-				onEvidenceDraftChange={vi.fn()}
-				onVoteSupportChange={vi.fn()}
-				onSubmitEvidence={vi.fn()}
-				onSubmitVote={vi.fn()}
-				onResolveDispute={vi.fn()}
+				{...createPanelProps({
+					header: {
+						visibleDisputes: [{ request: disputeRequest, contract: { ...disputeContract, estado: "encerrada" } }],
+					},
+					table: {
+						visibleDisputes: [{ request: disputeRequest, contract: { ...disputeContract, estado: "encerrada" } }],
+					},
+					modal: {
+						selectedDispute: { request: disputeRequest, contract: { ...disputeContract, estado: "encerrada" } },
+						selectedEvidence: disputeEvidence,
+						votedDisputeChoices: { 21: true },
+					},
+				})}
 			/>,
 		);
 
@@ -418,32 +343,14 @@ describe("components/disputes/DisputesPanelView", () => {
 	it("bloqueia o voto ja registrado e preserva o lado escolhido", () => {
 		renderWithMantine(
 			<DisputesPanelView
-				connected
-				walletAddress="0xvotante"
-				walletNotice={null}
-				perfilAtivo={null}
-				hasVotingTokens
-				loading={false}
-				error={null}
-				disputes={[{ request: disputeRequest, contract: disputeContract }]}
-				visibleDisputes={[{ request: disputeRequest, contract: disputeContract }]}
-				selectedDisputeId={21}
-				selectedDispute={{ request: disputeRequest, contract: disputeContract }}
-				selectedEvidence={disputeEvidence}
-				evidenceDraft=""
-				voteSupportOpener={true}
-				busyDisputeId={null}
-				votedDisputeIds={[21]}
-				votedDisputeChoices={{ 21: true }}
-				evidenceSubmittedDisputeIds={[]}
-				onRefresh={vi.fn()}
-				onSelectDispute={vi.fn()}
-				onCloseDispute={vi.fn()}
-				onEvidenceDraftChange={vi.fn()}
-				onVoteSupportChange={vi.fn()}
-				onSubmitEvidence={vi.fn()}
-				onSubmitVote={vi.fn()}
-				onResolveDispute={vi.fn()}
+				{...createPanelProps({
+					modal: {
+						selectedDispute: { request: disputeRequest, contract: disputeContract },
+						selectedEvidence: disputeEvidence,
+						votedDisputeIds: [21],
+						votedDisputeChoices: { 21: true },
+					},
+				})}
 			/>,
 		);
 
@@ -456,32 +363,13 @@ describe("components/disputes/DisputesPanelView", () => {
 	it("oculta o card de evidencia apos registrar a evidencia", () => {
 		renderWithMantine(
 			<DisputesPanelView
-				connected
-				walletAddress="0xcliente"
-				walletNotice={null}
-				perfilAtivo="cliente"
-				hasVotingTokens
-				loading={false}
-				error={null}
-				disputes={[{ request: disputeRequest, contract: disputeContract }]}
-				visibleDisputes={[{ request: disputeRequest, contract: disputeContract }]}
-				selectedDisputeId={21}
-				selectedDispute={{ request: disputeRequest, contract: disputeContract }}
-				selectedEvidence={disputeEvidence}
-				evidenceDraft=""
-				voteSupportOpener={true}
-				busyDisputeId={null}
-				votedDisputeIds={[]}
-				votedDisputeChoices={{}}
-				evidenceSubmittedDisputeIds={[21]}
-				onRefresh={vi.fn()}
-				onSelectDispute={vi.fn()}
-				onCloseDispute={vi.fn()}
-				onEvidenceDraftChange={vi.fn()}
-				onVoteSupportChange={vi.fn()}
-				onSubmitEvidence={vi.fn()}
-				onSubmitVote={vi.fn()}
-				onResolveDispute={vi.fn()}
+				{...createPanelProps({
+					modal: {
+						selectedDispute: { request: disputeRequest, contract: disputeContract },
+						selectedEvidence: disputeEvidence,
+						evidenceSubmittedDisputeIds: [21],
+					},
+				})}
 			/>,
 		);
 

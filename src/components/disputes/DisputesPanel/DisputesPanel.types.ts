@@ -6,36 +6,57 @@ export type DisputeItem = {
 	contract: DisputaContratoDominio | null;
 };
 
-export type DisputesPanelViewProps = {
+export type DisputesPanelHeaderProps = {
+	disputes: DisputeItem[];
+	visibleDisputes: DisputeItem[];
 	connected: boolean;
 	walletAddress: string | null;
 	walletNotice: string | null;
 	perfilAtivo: "cliente" | "tecnico" | null;
-	hasVotingTokens: boolean;
 	loading: boolean;
-	error: string | null;
-	disputes: DisputeItem[];
+	onRefresh: () => void;
+};
+
+export type DisputesPanelFiltersProps = {
+	query: string;
+	statusFilter: "all" | DisputaContratoDominio["estado"];
+	onQueryChange: (value: string) => void;
+	onStatusFilterChange: (value: string | null) => void;
+	onClearFilters: () => void;
+};
+
+export type DisputesPanelTableProps = {
 	visibleDisputes: DisputeItem[];
-	query?: string;
-	statusFilter?: "all" | DisputaContratoDominio["estado"];
 	selectedDisputeId: number | null;
+	onSelectDispute: (disputeId: number) => Promise<void>;
+};
+
+export type DisputesPanelModalProps = {
+	connected: boolean;
+	hasVotingTokens: boolean;
+	busyDisputeId: number | null;
 	selectedDispute: DisputeItem | null;
 	selectedEvidence: EvidenciaContratoDominio[];
 	evidenceDraft: string;
 	voteSupportOpener: boolean;
-	busyDisputeId: number | null;
 	votedDisputeIds: number[];
 	votedDisputeChoices: Record<number, boolean>;
 	evidenceSubmittedDisputeIds: number[];
-	onRefresh: () => void;
-	onQueryChange?: (value: string) => void;
-	onStatusFilterChange?: (value: string | null) => void;
-	onClearFilters?: () => void;
-	onSelectDispute: (disputeId: number) => Promise<void>;
 	onCloseDispute: () => void;
 	onEvidenceDraftChange: (value: string) => void;
 	onVoteSupportChange: (value: boolean) => void;
 	onSubmitEvidence: () => Promise<void>;
 	onSubmitVote: () => Promise<void>;
 	onResolveDispute: () => Promise<void>;
+	walletAddress: string | null;
 };
+
+export type DisputesPanelViewState = {
+	header: DisputesPanelHeaderProps;
+	filters: DisputesPanelFiltersProps;
+	table: DisputesPanelTableProps;
+	modal: DisputesPanelModalProps;
+	error: string | null;
+};
+
+export type DisputesPanelViewProps = DisputesPanelViewState;

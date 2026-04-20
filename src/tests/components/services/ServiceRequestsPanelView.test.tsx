@@ -3,12 +3,81 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import type { ReactElement } from "react";
+import type { ComponentProps, ReactElement } from "react";
 import type { ServiceRequestSummary } from "@/services/serviceRequests";
 import { ServiceRequestsPanelView } from "@/components/services/ServiceRequestsPanel/ServiceRequestsPanelView";
 
+type PanelProps = ComponentProps<typeof ServiceRequestsPanelView>;
+type PanelOverrides = {
+	error?: string | null;
+	header?: Partial<PanelProps["header"]>;
+	filters?: Partial<PanelProps["filters"]>;
+	table?: Partial<PanelProps["table"]>;
+	modal?: Partial<PanelProps["modal"]>;
+};
+
 function renderWithMantine(node: ReactElement) {
 	return render(<MantineProvider>{node}</MantineProvider>);
+}
+
+function createPanelProps(overrides: PanelOverrides = {}): PanelProps {
+	const header: PanelProps["header"] = {
+		connected: true,
+		walletAddress: "0xcliente",
+		walletNotice: null,
+		perfilAtivo: "cliente",
+		clientRequests: [budgetRequest, concludedRequest],
+		visibleRequests: [budgetRequest, concludedRequest],
+		loading: false,
+		onRefresh: vi.fn(),
+	};
+
+	const filters: PanelProps["filters"] = {
+		query: "",
+		statusFilter: "all",
+		visibleRequests: 2,
+		onQueryChange: vi.fn(),
+		onStatusFilterChange: vi.fn(),
+		onClearFilters: vi.fn(),
+	};
+
+	const table: PanelProps["table"] = {
+		connected: true,
+		visibleRequests: [budgetRequest, concludedRequest],
+		perfilAtivo: "cliente",
+		walletAddress: "0xcliente",
+		busyRequestId: null,
+		onOpenRequestModal: vi.fn(),
+	};
+
+	const modal: PanelProps["modal"] = {
+		requestModalOpened: false,
+		requestModalRequest: null,
+		requestModalAction: null,
+		requestModalBudget: null,
+		requestModalRating: 5,
+		requestModalDisputeReason: "",
+		busyRequestId: null,
+		onCloseRequestModal: vi.fn(),
+		onRequestModalBudgetChange: vi.fn(),
+		onRequestModalRatingChange: vi.fn(),
+		onRequestModalDisputeReasonChange: vi.fn(),
+		onSubmitBudget: vi.fn(),
+		onPayBudget: vi.fn(),
+		onCompleteOrder: vi.fn(),
+		onConfirmDelivery: vi.fn(),
+		onRateService: vi.fn(),
+		onOpenDispute: vi.fn(),
+	};
+
+	return {
+		error: null,
+		header: { ...header, ...overrides.header },
+		filters: { ...filters, ...overrides.filters },
+		table: { ...table, ...overrides.table },
+		modal: { ...modal, ...overrides.modal },
+		...("error" in overrides ? { error: overrides.error ?? null } : {}),
+	};
 }
 
 const openRequest: ServiceRequestSummary = {
@@ -93,38 +162,14 @@ describe("components/services/ServiceRequestsPanelView", () => {
 	it("exibe os botoes principais conforme o perfil", () => {
 		renderWithMantine(
 			<ServiceRequestsPanelView
-				connected
-				walletAddress="0xcliente"
-				walletNotice={null}
-				perfilAtivo="cliente"
-				loading={false}
-				error={null}
-				clientRequests={[budgetRequest, concludedRequest]}
-				visibleRequests={[budgetRequest, concludedRequest]}
-				query=""
-				statusFilter="all"
-				requestModalOpened={false}
-				requestModalRequest={null}
-				requestModalAction={null}
-				requestModalBudget={null}
-				requestModalRating={5}
-				requestModalDisputeReason=""
-				busyRequestId={null}
-				onRefresh={vi.fn()}
-				onQueryChange={vi.fn()}
-				onStatusFilterChange={vi.fn()}
-				onClearFilters={vi.fn()}
-				onOpenRequestModal={vi.fn()}
-				onCloseRequestModal={vi.fn()}
-				onRequestModalBudgetChange={vi.fn()}
-				onRequestModalRatingChange={vi.fn()}
-				onRequestModalDisputeReasonChange={vi.fn()}
-				onSubmitBudget={vi.fn()}
-				onPayBudget={vi.fn()}
-				onCompleteOrder={vi.fn()}
-				onConfirmDelivery={vi.fn()}
-				onRateService={vi.fn()}
-				onOpenDispute={vi.fn()}
+				{...createPanelProps({
+					header: {
+						clientRequests: [budgetRequest, concludedRequest],
+						visibleRequests: [budgetRequest, concludedRequest],
+					},
+					filters: { visibleRequests: 2 },
+					table: { visibleRequests: [budgetRequest, concludedRequest] },
+				})}
 			/>,
 		);
 
@@ -138,45 +183,14 @@ describe("components/services/ServiceRequestsPanelView", () => {
 	it("esconde o botao de avaliacao para quem ja avaliou", () => {
 		renderWithMantine(
 			<ServiceRequestsPanelView
-				connected
-				walletAddress="0xcliente"
-				walletNotice={null}
-				perfilAtivo="cliente"
-				loading={false}
-				error={null}
-				clientRequests={[
-					{
-						...concludedRequest,
-						clientRated: true,
+				{...createPanelProps({
+					header: {
+						clientRequests: [{ ...concludedRequest, clientRated: true }],
+						visibleRequests: [{ ...concludedRequest, clientRated: true }],
 					},
-				]}
-				visibleRequests={[
-					{
-						...concludedRequest,
-						clientRated: true,
-					},
-				]}
-				query=""
-				statusFilter="all"
-				requestModalOpened={false}
-				requestModalRequest={null}
-				requestModalAction={null}
-				requestModalBudget={null}
-				requestModalRating={5}
-				busyRequestId={null}
-				onRefresh={vi.fn()}
-				onQueryChange={vi.fn()}
-				onStatusFilterChange={vi.fn()}
-				onClearFilters={vi.fn()}
-				onOpenRequestModal={vi.fn()}
-				onCloseRequestModal={vi.fn()}
-				onRequestModalBudgetChange={vi.fn()}
-				onRequestModalRatingChange={vi.fn()}
-				onSubmitBudget={vi.fn()}
-				onPayBudget={vi.fn()}
-				onCompleteOrder={vi.fn()}
-				onConfirmDelivery={vi.fn()}
-				onRateService={vi.fn()}
+					table: { visibleRequests: [{ ...concludedRequest, clientRated: true }] },
+					filters: { visibleRequests: 1 },
+				})}
 			/>,
 		);
 
@@ -186,38 +200,11 @@ describe("components/services/ServiceRequestsPanelView", () => {
 	it("mostra ordens em disputa com status destacado", () => {
 		renderWithMantine(
 			<ServiceRequestsPanelView
-				connected
-				walletAddress="0xcliente"
-				walletNotice={null}
-				perfilAtivo="cliente"
-				loading={false}
-				error={null}
-				clientRequests={[disputedRequest]}
-				visibleRequests={[disputedRequest]}
-				query=""
-				statusFilter="all"
-				requestModalOpened={false}
-				requestModalRequest={null}
-				requestModalAction={null}
-				requestModalBudget={null}
-				requestModalRating={5}
-				requestModalDisputeReason=""
-				busyRequestId={null}
-				onRefresh={vi.fn()}
-				onQueryChange={vi.fn()}
-				onStatusFilterChange={vi.fn()}
-				onClearFilters={vi.fn()}
-				onOpenRequestModal={vi.fn()}
-				onCloseRequestModal={vi.fn()}
-				onRequestModalBudgetChange={vi.fn()}
-				onRequestModalRatingChange={vi.fn()}
-				onRequestModalDisputeReasonChange={vi.fn()}
-				onSubmitBudget={vi.fn()}
-				onPayBudget={vi.fn()}
-				onCompleteOrder={vi.fn()}
-				onConfirmDelivery={vi.fn()}
-				onRateService={vi.fn()}
-				onOpenDispute={vi.fn()}
+				{...createPanelProps({
+					header: { clientRequests: [disputedRequest], visibleRequests: [disputedRequest] },
+					table: { visibleRequests: [disputedRequest] },
+					filters: { visibleRequests: 1 },
+				})}
 			/>,
 		);
 
@@ -230,45 +217,24 @@ describe("components/services/ServiceRequestsPanelView", () => {
 
 		renderWithMantine(
 			<ServiceRequestsPanelView
-				connected
-				walletAddress="0xtec"
-				walletNotice={null}
-				perfilAtivo="tecnico"
-				loading={false}
-				error={null}
-				clientRequests={[openRequest]}
-				visibleRequests={[openRequest]}
-				query=""
-				statusFilter="all"
-				requestModalOpened
-				requestModalRequest={openRequest}
-				requestModalAction="budget"
-				requestModalBudget={250}
-				requestModalRating={5}
-				requestModalDisputeReason=""
-				busyRequestId={null}
-				onRefresh={vi.fn()}
-				onQueryChange={vi.fn()}
-				onStatusFilterChange={vi.fn()}
-				onClearFilters={vi.fn()}
-				onOpenRequestModal={vi.fn()}
-				onCloseRequestModal={vi.fn()}
-				onRequestModalBudgetChange={vi.fn()}
-				onRequestModalRatingChange={vi.fn()}
-				onRequestModalDisputeReasonChange={vi.fn()}
-				onSubmitBudget={onSubmitBudget}
-				onPayBudget={vi.fn()}
-				onCompleteOrder={vi.fn()}
-				onConfirmDelivery={vi.fn()}
-				onRateService={vi.fn()}
-				onOpenDispute={vi.fn()}
+				{...createPanelProps({
+					header: { clientRequests: [openRequest], visibleRequests: [openRequest] },
+					table: { visibleRequests: [openRequest] },
+					filters: { visibleRequests: 1 },
+					modal: {
+						requestModalOpened: true,
+						requestModalRequest: openRequest,
+						requestModalAction: "budget",
+						requestModalBudget: 250,
+						onSubmitBudget,
+					},
+				})}
 			/>,
 		);
 
 		expect(screen.getByText("Definir valor do servico")).toBeDefined();
 		expect(screen.getByRole("button", { name: "Aceitar orcamento" })).toBeDefined();
 		fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Aceitar orcamento" }));
-
 		expect(onSubmitBudget).toHaveBeenCalledTimes(1);
 	});
 
@@ -277,38 +243,17 @@ describe("components/services/ServiceRequestsPanelView", () => {
 
 		renderWithMantine(
 			<ServiceRequestsPanelView
-				connected
-				walletAddress="0xcliente"
-				walletNotice={null}
-				perfilAtivo="cliente"
-				loading={false}
-				error={null}
-				clientRequests={[budgetRequest]}
-				visibleRequests={[budgetRequest]}
-				query=""
-				statusFilter="all"
-				requestModalOpened
-				requestModalRequest={budgetRequest}
-				requestModalAction="pay"
-				requestModalBudget={null}
-				requestModalRating={5}
-				requestModalDisputeReason=""
-				busyRequestId={null}
-				onRefresh={vi.fn()}
-				onQueryChange={vi.fn()}
-				onStatusFilterChange={vi.fn()}
-				onClearFilters={vi.fn()}
-				onOpenRequestModal={vi.fn()}
-				onCloseRequestModal={vi.fn()}
-				onRequestModalBudgetChange={vi.fn()}
-				onRequestModalRatingChange={vi.fn()}
-				onRequestModalDisputeReasonChange={vi.fn()}
-				onSubmitBudget={vi.fn()}
-				onPayBudget={onPayBudget}
-				onCompleteOrder={vi.fn()}
-				onConfirmDelivery={vi.fn()}
-				onRateService={vi.fn()}
-				onOpenDispute={vi.fn()}
+				{...createPanelProps({
+					header: { clientRequests: [budgetRequest], visibleRequests: [budgetRequest] },
+					table: { visibleRequests: [budgetRequest] },
+					filters: { visibleRequests: 1 },
+					modal: {
+						requestModalOpened: true,
+						requestModalRequest: budgetRequest,
+						requestModalAction: "pay",
+						onPayBudget,
+					},
+				})}
 			/>,
 		);
 
@@ -322,38 +267,17 @@ describe("components/services/ServiceRequestsPanelView", () => {
 
 		renderWithMantine(
 			<ServiceRequestsPanelView
-				connected
-				walletAddress="0xcliente"
-				walletNotice={null}
-				perfilAtivo="cliente"
-				loading={false}
-				error={null}
-				clientRequests={[concludedRequest]}
-				visibleRequests={[concludedRequest]}
-				query=""
-				statusFilter="all"
-				requestModalOpened
-				requestModalRequest={concludedRequest}
-				requestModalAction="confirm"
-				requestModalBudget={null}
-				requestModalRating={5}
-				requestModalDisputeReason=""
-				busyRequestId={null}
-				onRefresh={vi.fn()}
-				onQueryChange={vi.fn()}
-				onStatusFilterChange={vi.fn()}
-				onClearFilters={vi.fn()}
-				onOpenRequestModal={vi.fn()}
-				onCloseRequestModal={vi.fn()}
-				onRequestModalBudgetChange={vi.fn()}
-				onRequestModalRatingChange={vi.fn()}
-				onRequestModalDisputeReasonChange={vi.fn()}
-				onSubmitBudget={vi.fn()}
-				onPayBudget={vi.fn()}
-				onCompleteOrder={vi.fn()}
-				onConfirmDelivery={onConfirmDelivery}
-				onRateService={vi.fn()}
-				onOpenDispute={vi.fn()}
+				{...createPanelProps({
+					header: { clientRequests: [concludedRequest], visibleRequests: [concludedRequest] },
+					table: { visibleRequests: [concludedRequest] },
+					filters: { visibleRequests: 1 },
+					modal: {
+						requestModalOpened: true,
+						requestModalRequest: concludedRequest,
+						requestModalAction: "confirm",
+						onConfirmDelivery,
+					},
+				})}
 			/>,
 		);
 
@@ -368,38 +292,18 @@ describe("components/services/ServiceRequestsPanelView", () => {
 
 		renderWithMantine(
 			<ServiceRequestsPanelView
-				connected
-				walletAddress="0xcliente"
-				walletNotice={null}
-				perfilAtivo="cliente"
-				loading={false}
-				error={null}
-				clientRequests={[concludedRequest]}
-				visibleRequests={[concludedRequest]}
-				query=""
-				statusFilter="all"
-				requestModalOpened
-				requestModalRequest={concludedRequest}
-				requestModalAction="rate"
-				requestModalBudget={null}
-				requestModalRating={5}
-				requestModalDisputeReason=""
-				busyRequestId={null}
-				onRefresh={vi.fn()}
-				onQueryChange={vi.fn()}
-				onStatusFilterChange={vi.fn()}
-				onClearFilters={vi.fn()}
-				onOpenRequestModal={vi.fn()}
-				onCloseRequestModal={vi.fn()}
-				onRequestModalBudgetChange={vi.fn()}
-				onRequestModalRatingChange={onRequestModalRatingChange}
-				onRequestModalDisputeReasonChange={vi.fn()}
-				onSubmitBudget={vi.fn()}
-				onPayBudget={vi.fn()}
-				onCompleteOrder={vi.fn()}
-				onConfirmDelivery={vi.fn()}
-				onRateService={onRateService}
-				onOpenDispute={vi.fn()}
+				{...createPanelProps({
+					header: { clientRequests: [concludedRequest], visibleRequests: [concludedRequest] },
+					table: { visibleRequests: [concludedRequest] },
+					filters: { visibleRequests: 1 },
+					modal: {
+						requestModalOpened: true,
+						requestModalRequest: concludedRequest,
+						requestModalAction: "rate",
+						onRequestModalRatingChange,
+						onRateService,
+					},
+				})}
 			/>,
 		);
 
@@ -418,38 +322,19 @@ describe("components/services/ServiceRequestsPanelView", () => {
 
 		renderWithMantine(
 			<ServiceRequestsPanelView
-				connected
-				walletAddress="0xcliente"
-				walletNotice={null}
-				perfilAtivo="cliente"
-				loading={false}
-				error={null}
-				clientRequests={[concludedRequest]}
-				visibleRequests={[concludedRequest]}
-				query=""
-				statusFilter="all"
-				requestModalOpened
-				requestModalRequest={concludedRequest}
-				requestModalAction="dispute"
-				requestModalBudget={null}
-				requestModalRating={5}
-				requestModalDisputeReason="Servico fora do combinado"
-				busyRequestId={null}
-				onRefresh={vi.fn()}
-				onQueryChange={vi.fn()}
-				onStatusFilterChange={vi.fn()}
-				onClearFilters={vi.fn()}
-				onOpenRequestModal={vi.fn()}
-				onCloseRequestModal={vi.fn()}
-				onRequestModalBudgetChange={vi.fn()}
-				onRequestModalRatingChange={vi.fn()}
-				onRequestModalDisputeReasonChange={onRequestModalDisputeReasonChange}
-				onSubmitBudget={vi.fn()}
-				onPayBudget={vi.fn()}
-				onCompleteOrder={vi.fn()}
-				onConfirmDelivery={vi.fn()}
-				onRateService={vi.fn()}
-				onOpenDispute={onOpenDispute}
+				{...createPanelProps({
+					header: { clientRequests: [concludedRequest], visibleRequests: [concludedRequest] },
+					table: { visibleRequests: [concludedRequest] },
+					filters: { visibleRequests: 1 },
+					modal: {
+						requestModalOpened: true,
+						requestModalRequest: concludedRequest,
+						requestModalAction: "dispute",
+						requestModalDisputeReason: "Servico fora do combinado",
+						onRequestModalDisputeReasonChange,
+						onOpenDispute,
+					},
+				})}
 			/>,
 		);
 
@@ -472,38 +357,23 @@ describe("components/services/ServiceRequestsPanelView", () => {
 
 		renderWithMantine(
 			<ServiceRequestsPanelView
-				connected
-				walletAddress="0xcliente"
-				walletNotice={null}
-				perfilAtivo="cliente"
-				loading={false}
-				error={null}
-				clientRequests={[openRequest, budgetRequest]}
-				visibleRequests={[openRequest, budgetRequest]}
-				query=""
-				statusFilter="all"
-				requestModalOpened={false}
-				requestModalRequest={null}
-				requestModalAction={null}
-				requestModalBudget={null}
-				requestModalRating={5}
-				requestModalDisputeReason=""
-				busyRequestId={null}
-				onRefresh={onRefresh}
-				onQueryChange={onQueryChange}
-				onStatusFilterChange={onStatusFilterChange}
-				onClearFilters={onClearFilters}
-				onOpenRequestModal={onOpenRequestModal}
-				onCloseRequestModal={vi.fn()}
-				onRequestModalBudgetChange={vi.fn()}
-				onRequestModalRatingChange={vi.fn()}
-				onRequestModalDisputeReasonChange={vi.fn()}
-				onSubmitBudget={vi.fn()}
-				onPayBudget={vi.fn()}
-				onCompleteOrder={vi.fn()}
-				onConfirmDelivery={vi.fn()}
-				onRateService={vi.fn()}
-				onOpenDispute={vi.fn()}
+				{...createPanelProps({
+					header: {
+						clientRequests: [openRequest, budgetRequest],
+						visibleRequests: [openRequest, budgetRequest],
+						onRefresh,
+					},
+					filters: {
+						onQueryChange,
+						onStatusFilterChange,
+						onClearFilters,
+						visibleRequests: 2,
+					},
+					table: {
+						visibleRequests: [openRequest, budgetRequest],
+						onOpenRequestModal,
+					},
+				})}
 			/>,
 		);
 

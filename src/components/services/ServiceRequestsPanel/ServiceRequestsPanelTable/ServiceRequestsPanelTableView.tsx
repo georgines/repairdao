@@ -1,4 +1,4 @@
-import { Box, Card, Stack, Table } from "@mantine/core";
+import { Box, Card, Table } from "@mantine/core";
 import styles from "./ServiceRequestsPanelTableView.module.css";
 import { ServiceRequestsPanelEmptyState } from "@/components/services/ServiceRequestsPanel/ServiceRequestsPanelEmptyState/ServiceRequestsPanelEmptyState";
 import { ServiceRequestsPanelTableRow } from "@/components/services/ServiceRequestsPanel/ServiceRequestsPanelTableRow/ServiceRequestsPanelTableRow";
