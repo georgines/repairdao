@@ -1,32 +1,39 @@
 "use client";
 
-import { Alert, Paper, Stack, Text } from "@mantine/core";
 import { useSystemConfiguration } from "@/hooks/useSystemConfiguration";
 import { SystemConfigurationPanelView } from "@/components/system/SystemConfigurationPanel/SystemConfigurationPanelView";
+import { SystemConfigurationPanelAccessNotice } from "@/components/system/SystemConfigurationPanel/SystemConfigurationPanelAccessNotice/SystemConfigurationPanelAccessNotice";
+import {
+	getSystemConfigurationRestrictedNotice,
+	getSystemConfigurationDisconnectedNotice,
+} from "@/services/system/systemConfigurationPresentation";
 
 export function SystemConfigurationPanel() {
 	const panel = useSystemConfiguration();
 
 	if (!panel.connected) {
+		const notice = getSystemConfigurationDisconnectedNotice();
+
 		return (
-			<Paper p="lg" withBorder radius="md">
-				<Stack gap="sm">
-					<Text fw={700}>Configuracoes do sistema</Text>
-					<Alert color="yellow" title="Carteira desconectada">
-						Conecte a carteira autorizada para visualizar esta tela.
-					</Alert>
-				</Stack>
-			</Paper>
+			<SystemConfigurationPanelAccessNotice
+				heading={notice.heading}
+				title={notice.title}
+				message={notice.message}
+				color={notice.color}
+			/>
 		);
 	}
 
 	if (!panel.isOwner) {
+		const notice = getSystemConfigurationRestrictedNotice();
+
 		return (
-			<Paper p="lg" withBorder radius="md">
-				<Alert color="gray" title="Acesso restrito">
-					A carteira conectada nao e dona de nenhuma configuracao do sistema.
-				</Alert>
-			</Paper>
+			<SystemConfigurationPanelAccessNotice
+				heading={notice.heading}
+				title={notice.title}
+				message={notice.message}
+				color={notice.color}
+			/>
 		);
 	}
 

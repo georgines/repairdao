@@ -1,7 +1,17 @@
 "use client";
 
-import { Alert, Badge, Button, Group, Loader, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
-import { formatarRPT } from "@/services/wallet/formatters";
+import { Paper, Stack } from "@mantine/core";
+import styles from "./SystemConfigurationPanelView.module.css";
+import { SystemConfigurationPanelLoading } from "@/components/system/SystemConfigurationPanel/SystemConfigurationPanelLoading/SystemConfigurationPanelLoading";
+import { SystemConfigurationPanelHeader } from "@/components/system/SystemConfigurationPanel/SystemConfigurationPanelHeader/SystemConfigurationPanelHeader";
+import { SystemConfigurationPanelOverview } from "@/components/system/SystemConfigurationPanel/SystemConfigurationPanelOverview/SystemConfigurationPanelOverview";
+import { SystemConfigurationPanelAlert } from "@/components/system/SystemConfigurationPanel/SystemConfigurationPanelAlert/SystemConfigurationPanelAlert";
+import { SystemConfigurationPanelSetting } from "@/components/system/SystemConfigurationPanel/SystemConfigurationPanelSetting/SystemConfigurationPanelSetting";
+import {
+	getSystemConfigurationStatusColor,
+	getSystemConfigurationStatusLabel,
+	getSystemConfigurationWalletNotice,
+} from "@/services/system/systemConfigurationPresentation";
 
 type SystemConfigurationPanelViewProps = {
 	loading: boolean;
@@ -26,14 +36,6 @@ type SystemConfigurationPanelViewProps = {
 	onSubmitTokensPerEth: () => Promise<void>;
 };
 
-function renderBadge(isOwner: boolean, label: string) {
-	return (
-		<Badge variant="light" color={isOwner ? "teal" : "gray"}>
-			{label}
-		</Badge>
-	);
-}
-
 export function SystemConfigurationPanelView({
 	loading,
 	error,
@@ -57,99 +59,55 @@ export function SystemConfigurationPanelView({
 	onSubmitTokensPerEth,
 }: SystemConfigurationPanelViewProps) {
 	if (loading) {
-		return (
-			<Paper p="lg" withBorder radius="md">
-				<Group gap="sm" align="center">
-					<Loader size="sm" />
-					<Text size="sm">Carregando configuracoes do sistema...</Text>
-				</Group>
-			</Paper>
-		);
+		return <SystemConfigurationPanelLoading />;
 	}
 
+	const statusLabel = getSystemConfigurationStatusLabel(isDepositOwner, isTokenOwner);
+	const statusColor = getSystemConfigurationStatusColor(isDepositOwner, isTokenOwner);
+	const walletNotice = getSystemConfigurationWalletNotice(walletAddress);
+
 	return (
-		<Paper p="lg" withBorder radius="md">
-			<Stack gap="lg">
-				<Stack gap={4}>
-					<Group justify="space-between" align="flex-start">
-						<Stack gap={2}>
-							<Title order={3}>Configuracoes do sistema</Title>
-							<Text size="sm" c="dimmed">
-								A blockchain e a fonte de verdade. O banco apenas espelha o estado dos contratos.
-							</Text>
-						</Stack>
+		<Paper p="lg" withBorder radius="md" className={styles.card}>
+			<Stack gap="lg" className={styles.root}>
+				<SystemConfigurationPanelHeader statusLabel={statusLabel} statusColor={statusColor} />
 
-						{isDepositOwner || isTokenOwner
-							? renderBadge(true, isDepositOwner && isTokenOwner ? "Dono autenticado" : "Acesso parcial")
-							: renderBadge(false, "Apenas leitura")}
-					</Group>
+				<SystemConfigurationPanelOverview
+					minDeposit={minDeposit}
+					tokensPerEth={tokensPerEth}
+					donoDepositoAtualCurto={donoDepositoAtualCurto}
+					donoTokenAtualCurto={donoTokenAtualCurto}
+					walletNotice={walletNotice}
+				/>
 
-					<Text size="sm">
-						Deposito minimo atual: <strong>{formatarRPT(minDeposit)}</strong>
-					</Text>
-					<Text size="sm">
-						Taxa atual: <strong>1 ETH = {tokensPerEth} RPT</strong>
-					</Text>
-					<Text size="sm" c="dimmed">
-						Dono do deposito: {donoDepositoAtualCurto}
-					</Text>
-					<Text size="sm" c="dimmed">
-						Dono da taxa de cambio: {donoTokenAtualCurto}
-					</Text>
-					<Text size="sm" c="dimmed">
-						Carteira conectada: {walletAddress ?? "Carteira desconectada"}
-					</Text>
-				</Stack>
+				<SystemConfigurationPanelAlert title="Falha ao carregar" message={error} />
 
-				{error ? <Alert color="red" title="Falha ao carregar">{error}</Alert> : null}
+				<SystemConfigurationPanelSetting
+					title="Deposito minimo"
+					description="Valor exigido para ativacao da conta."
+					errorTitle="Nao foi possivel salvar"
+					errorMessage={minDepositError}
+					value={editingMinDeposit}
+					disabled={!connected || !isDepositOwner}
+					saving={savingMinDeposit}
+					unitLabel="RPT"
+					submitLabel="Salvar deposito minimo"
+					onChange={onEditingMinDepositChange}
+					onSubmit={onSubmitMinDeposit}
+				/>
 
-				<Stack gap="md">
-					<Stack gap={4}>
-						<Title order={4}>Deposito minimo</Title>
-						<Text size="sm" c="dimmed">
-							Valor exigido para ativacao da conta.
-						</Text>
-					</Stack>
-
-					{minDepositError ? <Alert color="red" title="Nao foi possivel salvar">{minDepositError}</Alert> : null}
-
-					<TextInput
-						value={editingMinDeposit}
-						onChange={(event) => onEditingMinDepositChange(event.currentTarget.value)}
-						disabled={!connected || !isDepositOwner || savingMinDeposit}
-						rightSection={<Text size="xs" c="dimmed">RPT</Text>}
-					/>
-
-					<Group justify="flex-end" align="center">
-						<Button onClick={() => void onSubmitMinDeposit()} loading={savingMinDeposit} disabled={!connected || !isDepositOwner}>
-							Salvar deposito minimo
-						</Button>
-					</Group>
-				</Stack>
-
-				<Stack gap="md">
-					<Stack gap={4}>
-						<Title order={4}>Taxa de cambio ETH para RPT</Title>
-						<Text size="sm" c="dimmed">
-							Quantidade de RPT emitida para cada 1 ETH.
-						</Text>
-					</Stack>
-
-					{tokensPerEthError ? <Alert color="red" title="Nao foi possivel salvar">{tokensPerEthError}</Alert> : null}
-
-					<TextInput
-						value={editingTokensPerEth}
-						onChange={(event) => onEditingTokensPerEthChange(event.currentTarget.value)}
-						disabled={!connected || !isTokenOwner || savingTokensPerEth}
-						rightSection={<Text size="xs" c="dimmed">RPT</Text>}
-					/>
-
-					<Group justify="flex-end" align="center">
-						<Button onClick={() => void onSubmitTokensPerEth()} loading={savingTokensPerEth} disabled={!connected || !isTokenOwner}>
-							Salvar taxa de cambio
-						</Button>
-					</Group>
-				</Stack>
+				<SystemConfigurationPanelSetting
+					title="Taxa de cambio ETH para RPT"
+					description="Quantidade de RPT emitida para cada 1 ETH."
+					errorTitle="Nao foi possivel salvar"
+					errorMessage={tokensPerEthError}
+					value={editingTokensPerEth}
+					disabled={!connected || !isTokenOwner}
+					saving={savingTokensPerEth}
+					unitLabel="RPT"
+					submitLabel="Salvar taxa de cambio"
+					onChange={onEditingTokensPerEthChange}
+					onSubmit={onSubmitTokensPerEth}
+				/>
 			</Stack>
 		</Paper>
 	);

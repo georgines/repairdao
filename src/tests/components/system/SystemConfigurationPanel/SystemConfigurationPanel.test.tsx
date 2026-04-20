@@ -97,6 +97,7 @@ describe("SystemConfigurationPanel", () => {
 		);
 
 		expect(markup).toContain("Carteira desconectada");
+		expect(markup).toContain("Configuracoes do sistema");
 	});
 
 	it("bloqueia quando a carteira nao e dona de nenhum contrato", () => {
