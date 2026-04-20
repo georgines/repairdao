@@ -1,7 +1,16 @@
 "use client";
 
-import { Alert, Badge, Button, Group, Loader, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
-import { formatarRPT } from "@/services/wallet/formatters";
+import { Paper, Stack } from "@mantine/core";
+import styles from "./DepositConfigurationPanelView.module.css";
+import { DepositConfigurationPanelLoading } from "@/components/deposit/DepositConfigurationPanel/DepositConfigurationPanelLoading/DepositConfigurationPanelLoading";
+import { DepositConfigurationPanelHeader } from "@/components/deposit/DepositConfigurationPanel/DepositConfigurationPanelHeader/DepositConfigurationPanelHeader";
+import { DepositConfigurationPanelAlerts } from "@/components/deposit/DepositConfigurationPanel/DepositConfigurationPanelAlerts/DepositConfigurationPanelAlerts";
+import { DepositConfigurationPanelForm } from "@/components/deposit/DepositConfigurationPanel/DepositConfigurationPanelForm/DepositConfigurationPanelForm";
+import {
+	getDepositConfigurationStatusColor,
+	getDepositConfigurationStatusLabel,
+	getDepositConfigurationWalletNotice,
+} from "@/services/deposit/depositConfigurationPresentation";
 
 type DepositConfigurationPanelViewProps = {
 	loading: boolean;
@@ -33,66 +42,35 @@ export function DepositConfigurationPanelView({
 	onSubmit,
 }: DepositConfigurationPanelViewProps) {
 	if (loading) {
-		return (
-			<Paper p="lg" withBorder radius="md">
-				<Group gap="sm" align="center">
-					<Loader size="sm" />
-					<Text size="sm">Carregando configuracao do deposito...</Text>
-				</Group>
-			</Paper>
-		);
+		return <DepositConfigurationPanelLoading />;
 	}
 
+	const statusLabel = getDepositConfigurationStatusLabel(isOwner);
+	const statusColor = getDepositConfigurationStatusColor(isOwner);
+	const walletNotice = getDepositConfigurationWalletNotice(walletAddress);
+
 	return (
-		<Paper p="lg" withBorder radius="md">
-			<Stack gap="md">
-				<Stack gap={4}>
-					<Group justify="space-between" align="flex-start">
-						<Stack gap={2}>
-							<Title order={3}>Deposito minimo para ativacao</Title>
-							<Text size="sm" c="dimmed">
-								Somente o dono do contrato pode alterar este valor.
-							</Text>
-						</Stack>
-
-						<Badge variant="light" color={isOwner ? "teal" : "gray"}>
-							{isOwner ? "Dono autenticado" : "Apenas leitura"}
-						</Badge>
-					</Group>
-
-					<Text size="sm">
-						Valor atual: <strong>{formatarRPT(minDeposit)}</strong>
-					</Text>
-					<Text size="sm" c="dimmed">
-						Dono do contrato: {donoAtualCurto}
-					</Text>
-					<Text size="sm" c="dimmed">
-						Carteira conectada: {walletAddress ?? "Carteira desconectada"}
-					</Text>
-				</Stack>
-
-				{error ? <Alert color="red" title="Falha ao carregar">{error}</Alert> : null}
-				{formError ? <Alert color="red" title="Nao foi possivel salvar">{formError}</Alert> : null}
-
-				<TextInput
-					label="Deposito minimo (RPT)"
-					description="Use o valor em RPT que a conta precisa depositar para ficar ativa."
-					value={editingMinDeposit}
-					onChange={(event) => onEditingMinDepositChange(event.currentTarget.value)}
-					disabled={!connected || !isOwner || saving}
-					rightSection={<Text size="xs" c="dimmed">RPT</Text>}
+		<Paper p="lg" withBorder radius="md" className={styles.card}>
+			<Stack gap="md" className={styles.root}>
+				<DepositConfigurationPanelHeader
+					statusLabel={statusLabel}
+					statusColor={statusColor}
+					minDeposit={minDeposit}
+					donoAtualCurto={donoAtualCurto}
+					walletNotice={walletNotice}
 				/>
 
-				<Group justify="space-between" align="center">
-					<Text size="sm" c="dimmed">
-						{connected ? "Alteracao sera enviada ao contrato e espelhada no banco." : "Conecte a carteira para alterar."}
-					</Text>
-					<Button onClick={() => void onSubmit()} loading={saving} disabled={!connected || !isOwner}>
-						Salvar no contrato
-					</Button>
-				</Group>
+				<DepositConfigurationPanelAlerts error={error} formError={formError} />
+
+				<DepositConfigurationPanelForm
+					connected={connected}
+					isOwner={isOwner}
+					editingMinDeposit={editingMinDeposit}
+					saving={saving}
+					onEditingMinDepositChange={onEditingMinDepositChange}
+					onSubmit={onSubmit}
+				/>
 			</Stack>
 		</Paper>
 	);
 }
-

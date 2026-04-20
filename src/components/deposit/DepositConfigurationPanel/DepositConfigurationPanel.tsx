@@ -1,33 +1,14 @@
 "use client";
 
-import { Alert, Paper, Stack, Text } from "@mantine/core";
 import { useDepositConfiguration } from "@/hooks/useDepositConfiguration";
+import { DepositConfigurationPanelAccessNotice } from "@/components/deposit/DepositConfigurationPanel/DepositConfigurationPanelAccessNotice/DepositConfigurationPanelAccessNotice";
 import { DepositConfigurationPanelView } from "@/components/deposit/DepositConfigurationPanel/DepositConfigurationPanelView";
 
 export function DepositConfigurationPanel() {
 	const panel = useDepositConfiguration();
 
-	if (!panel.connected) {
-		return (
-			<Paper p="lg" withBorder radius="md">
-				<Stack gap="sm">
-					<Text fw={700}>Deposito minimo para ativacao</Text>
-					<Alert color="yellow" title="Carteira desconectada">
-						Conecte a carteira do dono do contrato para visualizar esta tela.
-					</Alert>
-				</Stack>
-			</Paper>
-		);
-	}
-
-	if (!panel.isOwner) {
-		return (
-			<Paper p="lg" withBorder radius="md">
-				<Alert color="gray" title="Acesso restrito">
-					A carteira conectada nao e o dono do contrato.
-				</Alert>
-			</Paper>
-		);
+	if (!panel.connected || !panel.isOwner) {
+		return <DepositConfigurationPanelAccessNotice connected={panel.connected} isOwner={panel.isOwner} />;
 	}
 
 	return (
@@ -47,4 +28,3 @@ export function DepositConfigurationPanel() {
 		/>
 	);
 }
-
