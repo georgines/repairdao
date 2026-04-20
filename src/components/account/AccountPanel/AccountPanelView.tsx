@@ -6,14 +6,21 @@ import { AccountPanelHeader } from "@/components/account/AccountPanel/AccountPan
 import { AccountMetricsGrid } from "@/components/account/AccountPanel/AccountMetricsGrid/AccountMetricsGrid";
 import styles from "./AccountPanelView.module.css";
 
-export type AccountPanelViewProps = {
+export type AccountPanelWalletProps = {
 	walletAddress: string | null;
 	walletNotice: string | null;
+	connected: boolean;
+};
+
+export type AccountPanelBalanceProps = {
 	ethBalance: string;
 	usdBalance: string;
 	ethUsdPrice: string;
 	tokensPerEth: string;
 	rptBalance: string;
+};
+
+export type AccountPanelReputationProps = {
 	deposit: string;
 	rewards: string;
 	badgeLevel: string;
@@ -26,6 +33,9 @@ export type AccountPanelViewProps = {
 	totalRatings: string;
 	ratingSum: string;
 	averageRating: string;
+};
+
+export type AccountPanelWithdrawalProps = {
 	withdrawingDeposit: boolean;
 	withdrawingRewards: boolean;
 	error: string | null;
@@ -33,38 +43,16 @@ export type AccountPanelViewProps = {
 	canWithdrawRewards: boolean;
 	onWithdrawDeposit: () => void;
 	onWithdrawRewards: () => void;
-	connected: boolean;
 };
 
-export function AccountPanelView({
-	walletAddress,
-	walletNotice,
-	ethBalance,
-	usdBalance,
-	ethUsdPrice,
-	tokensPerEth,
-	rptBalance,
-	deposit,
-	rewards,
-	badgeLevel,
-	reputationLevelName,
-	perfilAtivo,
-	isActive,
-	totalPoints,
-	positiveRatings,
-	negativeRatings,
-	totalRatings,
-	ratingSum,
-	averageRating,
-	withdrawingDeposit,
-	withdrawingRewards,
-	error,
-	canWithdrawDeposit,
-	canWithdrawRewards,
-	onWithdrawDeposit,
-	onWithdrawRewards,
-	connected,
-}: AccountPanelViewProps) {
+export type AccountPanelViewProps = {
+	wallet: AccountPanelWalletProps;
+	balance: AccountPanelBalanceProps;
+	reputation: AccountPanelReputationProps;
+	withdrawal: AccountPanelWithdrawalProps;
+};
+
+export function AccountPanelView({ wallet, balance, reputation, withdrawal }: AccountPanelViewProps) {
 	return (
 		<Card
 			radius="sm"
@@ -74,47 +62,51 @@ export function AccountPanelView({
 			className={styles.card}
 		>
 			<Stack gap="lg">
-				<AccountPanelHeader badgeLevel={badgeLevel} isActive={isActive} perfilAtivo={perfilAtivo} />
+				<AccountPanelHeader
+					badgeLevel={reputation.badgeLevel}
+					isActive={reputation.isActive}
+					perfilAtivo={reputation.perfilAtivo}
+				/>
 
 				<AccountBalanceCard
-					rptBalance={rptBalance}
-					tokensPerEth={tokensPerEth}
-					ethUsdPrice={ethUsdPrice}
-					ethBalance={ethBalance}
-					usdBalance={usdBalance}
-					walletNotice={walletNotice}
+					rptBalance={balance.rptBalance}
+					tokensPerEth={balance.tokensPerEth}
+					ethUsdPrice={balance.ethUsdPrice}
+					ethBalance={balance.ethBalance}
+					usdBalance={balance.usdBalance}
+					walletNotice={wallet.walletNotice}
 				/>
 
 				<AccountMetricsGrid
-					deposit={deposit}
-					rewards={rewards}
-					reputationLevelName={reputationLevelName}
-					totalPoints={totalPoints}
-					averageRating={averageRating}
-					positiveRatings={positiveRatings}
-					negativeRatings={negativeRatings}
-					totalRatings={totalRatings}
+					deposit={reputation.deposit}
+					rewards={reputation.rewards}
+					reputationLevelName={reputation.reputationLevelName}
+					totalPoints={reputation.totalPoints}
+					averageRating={reputation.averageRating}
+					positiveRatings={reputation.positiveRatings}
+					negativeRatings={reputation.negativeRatings}
+					totalRatings={reputation.totalRatings}
 				/>
 
 				<AccountRatingsCard
-					walletAddress={walletAddress}
-					averageRating={averageRating}
-					positiveRatings={positiveRatings}
-					negativeRatings={negativeRatings}
-					totalRatings={totalRatings}
-					ratingSum={ratingSum}
+					walletAddress={wallet.walletAddress}
+					averageRating={reputation.averageRating}
+					positiveRatings={reputation.positiveRatings}
+					negativeRatings={reputation.negativeRatings}
+					totalRatings={reputation.totalRatings}
+					ratingSum={reputation.ratingSum}
 				/>
 
 				<AccountActionsCard
-					walletNotice={walletNotice}
-					withdrawingDeposit={withdrawingDeposit}
-					withdrawingRewards={withdrawingRewards}
-					error={error}
-					canWithdrawDeposit={canWithdrawDeposit}
-					canWithdrawRewards={canWithdrawRewards}
-					onWithdrawDeposit={onWithdrawDeposit}
-					onWithdrawRewards={onWithdrawRewards}
-					connected={connected}
+					walletNotice={wallet.walletNotice}
+					withdrawingDeposit={withdrawal.withdrawingDeposit}
+					withdrawingRewards={withdrawal.withdrawingRewards}
+					error={withdrawal.error}
+					canWithdrawDeposit={withdrawal.canWithdrawDeposit}
+					canWithdrawRewards={withdrawal.canWithdrawRewards}
+					onWithdrawDeposit={withdrawal.onWithdrawDeposit}
+					onWithdrawRewards={withdrawal.onWithdrawRewards}
+					connected={wallet.connected}
 				/>
 			</Stack>
 		</Card>

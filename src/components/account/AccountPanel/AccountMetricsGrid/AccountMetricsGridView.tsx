@@ -23,36 +23,36 @@ export function AccountMetricsGridView({
 	negativeRatings,
 	totalRatings,
 }: AccountMetricsGridViewProps) {
+	const metricCards = [
+		{
+			label: "Deposito",
+			value: `RPT ${formatarNumeroCompleto(deposit, 2)}`,
+			description: "Valor atualmente travado no contrato.",
+		},
+		{
+			label: "Rendimento",
+			value: `RPT ${formatarNumeroCompleto(rewards, 2)}`,
+			description: "Valor liberado para saque sem afetar o deposito.",
+		},
+		{
+			label: "Nivel",
+			value: reputationLevelName,
+			description: `Pontos acumulados: ${totalPoints}`,
+		},
+		{
+			label: "Avaliacoes",
+			value: `${averageRating}/5`,
+			description: `${positiveRatings} positivas, ${negativeRatings} negativas, ${totalRatings} total.`,
+		},
+	];
+
 	return (
 		<div className={styles.grid}>
-			<div className={`${styles.cell} ${styles.cellHalf} ${styles.cellQuarter}`}>
-				<AccountMetricCard
-					label="Deposito"
-					value={`RPT ${formatarNumeroCompleto(deposit, 2)}`}
-					description="Valor atualmente travado no contrato."
-				/>
-			</div>
-			<div className={`${styles.cell} ${styles.cellHalf} ${styles.cellQuarter}`}>
-				<AccountMetricCard
-					label="Rendimento"
-					value={`RPT ${formatarNumeroCompleto(rewards, 2)}`}
-					description="Valor liberado para saque sem afetar o deposito."
-				/>
-			</div>
-			<div className={`${styles.cell} ${styles.cellHalf} ${styles.cellQuarter}`}>
-				<AccountMetricCard
-					label="Nivel"
-					value={reputationLevelName}
-					description={`Pontos acumulados: ${totalPoints}`}
-				/>
-			</div>
-			<div className={`${styles.cell} ${styles.cellHalf} ${styles.cellQuarter}`}>
-				<AccountMetricCard
-					label="Avaliacoes"
-					value={`${averageRating}/5`}
-					description={`${positiveRatings} positivas, ${negativeRatings} negativas, ${totalRatings} total.`}
-				/>
-			</div>
+			{metricCards.map((metricCard) => (
+				<div key={metricCard.label} className={styles.cell}>
+					<AccountMetricCard {...metricCard} />
+				</div>
+			))}
 		</div>
 	);
 }

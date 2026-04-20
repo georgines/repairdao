@@ -49,33 +49,41 @@ describe("AccountPanelView", () => {
 	it("renderiza os blocos da conta e as acoes principais", () => {
 		const markup = renderWithMantine(
 			<AccountPanelView
-				walletAddress="0x1234567890abcdef1234567890abcdef12345678"
-				walletNotice={null}
-				ethBalance="0.5"
-				usdBalance="1000"
-				ethUsdPrice="2000"
-				tokensPerEth="250"
-				rptBalance="155"
-				deposit="150"
-				rewards="5"
-				badgeLevel="Ouro"
-				reputationLevelName="Platinum"
-				perfilAtivo="tecnico"
-				isActive={true}
-				totalPoints="32"
-				positiveRatings="8"
-				negativeRatings="1"
-				totalRatings="9"
-				ratingSum="41"
-				averageRating="4,6"
-				withdrawingDeposit={false}
-				withdrawingRewards={false}
-				error={null}
-				canWithdrawDeposit={true}
-				canWithdrawRewards={true}
-				onWithdrawDeposit={() => {}}
-				onWithdrawRewards={() => {}}
-				connected={true}
+				wallet={{
+					walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
+					walletNotice: null,
+					connected: true,
+				}}
+				balance={{
+					ethBalance: "0.5",
+					usdBalance: "1000",
+					ethUsdPrice: "2000",
+					tokensPerEth: "250",
+					rptBalance: "155",
+				}}
+				reputation={{
+					deposit: "150",
+					rewards: "5",
+					badgeLevel: "Ouro",
+					reputationLevelName: "Platinum",
+					perfilAtivo: "tecnico",
+					isActive: true,
+					totalPoints: "32",
+					positiveRatings: "8",
+					negativeRatings: "1",
+					totalRatings: "9",
+					ratingSum: "41",
+					averageRating: "4,6",
+				}}
+				withdrawal={{
+					withdrawingDeposit: false,
+					withdrawingRewards: false,
+					error: null,
+					canWithdrawDeposit: true,
+					canWithdrawRewards: true,
+					onWithdrawDeposit: () => {},
+					onWithdrawRewards: () => {},
+				}}
 			/>,
 		);
 
@@ -99,33 +107,41 @@ describe("AccountPanelView", () => {
 	it("mostra estado desconectado e bloqueia as acoes", () => {
 		const markup = renderWithMantine(
 			<AccountPanelView
-				walletAddress={null}
-				walletNotice="Carteira desconectada"
-				ethBalance="0"
-				usdBalance="0"
-				ethUsdPrice="0"
-				tokensPerEth="0"
-				rptBalance="0"
-				deposit="0"
-				rewards="0"
-				badgeLevel="Sem carteira"
-				reputationLevelName="None"
-				perfilAtivo={null}
-				isActive={false}
-				totalPoints="0"
-				positiveRatings="0"
-				negativeRatings="0"
-				totalRatings="5"
-				ratingSum="0"
-				averageRating="0,0"
-				withdrawingDeposit={false}
-				withdrawingRewards={false}
-				error={null}
-				canWithdrawDeposit={false}
-				canWithdrawRewards={false}
-				onWithdrawDeposit={() => {}}
-				onWithdrawRewards={() => {}}
-				connected={false}
+				wallet={{
+					walletAddress: null,
+					walletNotice: "Carteira desconectada",
+					connected: false,
+				}}
+				balance={{
+					ethBalance: "0",
+					usdBalance: "0",
+					ethUsdPrice: "0",
+					tokensPerEth: "0",
+					rptBalance: "0",
+				}}
+				reputation={{
+					deposit: "0",
+					rewards: "0",
+					badgeLevel: "Sem carteira",
+					reputationLevelName: "None",
+					perfilAtivo: null,
+					isActive: false,
+					totalPoints: "0",
+					positiveRatings: "0",
+					negativeRatings: "0",
+					totalRatings: "5",
+					ratingSum: "0",
+					averageRating: "0,0",
+				}}
+				withdrawal={{
+					withdrawingDeposit: false,
+					withdrawingRewards: false,
+					error: null,
+					canWithdrawDeposit: false,
+					canWithdrawRewards: false,
+					onWithdrawDeposit: () => {},
+					onWithdrawRewards: () => {},
+				}}
 			/>,
 		);
 
@@ -139,33 +155,41 @@ describe("AccountPanelView", () => {
 	it("mostra taxa zerada quando nao ha avaliacoes registradas", () => {
 		const markup = renderWithMantine(
 			<AccountPanelView
-				walletAddress={null}
-				walletNotice={null}
-				ethBalance="0"
-				usdBalance="0"
-				ethUsdPrice="0"
-				tokensPerEth="0"
-				rptBalance="0"
-				deposit="0"
-				rewards="0"
-				badgeLevel="Sem carteira"
-				reputationLevelName="None"
-				perfilAtivo={null}
-				isActive={false}
-				totalPoints="0"
-				positiveRatings="0"
-				negativeRatings="0"
-				totalRatings="0"
-				ratingSum="0"
-				averageRating="0,0"
-				withdrawingDeposit={false}
-				withdrawingRewards={false}
-				error={null}
-				canWithdrawDeposit={false}
-				canWithdrawRewards={false}
-				onWithdrawDeposit={() => {}}
-				onWithdrawRewards={() => {}}
-				connected={false}
+				wallet={{
+					walletAddress: null,
+					walletNotice: null,
+					connected: false,
+				}}
+				balance={{
+					ethBalance: "0",
+					usdBalance: "0",
+					ethUsdPrice: "0",
+					tokensPerEth: "0",
+					rptBalance: "0",
+				}}
+				reputation={{
+					deposit: "0",
+					rewards: "0",
+					badgeLevel: "Sem carteira",
+					reputationLevelName: "None",
+					perfilAtivo: null,
+					isActive: false,
+					totalPoints: "0",
+					positiveRatings: "0",
+					negativeRatings: "0",
+					totalRatings: "0",
+					ratingSum: "0",
+					averageRating: "0,0",
+				}}
+				withdrawal={{
+					withdrawingDeposit: false,
+					withdrawingRewards: false,
+					error: null,
+					canWithdrawDeposit: false,
+					canWithdrawRewards: false,
+					onWithdrawDeposit: () => {},
+					onWithdrawRewards: () => {},
+				}}
 			/>,
 		);
 
@@ -182,33 +206,41 @@ describe("AccountPanelView", () => {
 			root.render(
 				<MantineProvider>
 					<AccountPanelView
-						walletAddress="0x1234567890abcdef1234567890abcdef12345678"
-						walletNotice={null}
-						ethBalance="0.5"
-						usdBalance="1000"
-						ethUsdPrice="2000"
-						tokensPerEth="250"
-						rptBalance="155"
-						deposit="150"
-						rewards="5"
-						badgeLevel="Ouro"
-						reputationLevelName="Platinum"
-						perfilAtivo={null}
-						isActive={true}
-						totalPoints="32"
-						positiveRatings="8"
-						negativeRatings="1"
-						totalRatings="9"
-						ratingSum="41"
-						averageRating="4,6"
-						withdrawingDeposit={false}
-						withdrawingRewards={false}
-						error="falha ao sacar"
-						canWithdrawDeposit={true}
-						canWithdrawRewards={true}
-						onWithdrawDeposit={onWithdrawDeposit}
-						onWithdrawRewards={onWithdrawRewards}
-						connected={true}
+						wallet={{
+							walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
+							walletNotice: null,
+							connected: true,
+						}}
+						balance={{
+							ethBalance: "0.5",
+							usdBalance: "1000",
+							ethUsdPrice: "2000",
+							tokensPerEth: "250",
+							rptBalance: "155",
+						}}
+						reputation={{
+							deposit: "150",
+							rewards: "5",
+							badgeLevel: "Ouro",
+							reputationLevelName: "Platinum",
+							perfilAtivo: null,
+							isActive: true,
+							totalPoints: "32",
+							positiveRatings: "8",
+							negativeRatings: "1",
+							totalRatings: "9",
+							ratingSum: "41",
+							averageRating: "4,6",
+						}}
+						withdrawal={{
+							withdrawingDeposit: false,
+							withdrawingRewards: false,
+							error: "falha ao sacar",
+							canWithdrawDeposit: true,
+							canWithdrawRewards: true,
+							onWithdrawDeposit,
+							onWithdrawRewards,
+						}}
 					/>
 				</MantineProvider>,
 			);
