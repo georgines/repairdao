@@ -114,8 +114,6 @@ export function SystemConfigurationPanelView({
 					{minDepositError ? <Alert color="red" title="Nao foi possivel salvar">{minDepositError}</Alert> : null}
 
 					<TextInput
-						label="Deposito minimo (RPT)"
-						description="Use o valor em RPT que a conta precisa depositar para ficar ativa."
 						value={editingMinDeposit}
 						onChange={(event) => onEditingMinDepositChange(event.currentTarget.value)}
 						disabled={!connected || !isDepositOwner || savingMinDeposit}
@@ -143,8 +141,6 @@ export function SystemConfigurationPanelView({
 					{tokensPerEthError ? <Alert color="red" title="Nao foi possivel salvar">{tokensPerEthError}</Alert> : null}
 
 					<TextInput
-						label="Taxa de cambio (RPT por ETH)"
-						description="Informe quantos RPT o contrato deve emitir para cada ETH recebido."
 						value={editingTokensPerEth}
 						onChange={(event) => onEditingTokensPerEthChange(event.currentTarget.value)}
 						disabled={!connected || !isTokenOwner || savingTokensPerEth}
