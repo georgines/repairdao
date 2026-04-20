@@ -1,0 +1,17 @@
+.card {
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.tableHeadCell {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.tableTitleCell {
+  text-align: left;
+  vertical-align: middle;
+}

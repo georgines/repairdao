@@ -1,0 +1,29 @@
+.root {
+	background: var(--mantine-color-gray-0);
+}
+
+.timelineShell {
+	position: relative;
+}
+
+.timelineTrack {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 50%;
+	width: 2px;
+	transform: translateX(-50%);
+	background: var(--mantine-color-gray-3);
+}
+
+.timelineList {
+	position: relative;
+	z-index: 1;
+}
+
+.timelineContent {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	line-height: 1.55;
+}
+
