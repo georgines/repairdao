@@ -1,7 +1,7 @@
 import type { DisputaContratoDominio } from "@/services/blockchain/adapters";
 import type { ServiceRequestSummary } from "@/services/serviceRequests";
 import { normalizarEnderecoComparacao } from "@/services/wallet/formatters";
-import { getVoteOptionLabels, isParticipant } from "@/components/disputes/DisputesPanel/DisputesPanel.utils";
+import { getVoteOptionLabels, isParticipant } from "@/services/disputes/disputesPanelDomain";
 
 export type DisputesPanelModalDispute = {
 	request: ServiceRequestSummary;

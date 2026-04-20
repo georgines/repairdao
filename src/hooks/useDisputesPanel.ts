@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useWalletStatus } from "@/hooks/useWalletStatus";
 import { obterEthereumProvider } from "@/services/wallet/provider";
 import { carregarMetricasElegibilidade, type EligibilityMetrics } from "@/services/eligibility/eligibilityMetrics";
+import { statusLabel } from "@/components/disputes/DisputesPanel/DisputesPanel.utils";
 import { loadServiceRequests } from "@/services/serviceRequests/serviceRequestClient";
 import type { ServiceRequestSummary } from "@/services/serviceRequests/serviceRequestTypes";
 import type { DisputaContratoDominio, EvidenciaContratoDominio } from "@/services/blockchain/adapters";
@@ -76,21 +77,6 @@ function ehDisputaAtiva(contract: DisputaContratoDominio | null) {
 
 function normalizarTexto(valor: string) {
 	return valor.trim().toLowerCase();
-}
-
-function formatarStatusContrato(status: DisputaContratoDominio["estado"] | null) {
-	switch (status) {
-		case "aberta":
-			return "Aberta";
-		case "janela_votacao":
-			return "Votação aberta";
-		case "encerrada":
-			return "Votação encerrada";
-		case "resolvida":
-			return "Resolvida";
-		default:
-			return "Em disputa";
-	}
 }
 
 export function useDisputesPanel(): UseDisputesPanelResult {
@@ -243,7 +229,7 @@ export function useDisputesPanel(): UseDisputesPanelResult {
 						dispute.request.clientName,
 						dispute.request.clientAddress,
 						dispute.request.disputeReason ?? "",
-						formatarStatusContrato(dispute.contract?.estado ?? null),
+						statusLabel(dispute.contract?.estado),
 						dispute.contract?.motivo ?? "",
 						dispute.contract?.openedBy ?? "",
 						dispute.contract?.opposingParty ?? "",
