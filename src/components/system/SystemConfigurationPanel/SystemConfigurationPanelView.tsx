@@ -120,10 +120,7 @@ export function SystemConfigurationPanelView({
 						rightSection={<Text size="xs" c="dimmed">RPT</Text>}
 					/>
 
-					<Group justify="space-between" align="center">
-						<Text size="sm" c="dimmed">
-							{connected ? "A alteracao sera enviada ao contrato e depois espelhada no banco." : "Conecte a carteira para alterar."}
-						</Text>
+					<Group justify="flex-end" align="center">
 						<Button onClick={() => void onSubmitMinDeposit()} loading={savingMinDeposit} disabled={!connected || !isDepositOwner}>
 							Salvar deposito minimo
 						</Button>
@@ -147,10 +144,7 @@ export function SystemConfigurationPanelView({
 						rightSection={<Text size="xs" c="dimmed">RPT</Text>}
 					/>
 
-					<Group justify="space-between" align="center">
-						<Text size="sm" c="dimmed">
-							{connected ? "A alteracao sera enviada ao contrato e depois espelhada no banco." : "Conecte a carteira para alterar."}
-						</Text>
+					<Group justify="flex-end" align="center">
 						<Button onClick={() => void onSubmitTokensPerEth()} loading={savingTokensPerEth} disabled={!connected || !isTokenOwner}>
 							Salvar taxa de cambio
 						</Button>
