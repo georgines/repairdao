@@ -12,24 +12,6 @@ vi.mock("@/hooks/useAccountProfile", () => ({
 	}),
 }));
 
-vi.mock("@/hooks/useSystemConfigurationAccess", () => ({
-	useSystemConfigurationAccess: () => ({
-		isOwner: false,
-		isDepositOwner: false,
-		isTokenOwner: false,
-		loading: false,
-		error: null,
-		configuracao: null,
-		donoDepositoAtual: null,
-		donoDepositoAtualCurto: "Carteira desconectada",
-		donoTokenAtual: null,
-		donoTokenAtualCurto: "Carteira desconectada",
-		connected: false,
-		walletAddress: null,
-		refresh: async () => null,
-	}),
-}));
-
 describe("components/ui/AppShell/AppShell", () => {
 	it("envolve o conteudo no shell global", () => {
 		const markup = renderToStaticMarkup(

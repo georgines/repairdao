@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AppShell, NavLink, ScrollArea, Stack } from "@mantine/core";
 import { useAccountProfile } from "@/hooks/useAccountProfile";
-import { useSystemConfigurationAccess } from "@/hooks/useSystemConfigurationAccess";
 
 const menuItems = [
   { label: "Minha conta", href: "/account" },
@@ -14,7 +13,6 @@ const menuItems = [
 	{ label: "Disputas", href: "/disputes" },
 	{ label: "Votacoes", href: "/governance" },
 	{ label: "Tecnicos disponiveis", href: "/technicians", visibleFor: "cliente" },
-	{ label: "Configuracoes do sistema", href: "/configuration", ownerOnly: true },
 ];
 
 type NavBarProps = {
@@ -24,17 +22,12 @@ type NavBarProps = {
 export function NavBar({ onNavigate }: NavBarProps) {
 	const pathname = usePathname();
 	const { perfilAtivo } = useAccountProfile();
-	const configuracaoSistema = useSystemConfigurationAccess();
 
 	return (
 		<Stack h="100%" gap="sm" p="md">
 			<AppShell.Section grow component={ScrollArea}>
 				<Stack gap={4}>
 					{menuItems.map((item) => {
-						if ("ownerOnly" in item && item.ownerOnly && !configuracaoSistema.isOwner) {
-							return null;
-						}
-
 						if ("visibleFor" in item && item.visibleFor !== perfilAtivo) {
 							return null;
 						}
