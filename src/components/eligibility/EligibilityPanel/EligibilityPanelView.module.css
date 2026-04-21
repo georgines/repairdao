@@ -8,21 +8,30 @@
 }
 
 .summaryRow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
   gap: var(--mantine-spacing-md);
+  align-items: start;
 }
 
 .balanceSummary {
-  flex: 1 1 280px;
+  min-width: 0;
 }
 
 .statusSummary {
-  flex: 0 1 240px;
-  min-width: 220px;
-  margin-left: auto;
-  text-align: right;
   display: flex;
-  align-items: flex-end;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width: 0;
+  text-align: left;
+}
+
+@media (max-width: 48rem) {
+  .summaryRow {
+    grid-template-columns: 1fr;
+  }
+
+  .statusSummary {
+    justify-content: flex-start;
+  }
 }
