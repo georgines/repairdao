@@ -1,10 +1,11 @@
-import { Badge, Card, Group, Stack, Text, Title } from "@mantine/core";
+import { Badge, Card, Group, Stack, Text, ThemeIcon, Timeline, Title } from "@mantine/core";
 import type { EvidenciaContratoDominio } from "@/services/blockchain/adapters";
 import type { DisputeItem } from "@/components/disputes/DisputesPanel/DisputesPanel.types";
 import {
 	formatDisputesPanelModalDateTime,
 	getDisputesPanelEvidenceRoleLabel,
 } from "@/services/disputes/disputesPanelModal";
+import { formatarEnderecoCurto } from "@/services/wallet";
 import styles from "./DisputesPanelModalEvidenceSectionView.module.css";
 
 type DisputesPanelModalEvidenceSectionViewProps = {
@@ -17,12 +18,7 @@ type EvidenceTimelineProps = {
 	evidence: EvidenciaContratoDominio[];
 };
 
-function resolveEvidenceSide(
-	openedBy: string,
-	opposingParty: string,
-	author: string,
-	index: number,
-) {
+function resolveEvidenceCardSide(openedBy: string, opposingParty: string, author: string, index: number) {
 	if (openedBy && author === openedBy) {
 		return "left" as const;
 	}
@@ -31,11 +27,7 @@ function resolveEvidenceSide(
 		return "right" as const;
 	}
 
-	if (index % 2 === 0) {
-		return "left" as const;
-	}
-
-	return "right" as const;
+	return index % 2 === 0 ? "left" as const : "right" as const;
 }
 
 function resolveEvidenceSideLabel(side: "left" | "right", sideRoleLabel: string | null) {
@@ -54,62 +46,62 @@ function resolveEvidenceSideLabel(side: "left" | "right", sideRoleLabel: string 
 
 function EvidenceTimeline({ dispute, evidence }: EvidenceTimelineProps) {
 	return (
-		<div className={styles.timelineShell}>
-			<div className={styles.timelineTrack} aria-hidden="true" />
-			<Stack gap="md" className={styles.timelineList}>
-				{evidence.map((item, index) => {
-					const author = item.submittedBy.trim().toLowerCase();
-					const openedBy = dispute.contract?.openedBy?.trim().toLowerCase() ?? "";
-					const opposingParty = dispute.contract?.opposingParty?.trim().toLowerCase() ?? "";
-					const side = resolveEvidenceSide(openedBy, opposingParty, author, index);
-					let sideColor: "teal" | "indigo" = "indigo";
+		<Timeline active={evidence.length - 1} bulletSize={22} lineWidth={2} align="left" color="teal" className={styles.timelineRoot}>
+			{evidence.map((item, index) => {
+				const author = item.submittedBy.trim().toLowerCase();
+				const openedBy = dispute.contract?.openedBy?.trim().toLowerCase() ?? "";
+				const opposingParty = dispute.contract?.opposingParty?.trim().toLowerCase() ?? "";
+				const side = resolveEvidenceCardSide(openedBy, opposingParty, author, index);
+				const sideColor: "teal" | "indigo" = side === "left" ? "teal" : "indigo";
 
-					if (side === "left") {
-						sideColor = "teal";
-					}
+				const sideRoleLabel = getDisputesPanelEvidenceRoleLabel(item.submittedBy, dispute);
+				const sideLabel = resolveEvidenceSideLabel(side, sideRoleLabel);
+				const titleNode = (
+					<Stack gap={4}>
+						<Group justify="space-between" align="flex-start" wrap="nowrap">
+							<Stack gap={0}>
+								<Text size="sm" fw={700} title={item.submittedBy}>
+									{formatarEnderecoCurto(item.submittedBy)}
+								</Text>
+								<Text size="xs" c="dimmed" title={item.timestamp}>
+									{formatDisputesPanelModalDateTime(item.timestamp)}
+								</Text>
+								<Text size="xs" c="dimmed" title={sideRoleLabel ?? undefined}>
+									{sideRoleLabel ?? ""}
+								</Text>
+							</Stack>
 
-					const sideRoleLabel = getDisputesPanelEvidenceRoleLabel(item.submittedBy, dispute);
-					const sideLabel = resolveEvidenceSideLabel(side, sideRoleLabel);
+							<Badge variant="light" color={sideColor} title={sideLabel}>
+								{sideLabel}
+							</Badge>
+						</Group>
+					</Stack>
+				);
 
-					return (
-						<div key={`${item.timestamp}-${index}`} data-evidence-side={side}>
-							<Card withBorder radius="md" shadow="none" padding="md" className={styles.root}>
-								<Stack gap={8}>
-									<Group justify="space-between" align="flex-start" wrap="nowrap">
-										<Stack gap={2}>
-											<Group gap={6} wrap="nowrap" align="center">
-												<Text size="sm" fw={700}>
-													{item.submittedBy}
-												</Text>
-												<Text size="xs" c="dimmed">
-													#{index + 1}
-												</Text>
-											</Group>
-											<Text size="xs" c="dimmed">
-												{formatDisputesPanelModalDateTime(item.timestamp)}
-											</Text>
-										</Stack>
-
-										<Stack gap={4} align="flex-end">
-											<Text size="xs" c="dimmed">
-												{sideRoleLabel ?? ""}
-											</Text>
-											<Badge variant="light" color={sideColor}>
-												{sideLabel}
-											</Badge>
-										</Stack>
-									</Group>
-
-									<Text size="sm" className={styles.timelineContent}>
-										{item.content}
-									</Text>
-								</Stack>
-							</Card>
-						</div>
-					);
-				})}
-			</Stack>
-		</div>
+				return (
+					<Timeline.Item
+						key={`${item.timestamp}-${index}`}
+						bullet={
+							<ThemeIcon radius="xl" size={22} variant="light" color={sideColor}>
+								<Text size="xs" fw={700}>
+									{index + 1}
+								</Text>
+							</ThemeIcon>
+						}
+						title={titleNode}
+						lineVariant={index === evidence.length - 1 ? "solid" : "dashed"}
+					>
+						<Card withBorder radius="md" shadow="none" padding="md" className={styles.timelineCard}>
+							<Stack gap={8}>
+								<Text size="sm" className={styles.timelineContent}>
+									{item.content}
+								</Text>
+							</Stack>
+						</Card>
+					</Timeline.Item>
+				);
+			})}
+		</Timeline>
 	);
 }
 
