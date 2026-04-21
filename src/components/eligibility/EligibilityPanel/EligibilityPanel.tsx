@@ -8,34 +8,42 @@ export function EligibilityPanel() {
 
 	return (
 		<EligibilityPanelView
-			ethBalance={panel.ethBalance}
-			usdBalance={panel.usdBalance}
-			ethUsdPrice={panel.ethUsdPrice}
-			tokensPerEth={panel.tokensPerEth}
-			rptBalance={panel.rptBalance}
-			badgeLevel={panel.badgeLevel}
-			isActive={panel.isActive}
-			perfilAtivo={panel.perfilAtivo}
-			mostrarSeletoresPapel={panel.mostrarSeletoresPapel}
-			perfilSelecionado={panel.perfilSelecionado}
-			perfilConfirmacao={panel.perfilConfirmacao}
-			nome={panel.nome}
-			areaAtuacao={panel.areaAtuacao}
-			identificadorCarteira={panel.identificadorCarteira}
-			quantidadeRpt={panel.quantidadeRpt}
-			quantidadeErro={panel.quantidadeErro}
-			quantidadeMinima={panel.quantidadeMinima}
-			acaoLabel={panel.acaoLabel}
-			mensagemAcao={panel.mensagemAcao}
-			walletNotice={panel.walletNotice}
-			depositing={panel.depositing}
-			error={panel.error}
-			onPerfilChange={panel.handlePerfilChange}
-			onNomeChange={panel.handleNomeChange}
-			onAreaAtuacaoChange={panel.handleAreaAtuacaoChange}
-			onQuantidadeChange={panel.handleQuantidadeChange}
-			onDeposit={panel.handleDeposit}
-			connected={panel.connected}
+			balance={{
+				ethBalance: panel.ethBalance,
+				usdBalance: panel.usdBalance,
+				ethUsdPrice: panel.ethUsdPrice,
+				tokensPerEth: panel.tokensPerEth,
+				rptBalance: panel.rptBalance,
+				walletNotice: panel.walletNotice,
+			}}
+			status={{
+				badgeLevel: panel.badgeLevel,
+				isActive: panel.isActive,
+				perfilAtivo: panel.perfilAtivo,
+			}}
+			registration={{
+				mostrarSeletoresPapel: panel.mostrarSeletoresPapel,
+				perfilSelecionado: panel.perfilSelecionado,
+				perfilConfirmacao: panel.perfilConfirmacao,
+				nome: panel.nome,
+				areaAtuacao: panel.areaAtuacao,
+				identificadorCarteira: panel.identificadorCarteira,
+				depositing: panel.depositing,
+				onPerfilChange: panel.handlePerfilChange,
+				onNomeChange: panel.handleNomeChange,
+				onAreaAtuacaoChange: panel.handleAreaAtuacaoChange,
+			}}
+			deposit={{
+				quantidadeRpt: panel.quantidadeRpt,
+				quantidadeErro: panel.quantidadeErro,
+				quantidadeMinima: panel.quantidadeMinima,
+				acaoLabel: panel.acaoLabel,
+				mensagemAcao: panel.mensagemAcao,
+				error: panel.error,
+				connected: panel.connected,
+				onQuantidadeChange: panel.handleQuantidadeChange,
+				onDeposit: panel.handleDeposit,
+			}}
 		/>
 	);
 }

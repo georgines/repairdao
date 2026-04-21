@@ -14,35 +14,70 @@ function renderWithMantine(node: ReactElement) {
 }
 
 const baseProps = {
-	ethBalance: "0.5",
-	usdBalance: "1000",
-	ethUsdPrice: "2000",
-	tokensPerEth: "250",
-	rptBalance: "10",
-	badgeLevel: "bronze",
-	isActive: false,
-	perfilAtivo: null,
-	mostrarSeletoresPapel: true,
-	perfilSelecionado: "cliente" as const,
-	perfilConfirmacao: "cliente" as const,
-	nome: "Ana",
-	areaAtuacao: "",
-	identificadorCarteira: "0x1234567890abcdef1234567890abcdef12345678",
-	quantidadeRpt: null as string | number | null,
-	quantidadeErro: null as string | null,
-	quantidadeMinima: 100,
-	acaoLabel: "Ativar como cliente",
-	mensagemAcao: "Ao ativar como cliente, o valor digitado sera confirmado antes de salvar o cadastro.",
-	walletNotice: null as string | null,
-	depositing: false,
-	error: null as string | null,
-	onPerfilChange: vi.fn(),
-	onNomeChange: vi.fn(),
-	onAreaAtuacaoChange: vi.fn(),
-	onQuantidadeChange: vi.fn(),
-	onDeposit: vi.fn(),
-	connected: true,
+	balance: {
+		ethBalance: "0.5",
+		usdBalance: "1000",
+		ethUsdPrice: "2000",
+		tokensPerEth: "250",
+		rptBalance: "10",
+		walletNotice: null as string | null,
+	},
+	status: {
+		badgeLevel: "bronze",
+		isActive: false,
+		perfilAtivo: null,
+	},
+	registration: {
+		mostrarSeletoresPapel: true,
+		perfilSelecionado: "cliente" as const,
+		perfilConfirmacao: "cliente" as const,
+		nome: "Ana",
+		areaAtuacao: "",
+		identificadorCarteira: "0x1234567890abcdef1234567890abcdef12345678",
+		depositing: false,
+		onPerfilChange: vi.fn(),
+		onNomeChange: vi.fn(),
+		onAreaAtuacaoChange: vi.fn(),
+	},
+	deposit: {
+		quantidadeRpt: null as string | number | null,
+		quantidadeErro: null as string | null,
+		quantidadeMinima: 100,
+		acaoLabel: "Ativar como cliente",
+		mensagemAcao: "Ao ativar como cliente, o valor digitado sera confirmado antes de salvar o cadastro.",
+		error: null as string | null,
+		connected: true,
+		onQuantidadeChange: vi.fn(),
+		onDeposit: vi.fn(),
+	},
 };
+
+type DeepPartial<T> = {
+	[K in keyof T]?: T[K] extends (...args: unknown[]) => unknown ? T[K] : T[K] extends object ? DeepPartial<T[K]> : T[K];
+};
+
+function mergeProps(overrides: DeepPartial<typeof baseProps> = {}) {
+	return {
+		...baseProps,
+		...overrides,
+		balance: {
+			...baseProps.balance,
+			...(overrides.balance ?? {}),
+		},
+		status: {
+			...baseProps.status,
+			...(overrides.status ?? {}),
+		},
+		registration: {
+			...baseProps.registration,
+			...(overrides.registration ?? {}),
+		},
+		deposit: {
+			...baseProps.deposit,
+			...(overrides.deposit ?? {}),
+		},
+	};
+}
 
 describe("EligibilityPanelView", () => {
 	let container: HTMLDivElement;
@@ -79,7 +114,7 @@ describe("EligibilityPanelView", () => {
 	});
 
 	it("renderiza o cadastro, o seletor de papel e o card de nivel", async () => {
-		const markup = renderWithMantine(<EligibilityPanelView {...baseProps} />);
+		const markup = renderWithMantine(<EligibilityPanelView {...mergeProps()} />);
 
 		expect(markup).toContain("Depositar RPT e ativar conta");
 		expect(markup).toContain("Definir papel");
@@ -98,15 +133,24 @@ describe("EligibilityPanelView", () => {
 	it("mostra estado desconectado e bloqueia o deposito", () => {
 		const markup = renderWithMantine(
 			<EligibilityPanelView
-				{...baseProps}
-				connected={false}
-				ethBalance="0"
-				usdBalance="0"
-				rptBalance="0"
-				badgeLevel="Sem carteira"
-				walletNotice="Carteira desconectada"
-				quantidadeErro="O valor para deposito deve ser maior ou igual a 100 RPT."
-				identificadorCarteira=""
+				{...mergeProps({
+					balance: {
+						ethBalance: "0",
+						usdBalance: "0",
+						rptBalance: "0",
+						walletNotice: "Carteira desconectada",
+					},
+					status: {
+						badgeLevel: "Sem carteira",
+					},
+					registration: {
+						identificadorCarteira: "",
+					},
+					deposit: {
+						quantidadeErro: "O valor para deposito deve ser maior ou igual a 100 RPT.",
+						connected: false,
+					},
+				})}
 			/>,
 		);
 
@@ -122,10 +166,15 @@ describe("EligibilityPanelView", () => {
 			root.render(
 				<MantineProvider>
 					<EligibilityPanelView
-						{...baseProps}
-						quantidadeRpt={null}
-						quantidadeErro={null}
-						nome="Ana"
+						{...mergeProps({
+							registration: {
+								nome: "Ana",
+							},
+							deposit: {
+								quantidadeRpt: null,
+								quantidadeErro: null,
+							},
+						})}
 					/>
 				</MantineProvider>,
 			);
@@ -140,10 +189,15 @@ describe("EligibilityPanelView", () => {
 			root.render(
 				<MantineProvider>
 					<EligibilityPanelView
-						{...baseProps}
-						quantidadeRpt={10}
-						quantidadeErro={null}
-						nome="Ana"
+						{...mergeProps({
+							registration: {
+								nome: "Ana",
+							},
+							deposit: {
+								quantidadeRpt: 10,
+								quantidadeErro: null,
+							},
+						})}
 					/>
 				</MantineProvider>,
 			);
@@ -158,17 +212,25 @@ describe("EligibilityPanelView", () => {
 			root.render(
 				<MantineProvider>
 					<EligibilityPanelView
-						{...baseProps}
-						isActive={true}
-						perfilAtivo="cliente"
-						mostrarSeletoresPapel={false}
-						perfilConfirmacao="tecnico"
-						areaAtuacao="Eletrica"
-						acaoLabel="Trocar para tecnico"
-						mensagemAcao="Ao trocar para tecnico, o saldo atual sera sacado, a confirmacao sera aguardada e o cadastro sera salvo depois da confirmacao."
-						quantidadeRpt={150}
-						quantidadeErro={null}
-						nome="Ana"
+						{...mergeProps({
+							status: {
+								isActive: true,
+								perfilAtivo: "cliente",
+							},
+							registration: {
+								mostrarSeletoresPapel: false,
+								perfilConfirmacao: "tecnico",
+								areaAtuacao: "Eletrica",
+								nome: "Ana",
+							},
+							deposit: {
+								acaoLabel: "Trocar para tecnico",
+								mensagemAcao:
+									"Ao trocar para tecnico, o saldo atual sera sacado, a confirmacao sera aguardada e o cadastro sera salvo depois da confirmacao.",
+								quantidadeRpt: 150,
+								quantidadeErro: null,
+							},
+						})}
 					/>
 				</MantineProvider>,
 			);
@@ -183,15 +245,25 @@ describe("EligibilityPanelView", () => {
 	it("exibe saldo de RPT grande sem abreviacao", () => {
 		const markup = renderWithMantine(
 			<EligibilityPanelView
-				{...baseProps}
-				isActive={true}
-				perfilAtivo="cliente"
-				mostrarSeletoresPapel={false}
-				perfilConfirmacao="tecnico"
-				rptBalance="1000000"
-				tokensPerEth="1000000"
-				acaoLabel="Trocar para tecnico"
-				mensagemAcao="Ao trocar para tecnico, o saldo atual sera sacado, a confirmacao sera aguardada e o cadastro sera salvo depois da confirmacao."
+				{...mergeProps({
+					balance: {
+						rptBalance: "1000000",
+						tokensPerEth: "1000000",
+					},
+					status: {
+						isActive: true,
+						perfilAtivo: "cliente",
+					},
+					registration: {
+						mostrarSeletoresPapel: false,
+						perfilConfirmacao: "tecnico",
+					},
+					deposit: {
+						acaoLabel: "Trocar para tecnico",
+						mensagemAcao:
+							"Ao trocar para tecnico, o saldo atual sera sacado, a confirmacao sera aguardada e o cadastro sera salvo depois da confirmacao.",
+					},
+				})}
 			/>,
 		);
 
@@ -207,18 +279,26 @@ describe("EligibilityPanelView", () => {
 			root.render(
 				<MantineProvider>
 					<EligibilityPanelView
-						{...baseProps}
-						isActive={true}
-						perfilAtivo="tecnico"
-						mostrarSeletoresPapel={false}
-						perfilConfirmacao="cliente"
-						quantidadeRpt={200}
-						quantidadeErro={null}
-						acaoLabel="Trocar para cliente"
-						mensagemAcao="Ao trocar para cliente, o saldo atual sera sacado, a confirmacao sera aguardada e o cadastro sera salvo depois da confirmacao."
-						error="falha no deposito"
-						onPerfilChange={onPerfilChange}
-						onDeposit={onDeposit}
+						{...mergeProps({
+							status: {
+								isActive: true,
+								perfilAtivo: "tecnico",
+							},
+							registration: {
+								mostrarSeletoresPapel: false,
+								perfilConfirmacao: "cliente",
+								onPerfilChange,
+							},
+							deposit: {
+								quantidadeRpt: 200,
+								quantidadeErro: null,
+								acaoLabel: "Trocar para cliente",
+								mensagemAcao:
+									"Ao trocar para cliente, o saldo atual sera sacado, a confirmacao sera aguardada e o cadastro sera salvo depois da confirmacao.",
+								error: "falha no deposito",
+								onDeposit,
+							},
+						})}
 					/>
 				</MantineProvider>,
 			);
@@ -249,12 +329,17 @@ describe("EligibilityPanelView", () => {
 	it("destaca o papel tecnico antes da ativacao", () => {
 		const markup = renderWithMantine(
 			<EligibilityPanelView
-				{...baseProps}
-				perfilSelecionado="tecnico"
-				perfilConfirmacao="tecnico"
-				areaAtuacao="Eletrica"
-				acaoLabel="Ativar como tecnico"
-				mensagemAcao="Ao ativar como tecnico, o valor digitado sera confirmado antes de salvar o cadastro."
+				{...mergeProps({
+					registration: {
+						perfilSelecionado: "tecnico",
+						perfilConfirmacao: "tecnico",
+						areaAtuacao: "Eletrica",
+					},
+					deposit: {
+						acaoLabel: "Ativar como tecnico",
+						mensagemAcao: "Ao ativar como tecnico, o valor digitado sera confirmado antes de salvar o cadastro.",
+					},
+				})}
 			/>,
 		);
 
@@ -274,14 +359,19 @@ describe("EligibilityPanelView", () => {
 			root.render(
 				<MantineProvider>
 					<EligibilityPanelView
-						{...baseProps}
-						onPerfilChange={onPerfilChange}
-						onNomeChange={onNomeChange}
-						onAreaAtuacaoChange={onAreaAtuacaoChange}
-						onQuantidadeChange={onQuantidadeChange}
-						perfilSelecionado="tecnico"
-						perfilConfirmacao="tecnico"
-						areaAtuacao="Eletrica"
+						{...mergeProps({
+							registration: {
+								onPerfilChange,
+								onNomeChange,
+								onAreaAtuacaoChange,
+								perfilSelecionado: "tecnico",
+								perfilConfirmacao: "tecnico",
+								areaAtuacao: "Eletrica",
+							},
+							deposit: {
+								onQuantidadeChange,
+							},
+						})}
 					/>
 				</MantineProvider>,
 			);
