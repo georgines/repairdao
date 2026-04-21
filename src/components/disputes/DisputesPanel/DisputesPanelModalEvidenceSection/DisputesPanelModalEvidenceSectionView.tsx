@@ -91,7 +91,7 @@ function EvidenceTimeline({ dispute, evidence }: EvidenceTimelineProps) {
 						title={titleNode}
 						lineVariant={index === evidence.length - 1 ? "solid" : "dashed"}
 					>
-						<Card withBorder radius="md" shadow="none" padding="md" className={styles.timelineCard}>
+						<Card withBorder radius="md" shadow="none" padding="md" className={styles.timelineCard} data-evidence-side={side}>
 							<Stack gap={8}>
 								<Text size="sm" className={styles.timelineContent}>
 									{item.content}
