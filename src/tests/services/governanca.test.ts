@@ -3,6 +3,7 @@ import {
   ehEstadoPropostaValido,
   governancaAtingiuQuorum,
   garantirEstadoProposta,
+  garantirDuracaoProposta,
   garantirPodeCriarProposta,
   garantirPodeReceberVoto,
   garantirTransicaoProposta,
@@ -26,13 +27,15 @@ describe("governanca", () => {
   });
 
   it("valida criacao de proposta e duracao", () => {
-    expect(propostaPodeSerCriada(true, "Adicionar nova regra", 7)).toBe(true);
-    expect(propostaPodeSerCriada(false, "Adicionar nova regra", 7)).toBe(false);
-    expect(propostaDuracaoValida(1)).toBe(true);
-    expect(propostaDuracaoValida(31)).toBe(false);
-    expect(garantirPodeCriarProposta(true, "Adicionar nova regra", 7)).toBe(true);
-    expect(() => garantirPodeCriarProposta(false, "", 7)).toThrow(/A proposta exige deposito ativo/);
-    expect(() => garantirPodeCriarProposta(true, "Adicionar nova regra", 31)).toThrow(/duracao entre 1 e 30 dias/);
+    expect(propostaPodeSerCriada(true, false, "Adicionar nova regra")).toBe(true);
+    expect(propostaPodeSerCriada(false, true, "Adicionar nova regra")).toBe(true);
+    expect(propostaPodeSerCriada(false, false, "Adicionar nova regra")).toBe(false);
+    expect(propostaDuracaoValida(300)).toBe(true);
+    expect(propostaDuracaoValida(301)).toBe(false);
+    expect(garantirPodeCriarProposta(true, false, "Adicionar nova regra")).toBe(true);
+    expect(garantirPodeCriarProposta(false, true, "Adicionar nova regra")).toBe(true);
+    expect(() => garantirPodeCriarProposta(false, false, "")).toThrow(/deposito ativo ou permissao de owner/);
+    expect(() => garantirDuracaoProposta(301)).toThrow(/exatamente 300 segundos/);
   });
 
   it("valida votacao por tokens e janela aberta", () => {
@@ -53,7 +56,7 @@ describe("governanca", () => {
     expect(propostaPodeSerExecutada("encerrada", new Date("2026-04-02T10:00:00Z"), new Date("2026-04-01T10:00:00Z"), true)).toBe(false);
     expect(governancaAtingiuQuorum(1000)).toBe(true);
     expect(governancaAtingiuQuorum(999)).toBe(false);
-    expect(() => governancaAtingiuQuorum(0)).toThrow(/maior que zero/);
+    expect(governancaAtingiuQuorum(0)).toBe(false);
     expect(propostaAprovada(600, 200, 1000)).toBe(true);
     expect(propostaAprovada(400, 500, 1000)).toBe(false);
     expect(propostaAprovada(600, 200, 999)).toBe(false);

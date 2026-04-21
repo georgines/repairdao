@@ -7,8 +7,8 @@ import { DepositConfigurationPanelView } from "@/components/deposit/DepositConfi
 export function DepositConfigurationPanel() {
 	const panel = useDepositConfiguration();
 
-	if (!panel.connected || !panel.isOwner) {
-		return <DepositConfigurationPanelAccessNotice connected={panel.connected} isOwner={panel.isOwner} />;
+	if (!panel.connected || !panel.canCreateProposal) {
+		return <DepositConfigurationPanelAccessNotice connected={panel.connected} canCreateProposal={panel.canCreateProposal} />;
 	}
 
 	return (
@@ -17,6 +17,7 @@ export function DepositConfigurationPanel() {
 				loading: panel.loading,
 				connected: panel.connected,
 				isOwner: panel.isOwner,
+				canCreateProposal: panel.canCreateProposal,
 				walletAddress: panel.walletAddress,
 				donoAtualCurto: panel.donoAtualCurto,
 				minDeposit: panel.minDeposit,

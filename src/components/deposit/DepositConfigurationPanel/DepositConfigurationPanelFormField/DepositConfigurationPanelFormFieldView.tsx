@@ -20,7 +20,7 @@ export function DepositConfigurationPanelFormFieldView({
 		<div className={styles.root}>
 			<TextInput
 				label="Deposito minimo (RPT)"
-				description="Use o valor em RPT que a conta precisa depositar para ficar ativa."
+				description="A mudanca cria uma proposta de governanca para o deposito minimo."
 				value={editingMinDeposit}
 				onChange={(event) => onEditingMinDepositChange(event.currentTarget.value)}
 				disabled={!connected || !isOwner || saving}

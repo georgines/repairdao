@@ -31,7 +31,7 @@ describe("gateways repairdao", () => {
 		await expect(gateways.deposit.readContract({ functionName: "getEthUsdPrice" })).resolves.toBe("ok");
 		await expect(gateways.reputation.writeContract({ functionName: "registerUser" })).resolves.toBe("tx");
 		await expect(gateways.escrow.writeContract({ functionName: "createOrder" })).resolves.toBe("tx");
-		await expect(gateways.governance.writeContract({ functionName: "createProposal" })).resolves.toBe("tx");
+		await expect(gateways.governance.writeContract({ functionName: "createMinDepositProposal" })).resolves.toBe("tx");
 
 		expect(contractClient.writeContract).toHaveBeenCalledWith(
 			expect.objectContaining({ address: contratosAtuais.RepairToken, functionName: "buy" }),
@@ -49,7 +49,7 @@ describe("gateways repairdao", () => {
 			expect.objectContaining({ address: contratosAtuais.RepairEscrow, functionName: "createOrder" }),
 		);
 		expect(contractClient.writeContract).toHaveBeenCalledWith(
-			expect.objectContaining({ address: contratosAtuais.RepairGovernance, functionName: "createProposal" }),
+			expect.objectContaining({ address: contratosAtuais.RepairGovernance, functionName: "createMinDepositProposal" }),
 		);
 	});
 

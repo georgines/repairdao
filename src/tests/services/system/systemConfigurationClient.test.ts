@@ -12,6 +12,7 @@ const clientMocks = vi.hoisted(() => ({
 	aguardarTransacao: vi.fn(),
 	writeDepositContract: vi.fn(),
 	writeTokenContract: vi.fn(),
+	writeGovernanceContract: vi.fn(),
 }));
 
 vi.mock("ethers", () => ({
@@ -50,6 +51,9 @@ describe("systemConfigurationClient", () => {
 		clientMocks.obterRedeSelecionadaNoCliente.mockReturnValue("local");
 		clientMocks.criarRepairDAOBrowserContractClient.mockReturnValue({ client: true });
 		clientMocks.criarGatewaysRepairDAO.mockReturnValue({
+			governance: {
+				writeContract: clientMocks.writeGovernanceContract,
+			},
 			deposit: {
 				writeContract: clientMocks.writeDepositContract,
 			},
@@ -111,14 +115,14 @@ describe("systemConfigurationClient", () => {
 				{ status: 200, headers: { "Content-Type": "application/json" } },
 			),
 		);
-		clientMocks.writeDepositContract.mockResolvedValue("tx-hash");
+		clientMocks.writeGovernanceContract.mockResolvedValue("tx-hash");
 
 		await expect(atualizarMinDepositNoContrato({ ethereum: true }, "150")).resolves.toBeUndefined();
 
-		expect(clientMocks.writeDepositContract).toHaveBeenCalledWith(
+		expect(clientMocks.writeGovernanceContract).toHaveBeenCalledWith(
 			expect.objectContaining({
-				functionName: "setMinDeposit",
-				args: [150000000000000000000n],
+				functionName: "createMinDepositProposal",
+				args: ["Propor novo deposito minimo de 150 RPT", 150000000000000000000n],
 			}),
 		);
 		expect(clientMocks.aguardarTransacao).toHaveBeenCalledWith("tx-hash");
@@ -143,14 +147,14 @@ describe("systemConfigurationClient", () => {
 				{ status: 200, headers: { "Content-Type": "application/json" } },
 			),
 		);
-		clientMocks.writeTokenContract.mockResolvedValue("tx-token");
+		clientMocks.writeGovernanceContract.mockResolvedValue("tx-token");
 
 		await expect(atualizarTokensPerEthNoContrato({ ethereum: true }, "1500")).resolves.toBeUndefined();
 
-		expect(clientMocks.writeTokenContract).toHaveBeenCalledWith(
+		expect(clientMocks.writeGovernanceContract).toHaveBeenCalledWith(
 			expect.objectContaining({
-				functionName: "setTokensPerEth",
-				args: [1500n],
+				functionName: "createTokensPerEthProposal",
+				args: ["Propor nova taxa de cambio de 1500 RPT por ETH", 1500n],
 			}),
 		);
 		expect(clientMocks.aguardarTransacao).toHaveBeenCalledWith("tx-token");

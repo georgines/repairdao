@@ -11,11 +11,11 @@ describe("governanceGateway", () => {
 
     const gateway = criarRepairGovernanceGateway(contractClient);
 
-    await expect(gateway.writeContract({ functionName: "createProposal" })).resolves.toBe("tx");
+    await expect(gateway.writeContract({ functionName: "createMinDepositProposal" })).resolves.toBe("tx");
     await expect(gateway.readContract({ functionName: "getProposal" })).resolves.toEqual({ id: 1 });
 
     expect(contractClient.writeContract).toHaveBeenCalledWith(
-      expect.objectContaining({ address: contratos.RepairGovernance, functionName: "createProposal" }),
+      expect.objectContaining({ address: contratos.RepairGovernance, functionName: "createMinDepositProposal" }),
     );
     expect(contractClient.readContract).toHaveBeenCalledWith(
       expect.objectContaining({ address: contratos.RepairGovernance, functionName: "getProposal" }),

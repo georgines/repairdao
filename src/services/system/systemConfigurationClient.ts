@@ -83,11 +83,12 @@ export async function atualizarMinDepositNoContrato(ethereum: EthereumProvider, 
 	const rede = obterRedeSelecionadaNoCliente();
 	const gateways = criarGatewaysRepairDAO(criarRepairDAOBrowserContractClient(provider), rede);
 	const quantidade = parseUnits(valorNormalizado, 18);
+	const descricao = `Propor novo deposito minimo de ${valorNormalizado} RPT`;
 
 	await aguardarTransacao(
-		await gateways.deposit.writeContract({
-			functionName: "setMinDeposit",
-			args: [quantidade],
+		await gateways.governance.writeContract({
+			functionName: "createMinDepositProposal",
+			args: [descricao, quantidade],
 		}),
 	);
 
@@ -103,11 +104,12 @@ export async function atualizarTokensPerEthNoContrato(ethereum: EthereumProvider
 	const provider = new BrowserProvider(ethereum as never);
 	const rede = obterRedeSelecionadaNoCliente();
 	const gateways = criarGatewaysRepairDAO(criarRepairDAOBrowserContractClient(provider), rede);
+	const descricao = `Propor nova taxa de cambio de ${valorNormalizado} RPT por ETH`;
 
 	await aguardarTransacao(
-		await gateways.token.writeContract({
-			functionName: "setTokensPerEth",
-			args: [valorNormalizado],
+		await gateways.governance.writeContract({
+			functionName: "createTokensPerEthProposal",
+			args: [descricao, valorNormalizado],
 		}),
 	);
 

@@ -5,6 +5,7 @@ import {
 import { garantirEstadoDisputa } from "@/services/disputas";
 import { garantirEstadoProposta } from "@/services/governanca";
 import { garantirTextoNaoVazio } from "@/services/validacoes";
+import { normalizarEndereco } from "@/services/blockchain/gateways/shared";
 import type {
   EstadoDisputaRepairDAO,
   EstadoOrdemRepairDAO,
@@ -96,16 +97,32 @@ export interface EvidenciaContratoDominio {
 
 export interface PropostaContratoBruta {
   id: bigint | number | string;
-  estado: bigint | number | string;
+  proposer?: string | null;
   descricao: string;
-  duracaoEmDias: bigint | number | string;
+  votesFor?: bigint | number | string | null;
+  votesAgainst?: bigint | number | string | null;
+  deadline?: bigint | number | string | null;
+  executed?: boolean | null;
+  approved?: boolean | null;
+  action?: bigint | number | string | null;
+  actionValue?: bigint | number | string | null;
+  estado?: bigint | number | string;
+  duracaoEmDias?: bigint | number | string;
 }
 
 export interface PropostaContratoDominio {
   id: string;
-  estado: EstadoPropostaRepairDAO;
   descricao: string;
-  duracaoEmDias: number;
+  proposer?: string;
+  votesFor?: bigint;
+  votesAgainst?: bigint;
+  deadline?: string;
+  executed?: boolean;
+  approved?: boolean;
+  action?: "tokens_per_eth" | "min_deposit";
+  actionValue?: bigint;
+  estado?: EstadoPropostaRepairDAO;
+  duracaoEmDias?: number;
 }
 
 function normalizarNumero(valor: unknown, campo: string): number {
@@ -203,6 +220,22 @@ function normalizarBigInt(valor: unknown, campo: string): bigint {
   });
 }
 
+function mapearAcaoProposta(valor: unknown): "tokens_per_eth" | "min_deposit" {
+  const acao = normalizarNumero(valor, "acao da proposta");
+
+  if (acao === 0) {
+    return "tokens_per_eth";
+  }
+
+  if (acao === 1) {
+    return "min_deposit";
+  }
+
+  throw new RepairDAODominioError("acao_proposta_contrato_invalida", "Acao de proposta invalida no contrato.", {
+    valor,
+  });
+}
+
 export function mapearDisputaDoContrato(disputa: DisputaContratoBruta): DisputaContratoDominio {
   return {
     id: String(disputa.id),
@@ -236,10 +269,53 @@ export function mapearEvidenciaDoContrato(evidencia: EvidenciaContratoBruta): Ev
 }
 
 export function mapearPropostaDoContrato(proposta: PropostaContratoBruta): PropostaContratoDominio {
+  const temFormatoNovo =
+    proposta.executed !== undefined ||
+    proposta.approved !== undefined ||
+    proposta.action !== undefined ||
+    proposta.actionValue !== undefined ||
+    proposta.votesFor !== undefined ||
+    proposta.votesAgainst !== undefined ||
+    proposta.deadline !== undefined ||
+    proposta.proposer !== undefined;
+
+  if (temFormatoNovo) {
+    const actionRaw = proposta.action;
+    const action = actionRaw === undefined || actionRaw === null ? undefined : mapearAcaoProposta(actionRaw);
+
+    return {
+      id: String(proposta.id),
+      descricao: garantirTextoNaoVazio(proposta.descricao, "descricao da proposta"),
+      proposer: normalizarEndereco(proposta.proposer ?? undefined, "propositor da proposta") ?? undefined,
+      votesFor:
+        proposta.votesFor === undefined || proposta.votesFor === null
+          ? undefined
+          : normalizarBigInt(proposta.votesFor, "votos a favor da proposta"),
+      votesAgainst:
+        proposta.votesAgainst === undefined || proposta.votesAgainst === null
+          ? undefined
+          : normalizarBigInt(proposta.votesAgainst, "votos contra a proposta"),
+      deadline:
+        proposta.deadline === undefined || proposta.deadline === null
+          ? undefined
+          : new Date(normalizarNumero(proposta.deadline, "deadline da proposta") * 1000).toISOString(),
+      executed: proposta.executed === undefined || proposta.executed === null ? undefined : Boolean(proposta.executed),
+      approved: proposta.approved === undefined || proposta.approved === null ? undefined : Boolean(proposta.approved),
+      action,
+      actionValue:
+        proposta.actionValue === undefined || proposta.actionValue === null
+          ? undefined
+          : normalizarBigInt(proposta.actionValue, "valor da acao da proposta"),
+    };
+  }
+
   return {
     id: String(proposta.id),
-    estado: mapearEstadoPropostaDoContrato(proposta.estado),
     descricao: garantirTextoNaoVazio(proposta.descricao, "descricao da proposta"),
-    duracaoEmDias: normalizarNumero(proposta.duracaoEmDias, "duracao da proposta"),
+    estado: proposta.estado === undefined ? undefined : mapearEstadoPropostaDoContrato(proposta.estado),
+    duracaoEmDias:
+      proposta.duracaoEmDias === undefined || proposta.duracaoEmDias === null
+        ? undefined
+        : normalizarNumero(proposta.duracaoEmDias, "duracao da proposta"),
   };
 }

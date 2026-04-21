@@ -8,6 +8,7 @@ const baseProps = {
 		loading: false,
 		connected: true,
 		isOwner: true,
+		canCreateProposal: true,
 		walletAddress: "0xowner",
 		donoAtualCurto: "0xowne...wner",
 		minDeposit: "100",
@@ -87,6 +88,6 @@ describe("DepositConfigurationPanelView", () => {
 
 		expect(markup).toContain("Falha ao carregar");
 		expect(markup).toContain("Falha ao salvar");
-		expect(markup).toContain("Salvar no contrato");
+		expect(markup).toContain("Criar proposta");
 	});
 });

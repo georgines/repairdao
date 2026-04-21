@@ -12,6 +12,7 @@ const menuItems = [
 	{ label: "Elegibilidade", href: "/eligibility" },
 	{ label: "Servicos", href: "/services" },
 	{ label: "Disputas", href: "/disputes" },
+	{ label: "Votacoes", href: "/governance" },
 	{ label: "Tecnicos disponiveis", href: "/technicians", visibleFor: "cliente" },
 	{ label: "Configuracoes do sistema", href: "/configuration", ownerOnly: true },
 ];

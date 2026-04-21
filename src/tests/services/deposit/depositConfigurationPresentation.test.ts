@@ -3,13 +3,15 @@ import { getDepositConfigurationFooterNotice, getDepositConfigurationStatusColor
 
 describe("depositConfigurationPresentation", () => {
 	it("deriva os textos base", () => {
-		expect(getDepositConfigurationStatusLabel(true)).toBe("Dono autenticado");
-		expect(getDepositConfigurationStatusLabel(false)).toBe("Apenas leitura");
-		expect(getDepositConfigurationStatusColor(true)).toBe("teal");
-		expect(getDepositConfigurationStatusColor(false)).toBe("gray");
+		expect(getDepositConfigurationStatusLabel(true, false)).toBe("Dono autenticado");
+		expect(getDepositConfigurationStatusLabel(false, true)).toBe("Acesso a propostas");
+		expect(getDepositConfigurationStatusLabel(false, false)).toBe("Apenas leitura");
+		expect(getDepositConfigurationStatusColor(true, false)).toBe("teal");
+		expect(getDepositConfigurationStatusColor(false, true)).toBe("teal");
+		expect(getDepositConfigurationStatusColor(false, false)).toBe("gray");
 		expect(getDepositConfigurationWalletNotice("0xowner")).toBe("0xowner");
 		expect(getDepositConfigurationWalletNotice(null)).toBe("Carteira desconectada");
-		expect(getDepositConfigurationFooterNotice(true)).toBe("Alteracao sera enviada ao contrato e espelhada no banco.");
-		expect(getDepositConfigurationFooterNotice(false)).toBe("Conecte a carteira para alterar.");
+		expect(getDepositConfigurationFooterNotice(true)).toBe("A mudanca sera enviada como proposta de governanca.");
+		expect(getDepositConfigurationFooterNotice(false)).toBe("Conecte a carteira para criar propostas.");
 	});
 });

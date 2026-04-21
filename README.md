@@ -20,6 +20,13 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Governanca
+
+- Propostas de governanca podem ser abertas pelo `owner` ou por qualquer usuario com deposito ativo.
+- O prazo de votacao e fixo em `5 minutes`.
+- A governanca so pode alterar os parametros globais `tokensPerEth` e `minDeposit`.
+- Toda mudanca precisa passar por voto e quorum; o `owner` nao pode burlar essa etapa.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

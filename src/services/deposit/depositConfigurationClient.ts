@@ -59,11 +59,12 @@ export async function atualizarMinDepositNoContrato(ethereum: EthereumProvider, 
 	const rede = obterRedeSelecionadaNoCliente();
 	const gateways = criarGatewaysRepairDAO(criarRepairDAOBrowserContractClient(provider), rede);
 	const quantidade = parseUnits(valorNormalizado, 18);
+	const descricao = `Propor novo deposito minimo de ${valorNormalizado} RPT`;
 
 	await aguardarTransacao(
-		await gateways.deposit.writeContract({
-			functionName: "setMinDeposit",
-			args: [quantidade],
+		await gateways.governance.writeContract({
+			functionName: "createMinDepositProposal",
+			args: [descricao, quantidade],
 		}),
 	);
 
@@ -80,4 +81,3 @@ export async function carregarConfiguracaoDepositoEContrato(): Promise<{
 		contrato: obterRepairDAOContractos(configuracao.network).deposit.address,
 	};
 }
-

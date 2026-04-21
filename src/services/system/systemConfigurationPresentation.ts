@@ -1,8 +1,12 @@
 export type SystemConfigurationStatusColor = "teal" | "gray";
 
-export function getSystemConfigurationStatusLabel(isDepositOwner: boolean, isTokenOwner: boolean) {
+export function getSystemConfigurationStatusLabel(isDepositOwner: boolean, isTokenOwner: boolean, canCreateProposal: boolean) {
 	if (isDepositOwner && isTokenOwner) {
 		return "Dono autenticado";
+	}
+
+	if (canCreateProposal) {
+		return "Acesso a propostas";
 	}
 
 	if (isDepositOwner || isTokenOwner) {
@@ -12,8 +16,8 @@ export function getSystemConfigurationStatusLabel(isDepositOwner: boolean, isTok
 	return "Apenas leitura";
 }
 
-export function getSystemConfigurationStatusColor(isDepositOwner: boolean, isTokenOwner: boolean): SystemConfigurationStatusColor {
-	if (isDepositOwner || isTokenOwner) {
+export function getSystemConfigurationStatusColor(isDepositOwner: boolean, isTokenOwner: boolean, canCreateProposal: boolean): SystemConfigurationStatusColor {
+	if (isDepositOwner || isTokenOwner || canCreateProposal) {
 		return "teal";
 	}
 
@@ -41,7 +45,7 @@ export function getSystemConfigurationRestrictedNotice() {
 	return {
 		heading: null,
 		title: "Acesso restrito",
-		message: "A carteira conectada nao e dona de nenhuma configuracao do sistema.",
+		message: "A carteira conectada nao pode criar propostas de configuracao.",
 		color: "gray" as const,
 	};
 }

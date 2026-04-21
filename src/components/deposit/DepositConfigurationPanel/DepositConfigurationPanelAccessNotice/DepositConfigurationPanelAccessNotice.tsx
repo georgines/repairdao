@@ -4,7 +4,7 @@ import { DepositConfigurationPanelAccessNoticeView } from "@/components/deposit/
 
 type DepositConfigurationPanelAccessNoticeProps = {
 	connected: boolean;
-	isOwner: boolean;
+	canCreateProposal: boolean;
 };
 
 export function DepositConfigurationPanelAccessNotice(props: DepositConfigurationPanelAccessNoticeProps) {

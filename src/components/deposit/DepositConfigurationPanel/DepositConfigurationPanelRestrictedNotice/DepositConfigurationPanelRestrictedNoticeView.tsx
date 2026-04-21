@@ -5,7 +5,7 @@ export function DepositConfigurationPanelRestrictedNoticeView() {
 	return (
 		<Paper p="lg" withBorder radius="md" className={styles.card}>
 			<Alert color="gray" title="Acesso restrito">
-				A carteira conectada nao e o dono do contrato.
+				A carteira conectada nao pode criar propostas de configuracao.
 			</Alert>
 		</Paper>
 	);

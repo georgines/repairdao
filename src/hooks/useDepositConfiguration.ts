@@ -31,12 +31,12 @@ export function useDepositConfiguration(): UseDepositConfigurationResult {
 
 	async function submit() {
 		if (!ethereum || !access.connected) {
-			setFormError("Conecte a carteira para alterar o deposito minimo.");
+			setFormError("Conecte a carteira para criar a proposta do deposito minimo.");
 			return;
 		}
 
-		if (!access.isOwner) {
-			setFormError("Somente o dono do contrato pode alterar o deposito minimo.");
+		if (!access.canCreateProposal) {
+			setFormError("Somente uma carteira com deposito ativo ou o dono do contrato pode criar a proposta do deposito minimo.");
 			return;
 		}
 
@@ -55,7 +55,7 @@ export function useDepositConfiguration(): UseDepositConfigurationResult {
 			const dadosAtualizados = await access.refresh();
 			setEditingMinDeposit(dadosAtualizados?.minDeposit ?? valor);
 		} catch (submitError) {
-			setFormError(submitError instanceof Error ? submitError.message : "Nao foi possivel atualizar o deposito minimo.");
+			setFormError(submitError instanceof Error ? submitError.message : "Nao foi possivel criar a proposta do deposito minimo.");
 		} finally {
 			setSaving(false);
 		}

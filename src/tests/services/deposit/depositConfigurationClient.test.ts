@@ -11,6 +11,7 @@ const clientMocks = vi.hoisted(() => ({
 	obterRedeSelecionadaNoCliente: vi.fn(),
 	aguardarTransacao: vi.fn(),
 	writeContract: vi.fn(),
+	writeGovernanceContract: vi.fn(),
 }));
 
 vi.mock("ethers", () => ({
@@ -45,6 +46,9 @@ describe("depositConfigurationClient", () => {
 		clientMocks.obterRedeSelecionadaNoCliente.mockReturnValue("local");
 		clientMocks.criarRepairDAOBrowserContractClient.mockReturnValue({ client: true });
 		clientMocks.criarGatewaysRepairDAO.mockReturnValue({
+			governance: {
+				writeContract: clientMocks.writeGovernanceContract,
+			},
 			deposit: {
 				writeContract: clientMocks.writeContract,
 			},
@@ -91,14 +95,14 @@ describe("depositConfigurationClient", () => {
 				{ status: 200, headers: { "Content-Type": "application/json" } },
 			),
 		);
-		clientMocks.writeContract.mockResolvedValue("tx-hash");
+		clientMocks.writeGovernanceContract.mockResolvedValue("tx-hash");
 
 		await expect(atualizarMinDepositNoContrato({ ethereum: true }, "150")).resolves.toBeUndefined();
 
-		expect(clientMocks.writeContract).toHaveBeenCalledWith(
+		expect(clientMocks.writeGovernanceContract).toHaveBeenCalledWith(
 			expect.objectContaining({
-				functionName: "setMinDeposit",
-				args: [150000000000000000000n],
+				functionName: "createMinDepositProposal",
+				args: ["Propor novo deposito minimo de 150 RPT", 150000000000000000000n],
 			}),
 		);
 		expect(clientMocks.aguardarTransacao).toHaveBeenCalledWith("tx-hash");

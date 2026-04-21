@@ -97,15 +97,27 @@ describe("adapters blockchain", () => {
     expect(
       mapearPropostaDoContrato({
         id: 7,
-        estado: 1,
         descricao: " nova regra ",
-        duracaoEmDias: 7,
+        proposer: "0xabc",
+        votesFor: 10,
+        votesAgainst: "3",
+        deadline: 1710000000,
+        executed: false,
+        approved: true,
+        action: 0,
+        actionValue: 1500,
       }),
     ).toEqual({
       id: "7",
-      estado: "ativa",
       descricao: "nova regra",
-      duracaoEmDias: 7,
+      proposer: "0xabc",
+      votesFor: 10n,
+      votesAgainst: 3n,
+      deadline: "2024-03-09T16:00:00.000Z",
+      executed: false,
+      approved: true,
+      action: "tokens_per_eth",
+      actionValue: 1500n,
     });
 
     expect(
@@ -129,25 +141,26 @@ describe("adapters blockchain", () => {
     expect(
       mapearPropostaDoContrato({
         id: 8,
-        estado: 1,
         descricao: "nova regra 2",
-        duracaoEmDias: "9" as never,
+        proposer: "0xdef",
+        action: 1,
+        actionValue: "90000000000000000000" as never,
       }),
     ).toEqual({
       id: "8",
-      estado: "ativa",
       descricao: "nova regra 2",
-      duracaoEmDias: 9,
+      proposer: "0xdef",
+      action: "min_deposit",
+      actionValue: 90000000000000000000n,
     });
 
     expect(() =>
       mapearPropostaDoContrato({
         id: 8,
-        estado: 1,
         descricao: "nova regra",
-        duracaoEmDias: 7.5,
+        action: 2,
       }),
-    ).toThrow(/inteiro valido/);
+    ).toThrow(/acao de proposta invalida/i);
   });
 
   it("cobre ramos opcionais e validacoes de conversao", () => {

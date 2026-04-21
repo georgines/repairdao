@@ -29,12 +29,12 @@ describe("DepositConfigurationPanel parts", () => {
 	it("mostra a mensagem de acesso desconectado e restrito", () => {
 		const disconnected = renderToStaticMarkup(
 			<MantineProvider>
-				<DepositConfigurationPanelAccessNotice connected={false} isOwner={false} />
+				<DepositConfigurationPanelAccessNotice connected={false} canCreateProposal={false} />
 			</MantineProvider>,
 		);
 		const restricted = renderToStaticMarkup(
 			<MantineProvider>
-				<DepositConfigurationPanelAccessNotice connected={true} isOwner={false} />
+				<DepositConfigurationPanelAccessNotice connected={true} canCreateProposal={false} />
 			</MantineProvider>,
 		);
 
@@ -118,8 +118,8 @@ describe("DepositConfigurationPanel parts", () => {
 		);
 
 		expect(markup).toContain("Deposito minimo (RPT)");
-		expect(markup).toContain("Salvar no contrato");
-		expect(markup).toContain("Alteracao sera enviada ao contrato e espelhada no banco.");
+		expect(markup).toContain("Criar proposta");
+		expect(markup).toContain("A mudanca sera enviada como proposta de governanca.");
 	});
 
 	it("mostra os blocos pequenos do formulario e do acesso", () => {
@@ -151,7 +151,7 @@ describe("DepositConfigurationPanel parts", () => {
 		);
 
 		expect(fieldMarkup).toContain("Deposito minimo (RPT)");
-		expect(footerMarkup).toContain("Salvar no contrato");
+		expect(footerMarkup).toContain("Criar proposta");
 		expect(disconnectedMarkup).toContain("Carteira desconectada");
 		expect(restrictedMarkup).toContain("Acesso restrito");
 	});

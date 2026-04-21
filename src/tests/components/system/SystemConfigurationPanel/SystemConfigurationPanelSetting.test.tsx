@@ -32,23 +32,23 @@ describe("SystemConfigurationPanelSetting", () => {
 		renderWithMantine(
 			<SystemConfigurationPanelSetting
 				title="Deposito minimo"
-				description="Valor exigido para ativacao da conta."
+				description="A mudanca cria uma proposta de governanca para o deposito minimo."
 				errorTitle="Nao foi possivel salvar"
 				errorMessage={null}
 				value="100"
 				disabled={false}
 				saving={false}
 				unitLabel="RPT"
-				submitLabel="Salvar deposito minimo"
+				submitLabel="Criar proposta do deposito"
 				onChange={() => {}}
 				onSubmit={async () => {}}
 			/>,
 		);
 
 		expect(screen.getByText("Deposito minimo")).toBeTruthy();
-		expect(screen.getByText("Valor exigido para ativacao da conta.")).toBeTruthy();
+		expect(screen.getByText("A mudanca cria uma proposta de governanca para o deposito minimo.")).toBeTruthy();
 		expect(screen.getByDisplayValue("100")).toBeTruthy();
-		expect(screen.getByRole("button", { name: "Salvar deposito minimo" })).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Criar proposta do deposito" })).toBeTruthy();
 	});
 
 	it("chama os handlers de mudança e submissao", () => {
@@ -58,21 +58,21 @@ describe("SystemConfigurationPanelSetting", () => {
 		renderWithMantine(
 			<SystemConfigurationPanelSetting
 				title="Deposito minimo"
-				description="Valor exigido para ativacao da conta."
+				description="A mudanca cria uma proposta de governanca para o deposito minimo."
 				errorTitle="Nao foi possivel salvar"
 				errorMessage={null}
 				value="100"
 				disabled={false}
 				saving={false}
 				unitLabel="RPT"
-				submitLabel="Salvar deposito minimo"
+				submitLabel="Criar proposta do deposito"
 				onChange={onChange}
 				onSubmit={onSubmit}
 			/>,
 		);
 
 		fireEvent.change(screen.getByDisplayValue("100"), { target: { value: "150" } });
-		fireEvent.click(screen.getByRole("button", { name: "Salvar deposito minimo" }));
+		fireEvent.click(screen.getByRole("button", { name: "Criar proposta do deposito" }));
 
 		expect(onChange).toHaveBeenCalledWith("150");
 		expect(onSubmit).toHaveBeenCalledTimes(1);
@@ -82,21 +82,21 @@ describe("SystemConfigurationPanelSetting", () => {
 		renderWithMantine(
 			<SystemConfigurationPanelSetting
 				title="Deposito minimo"
-				description="Valor exigido para ativacao da conta."
+				description="A mudanca cria uma proposta de governanca para o deposito minimo."
 				errorTitle="Nao foi possivel salvar"
 				errorMessage="Falha ao salvar"
 				value="100"
 				disabled={true}
 				saving={false}
 				unitLabel="RPT"
-				submitLabel="Salvar deposito minimo"
+				submitLabel="Criar proposta do deposito"
 				onChange={() => {}}
 				onSubmit={async () => {}}
 			/>,
 		);
 
 		expect(screen.getByDisplayValue("100").hasAttribute("disabled")).toBe(true);
-		expect(screen.getByRole("button", { name: "Salvar deposito minimo" }).hasAttribute("disabled")).toBe(true);
+		expect(screen.getByRole("button", { name: "Criar proposta do deposito" }).hasAttribute("disabled")).toBe(true);
 		expect(screen.getByText("Falha ao salvar")).toBeTruthy();
 	});
 });

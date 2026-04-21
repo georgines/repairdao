@@ -50,12 +50,12 @@ export function useSystemConfiguration(): UseSystemConfigurationResult {
 
 	async function submitMinDeposit() {
 		if (!ethereum || !access.connected) {
-			setMinDepositError("Conecte a carteira para alterar o deposito minimo.");
+			setMinDepositError("Conecte a carteira para criar a proposta do deposito minimo.");
 			return;
 		}
 
-		if (!access.isDepositOwner) {
-			setMinDepositError("Somente o dono do contrato de deposito pode alterar o deposito minimo.");
+		if (!access.canCreateProposal) {
+			setMinDepositError("Somente uma carteira com deposito ativo ou o dono do contrato pode criar a proposta do deposito minimo.");
 			return;
 		}
 
@@ -74,7 +74,7 @@ export function useSystemConfiguration(): UseSystemConfigurationResult {
 			const dadosAtualizados = await access.refresh();
 			setEditingMinDeposit(dadosAtualizados?.minDeposit ?? valor);
 		} catch (submitError) {
-			setMinDepositError(submitError instanceof Error ? submitError.message : "Nao foi possivel atualizar o deposito minimo.");
+			setMinDepositError(submitError instanceof Error ? submitError.message : "Nao foi possivel criar a proposta do deposito minimo.");
 		} finally {
 			setSavingMinDeposit(false);
 		}
@@ -82,12 +82,12 @@ export function useSystemConfiguration(): UseSystemConfigurationResult {
 
 	async function submitTokensPerEth() {
 		if (!ethereum || !access.connected) {
-			setTokensPerEthError("Conecte a carteira para alterar a taxa de cambio.");
+			setTokensPerEthError("Conecte a carteira para criar a proposta da taxa de cambio.");
 			return;
 		}
 
-		if (!access.isTokenOwner) {
-			setTokensPerEthError("Somente o dono do contrato de token pode alterar a taxa de cambio.");
+		if (!access.canCreateProposal) {
+			setTokensPerEthError("Somente uma carteira com deposito ativo ou o dono do contrato pode criar a proposta da taxa de cambio.");
 			return;
 		}
 
@@ -106,7 +106,7 @@ export function useSystemConfiguration(): UseSystemConfigurationResult {
 			const dadosAtualizados = await access.refresh();
 			setEditingTokensPerEth(dadosAtualizados?.tokensPerEth ?? valor);
 		} catch (submitError) {
-			setTokensPerEthError(submitError instanceof Error ? submitError.message : "Nao foi possivel atualizar a taxa de cambio.");
+			setTokensPerEthError(submitError instanceof Error ? submitError.message : "Nao foi possivel criar a proposta da taxa de cambio.");
 		} finally {
 			setSavingTokensPerEth(false);
 		}

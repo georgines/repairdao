@@ -64,6 +64,8 @@ describe("useDepositConfiguration", () => {
 			donoAtual: "0xowner",
 			donoAtualCurto: "0xowne...wner",
 			isOwner: true,
+			isDepositActive: false,
+			canCreateProposal: true,
 			connected: true,
 			walletAddress: "0xowner",
 			refresh: vi.fn().mockResolvedValue({
@@ -119,6 +121,8 @@ describe("useDepositConfiguration", () => {
 			donoAtual: "0xowner",
 			donoAtualCurto: "0xowne...wner",
 			isOwner: true,
+			isDepositActive: false,
+			canCreateProposal: true,
 			connected: true,
 			walletAddress: "0xowner",
 			refresh,
@@ -152,6 +156,8 @@ describe("useDepositConfiguration", () => {
 			donoAtual: null,
 			donoAtualCurto: "Carteira desconectada",
 			isOwner: false,
+			isDepositActive: false,
+			canCreateProposal: false,
 			connected: false,
 			walletAddress: null,
 			refresh: vi.fn(),
@@ -167,8 +173,7 @@ describe("useDepositConfiguration", () => {
 			await flush();
 		});
 
-		expect(getLatest()?.formError).toBe("Conecte a carteira para alterar o deposito minimo.");
+		expect(getLatest()?.formError).toBe("Conecte a carteira para criar a proposta do deposito minimo.");
 		expect(serviceMocks.atualizarMinDepositNoContrato).not.toHaveBeenCalled();
 	});
 });
-

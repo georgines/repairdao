@@ -60,6 +60,7 @@ describe("components/ui/NavBar/NavBar", () => {
 		expect(markup).toContain("Elegibilidade");
 		expect(markup).toContain("Servicos");
 		expect(markup).toContain("Disputas");
+		expect(markup).toContain("Votacoes");
 		expect(markup).toContain("Tecnicos disponiveis");
 	});
 
@@ -79,10 +80,11 @@ describe("components/ui/NavBar/NavBar", () => {
 		expect(markup).toContain('href="/store"');
 		expect(markup).toContain('data-active="true"');
 		expect(markup).toContain("Disputas");
+		expect(markup).toContain("Votacoes");
 		expect(markup).not.toContain('href="/technicians"');
 	});
 
-	it("exibe a configuracao do deposito somente para o dono", () => {
+	it("exibe as configuracoes do sistema somente para o dono", () => {
 		pathnameState.value = "/eligibility";
 		profileState.perfilAtivo = "cliente";
 		depositAccessState.isOwner = true;
@@ -112,6 +114,6 @@ describe("components/ui/NavBar/NavBar", () => {
 			</MantineAppShell>,
 		);
 
-		expect(markup.lastIndexOf("Configuracoes do sistema")).toBeGreaterThan(markup.lastIndexOf("Disputas"));
+		expect(markup.lastIndexOf("Configuracoes do sistema")).toBeGreaterThan(markup.lastIndexOf("Votacoes"));
 	});
 });

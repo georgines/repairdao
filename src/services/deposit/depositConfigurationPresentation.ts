@@ -1,9 +1,13 @@
-export function getDepositConfigurationStatusLabel(isOwner: boolean) {
-	return isOwner ? "Dono autenticado" : "Apenas leitura";
+export function getDepositConfigurationStatusLabel(isOwner: boolean, canCreateProposal: boolean) {
+	if (isOwner) {
+		return "Dono autenticado";
+	}
+
+	return canCreateProposal ? "Acesso a propostas" : "Apenas leitura";
 }
 
-export function getDepositConfigurationStatusColor(isOwner: boolean) {
-	return isOwner ? ("teal" as const) : ("gray" as const);
+export function getDepositConfigurationStatusColor(isOwner: boolean, canCreateProposal: boolean) {
+	return isOwner || canCreateProposal ? ("teal" as const) : ("gray" as const);
 }
 
 export function getDepositConfigurationWalletNotice(walletAddress: string | null) {
@@ -12,6 +16,6 @@ export function getDepositConfigurationWalletNotice(walletAddress: string | null
 
 export function getDepositConfigurationFooterNotice(connected: boolean) {
 	return connected
-		? "Alteracao sera enviada ao contrato e espelhada no banco."
-		: "Conecte a carteira para alterar.";
+		? "A mudanca sera enviada como proposta de governanca."
+		: "Conecte a carteira para criar propostas.";
 }

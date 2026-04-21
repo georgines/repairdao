@@ -6,6 +6,7 @@ import { DepositConfigurationPanel } from "@/components/deposit/DepositConfigura
 const hookState = vi.hoisted(() => ({
 	connected: true,
 	isOwner: true,
+	canCreateProposal: true,
 	loading: false,
 	error: null as string | null,
 	formError: null as string | null,
@@ -20,6 +21,7 @@ vi.mock("@/hooks/useDepositConfiguration", () => ({
 	useDepositConfiguration: () => ({
 		connected: hookState.connected,
 		isOwner: hookState.isOwner,
+		canCreateProposal: hookState.canCreateProposal,
 		loading: hookState.loading,
 		error: hookState.error,
 		formError: hookState.formError,
@@ -37,6 +39,7 @@ describe("DepositConfigurationPanel", () => {
 	beforeEach(() => {
 		hookState.connected = true;
 		hookState.isOwner = true;
+		hookState.canCreateProposal = true;
 		hookState.loading = false;
 		hookState.error = null;
 		hookState.formError = null;
@@ -56,12 +59,13 @@ describe("DepositConfigurationPanel", () => {
 
 		expect(markup).toContain("Deposito minimo para ativacao");
 		expect(markup).toContain("Valor atual");
-		expect(markup).toContain("Salvar no contrato");
+		expect(markup).toContain("Criar proposta");
 	});
 
 	it("bloqueia quando a carteira esta desconectada", () => {
 		hookState.connected = false;
 		hookState.isOwner = false;
+		hookState.canCreateProposal = false;
 
 		const markup = renderToStaticMarkup(
 			<MantineProvider>
@@ -75,6 +79,7 @@ describe("DepositConfigurationPanel", () => {
 	it("bloqueia quando a carteira nao e do dono", () => {
 		hookState.connected = true;
 		hookState.isOwner = false;
+		hookState.canCreateProposal = false;
 
 		const markup = renderToStaticMarkup(
 			<MantineProvider>

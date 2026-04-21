@@ -18,6 +18,7 @@ export type SystemConfigurationPanelStatusProps = {
 	connected: boolean;
 	isDepositOwner: boolean;
 	isTokenOwner: boolean;
+	canCreateProposal: boolean;
 	walletAddress: string | null;
 };
 
@@ -57,8 +58,8 @@ export function SystemConfigurationPanelView({ status, overview, alerts, setting
 		return <SystemConfigurationPanelLoading />;
 	}
 
-	const statusLabel = getSystemConfigurationStatusLabel(status.isDepositOwner, status.isTokenOwner);
-	const statusColor = getSystemConfigurationStatusColor(status.isDepositOwner, status.isTokenOwner);
+	const statusLabel = getSystemConfigurationStatusLabel(status.isDepositOwner, status.isTokenOwner, status.canCreateProposal);
+	const statusColor = getSystemConfigurationStatusColor(status.isDepositOwner, status.isTokenOwner, status.canCreateProposal);
 	const walletNotice = getSystemConfigurationWalletNotice(status.walletAddress);
 
 	return (
@@ -78,28 +79,28 @@ export function SystemConfigurationPanelView({ status, overview, alerts, setting
 
 				<SystemConfigurationPanelSetting
 					title="Deposito minimo"
-					description="Valor exigido para ativacao da conta."
-					errorTitle="Nao foi possivel salvar"
+					description="A mudanca cria uma proposta de governanca para o deposito minimo."
+					errorTitle="Nao foi possivel criar proposta"
 					errorMessage={alerts.minDepositError}
 					value={settings.editingMinDeposit}
-					disabled={!status.connected || !status.isDepositOwner}
+					disabled={!status.connected || !status.canCreateProposal}
 					saving={settings.savingMinDeposit}
 					unitLabel="RPT"
-					submitLabel="Salvar deposito minimo"
+					submitLabel="Criar proposta do deposito"
 					onChange={settings.onEditingMinDepositChange}
 					onSubmit={settings.onSubmitMinDeposit}
 				/>
 
 				<SystemConfigurationPanelSetting
 					title="Taxa de cambio ETH para RPT"
-					description="Quantidade de RPT emitida para cada 1 ETH."
-					errorTitle="Nao foi possivel salvar"
+					description="A mudanca cria uma proposta de governanca para a taxa de cambio."
+					errorTitle="Nao foi possivel criar proposta"
 					errorMessage={alerts.tokensPerEthError}
 					value={settings.editingTokensPerEth}
-					disabled={!status.connected || !status.isTokenOwner}
+					disabled={!status.connected || !status.canCreateProposal}
 					saving={settings.savingTokensPerEth}
 					unitLabel="RPT"
-					submitLabel="Salvar taxa de cambio"
+					submitLabel="Criar proposta da taxa"
 					onChange={settings.onEditingTokensPerEthChange}
 					onSubmit={settings.onSubmitTokensPerEth}
 				/>

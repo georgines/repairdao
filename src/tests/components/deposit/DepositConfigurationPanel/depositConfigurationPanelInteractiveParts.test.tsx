@@ -26,7 +26,7 @@ describe("DepositConfigurationPanel interactive parts", () => {
 	it("retorna vazio quando a carteira esta conectada e e dona", () => {
 		render(
 			<MantineProvider>
-				<DepositConfigurationPanelAccessNoticeView connected={true} isOwner={true} />
+				<DepositConfigurationPanelAccessNoticeView connected={true} canCreateProposal={true} />
 			</MantineProvider>,
 		);
 
@@ -65,7 +65,7 @@ describe("DepositConfigurationPanel interactive parts", () => {
 			</MantineProvider>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Salvar no contrato" }));
+		fireEvent.click(screen.getByRole("button", { name: "Criar proposta" }));
 
 		expect(onSubmit).toHaveBeenCalledTimes(1);
 	});

@@ -23,7 +23,7 @@ export function DepositConfigurationPanelFormFooterView({
 				{footerNotice}
 			</Text>
 			<Button onClick={() => void onSubmit()} loading={saving} disabled={!connected || !isOwner}>
-				Salvar no contrato
+				Criar proposta
 			</Button>
 		</Group>
 	);

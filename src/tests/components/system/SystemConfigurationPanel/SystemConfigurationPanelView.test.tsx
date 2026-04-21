@@ -9,6 +9,7 @@ const baseProps = {
 		connected: true,
 		isDepositOwner: true,
 		isTokenOwner: true,
+		canCreateProposal: true,
 		walletAddress: "0xowner",
 	},
 	overview: {
@@ -72,6 +73,7 @@ describe("SystemConfigurationPanelView", () => {
 							connected: false,
 							isDepositOwner: false,
 							isTokenOwner: false,
+							canCreateProposal: false,
 							walletAddress: null,
 						},
 						overview: {
@@ -108,7 +110,7 @@ describe("SystemConfigurationPanelView", () => {
 		expect(markup).toContain("Falha ao carregar");
 		expect(markup).toContain("Falha ao salvar deposito");
 		expect(markup).toContain("Falha ao salvar taxa");
-		expect(markup).toContain("Salvar deposito minimo");
-		expect(markup).toContain("Salvar taxa de cambio");
+		expect(markup).toContain("Criar proposta do deposito");
+		expect(markup).toContain("Criar proposta da taxa");
 	});
 });

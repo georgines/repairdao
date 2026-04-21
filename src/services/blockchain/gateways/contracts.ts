@@ -10,7 +10,9 @@ export const REPAIR_TOKEN_ABI = [
   { type: "function", name: "allowance", stateMutability: "view", inputs: [{ name: "owner", type: "address" }, { name: "spender", type: "address" }], outputs: [{ name: "remaining", type: "uint256" }] },
   { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ name: "decimals", type: "uint8" }] },
   { type: "function", name: "owner", stateMutability: "view", inputs: [], outputs: [{ name: "owner", type: "address" }] },
+  { type: "function", name: "governance", stateMutability: "view", inputs: [], outputs: [{ name: "governance", type: "address" }] },
   { type: "function", name: "tokensPerEth", stateMutability: "view", inputs: [], outputs: [{ name: "rate", type: "uint256" }] },
+  { type: "function", name: "setGovernance", stateMutability: "nonpayable", inputs: [{ name: "newGovernance", type: "address" }], outputs: [] },
   {
     type: "function",
     name: "mint",
@@ -52,8 +54,10 @@ export const REPAIR_DEPOSIT_ABI = [
   { type: "function", name: "authorizeContract", stateMutability: "nonpayable", inputs: [{ name: "contractAddress", type: "address" }], outputs: [] },
   { type: "function", name: "setRepairReputation", stateMutability: "nonpayable", inputs: [{ name: "reputationAddress", type: "address" }], outputs: [] },
   { type: "function", name: "owner", stateMutability: "view", inputs: [], outputs: [{ name: "owner", type: "address" }] },
+  { type: "function", name: "governance", stateMutability: "view", inputs: [], outputs: [{ name: "governance", type: "address" }] },
   { type: "function", name: "getEthUsdPrice", stateMutability: "view", inputs: [], outputs: [{ name: "price", type: "int256" }] },
   { type: "function", name: "minDeposit", stateMutability: "view", inputs: [], outputs: [{ name: "minDeposit", type: "uint256" }] },
+  { type: "function", name: "setGovernance", stateMutability: "nonpayable", inputs: [{ name: "newGovernance", type: "address" }], outputs: [] },
   {
     type: "function",
     name: "deposit",
@@ -193,9 +197,13 @@ export const REPAIR_ESCROW_ABI = [
 ] as const satisfies InterfaceAbi;
 
 export const REPAIR_GOVERNANCE_ABI = [
-  { type: "function", name: "createProposal", stateMutability: "nonpayable", inputs: [{ name: "description", type: "string" }, { name: "durationDays", type: "uint256" }], outputs: [] },
+  { type: "function", name: "createTokensPerEthProposal", stateMutability: "nonpayable", inputs: [{ name: "description", type: "string" }, { name: "newRate", type: "uint256" }], outputs: [] },
+  { type: "function", name: "createMinDepositProposal", stateMutability: "nonpayable", inputs: [{ name: "description", type: "string" }, { name: "newMin", type: "uint256" }], outputs: [] },
   { type: "function", name: "vote", stateMutability: "nonpayable", inputs: [{ name: "proposalId", type: "uint256" }, { name: "support", type: "bool" }], outputs: [] },
   { type: "function", name: "executeProposal", stateMutability: "nonpayable", inputs: [{ name: "proposalId", type: "uint256" }], outputs: [] },
+  { type: "function", name: "quorum", stateMutability: "view", inputs: [], outputs: [{ name: "quorum", type: "uint256" }] },
+  { type: "function", name: "totalProposals", stateMutability: "view", inputs: [], outputs: [{ name: "totalProposals", type: "uint256" }] },
+  { type: "function", name: "hasVoted", stateMutability: "view", inputs: [{ name: "proposalId", type: "uint256" }, { name: "voter", type: "address" }], outputs: [{ name: "hasVoted", type: "bool" }] },
   {
     type: "function",
     name: "getProposal",
@@ -214,6 +222,8 @@ export const REPAIR_GOVERNANCE_ABI = [
           { name: "deadline", type: "uint256" },
           { name: "executed", type: "bool" },
           { name: "approved", type: "bool" },
+          { name: "action", type: "uint8" },
+          { name: "actionValue", type: "uint256" },
         ],
       },
     ],

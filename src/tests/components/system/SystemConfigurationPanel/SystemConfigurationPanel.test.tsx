@@ -8,6 +8,7 @@ const hookState = vi.hoisted(() => ({
 	isOwner: true,
 	isDepositOwner: true,
 	isTokenOwner: true,
+	canCreateProposal: true,
 	loading: false,
 	error: null as string | null,
 	minDepositError: null as string | null,
@@ -29,6 +30,7 @@ vi.mock("@/hooks/useSystemConfiguration", () => ({
 		isOwner: hookState.isOwner,
 		isDepositOwner: hookState.isDepositOwner,
 		isTokenOwner: hookState.isTokenOwner,
+		canCreateProposal: hookState.canCreateProposal,
 		loading: hookState.loading,
 		error: hookState.error,
 		minDepositError: hookState.minDepositError,
@@ -59,6 +61,7 @@ describe("SystemConfigurationPanel", () => {
 		hookState.isOwner = true;
 		hookState.isDepositOwner = true;
 		hookState.isTokenOwner = true;
+		hookState.canCreateProposal = true;
 		hookState.loading = false;
 		hookState.error = null;
 		hookState.minDepositError = null;
@@ -82,13 +85,14 @@ describe("SystemConfigurationPanel", () => {
 		expect(markup).toContain("Configuracoes do sistema");
 		expect(markup).toContain("Deposito minimo");
 		expect(markup).toContain("Taxa de cambio ETH para RPT");
-		expect(markup).toContain("Salvar deposito minimo");
-		expect(markup).toContain("Salvar taxa de cambio");
+		expect(markup).toContain("Criar proposta do deposito");
+		expect(markup).toContain("Criar proposta da taxa");
 	});
 
 	it("bloqueia quando a carteira esta desconectada", () => {
 		hookState.connected = false;
 		hookState.isOwner = false;
+		hookState.canCreateProposal = false;
 
 		const markup = renderToStaticMarkup(
 			<MantineProvider>
@@ -105,6 +109,7 @@ describe("SystemConfigurationPanel", () => {
 		hookState.isOwner = false;
 		hookState.isDepositOwner = false;
 		hookState.isTokenOwner = false;
+		hookState.canCreateProposal = false;
 
 		const markup = renderToStaticMarkup(
 			<MantineProvider>

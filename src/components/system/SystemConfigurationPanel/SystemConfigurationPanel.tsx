@@ -24,7 +24,7 @@ export function SystemConfigurationPanel() {
 		);
 	}
 
-	if (!panel.isOwner) {
+	if (!panel.canCreateProposal) {
 		const notice = getSystemConfigurationRestrictedNotice();
 
 		return (
@@ -44,6 +44,7 @@ export function SystemConfigurationPanel() {
 				connected: panel.connected,
 				isDepositOwner: panel.isDepositOwner,
 				isTokenOwner: panel.isTokenOwner,
+				canCreateProposal: panel.canCreateProposal,
 				walletAddress: panel.walletAddress,
 			}}
 			overview={{

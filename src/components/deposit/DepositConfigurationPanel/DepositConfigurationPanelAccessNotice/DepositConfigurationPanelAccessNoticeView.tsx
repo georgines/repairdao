@@ -3,18 +3,18 @@ import { DepositConfigurationPanelRestrictedNotice } from "@/components/deposit/
 
 type DepositConfigurationPanelAccessNoticeViewProps = {
 	connected: boolean;
-	isOwner: boolean;
+	canCreateProposal: boolean;
 };
 
 export function DepositConfigurationPanelAccessNoticeView({
 	connected,
-	isOwner,
+	canCreateProposal,
 }: DepositConfigurationPanelAccessNoticeViewProps) {
 	if (!connected) {
 		return <DepositConfigurationPanelDisconnectedNotice />;
 	}
 
-	if (!isOwner) {
+	if (!canCreateProposal) {
 		return <DepositConfigurationPanelRestrictedNotice />;
 	}
 

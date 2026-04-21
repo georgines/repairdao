@@ -1,8 +1,9 @@
-import { REPAIRDAO_LIMITES } from "@/constants/constants";
 import { RepairDAODominioError } from "@/erros/errors";
 import { ESTADOS_PROPOSTA_REPAIRDAO, type EstadoPropostaRepairDAO } from "@/types";
 import { garantirTransicaoEstado, garantirValorPermitido } from "@/services/shared";
-import { duracaoPropostaValida, garantirDuracaoProposta, garantirNumeroMaiorQueZero, textoNaoVazio, tokensPositivos, garantirTokensPositivos } from "@/services/validacoes";
+import { textoNaoVazio, tokensPositivos, garantirTokensPositivos } from "@/services/validacoes";
+
+export const DURACAO_FIXA_PROPOSTA_GOVERNANCA_SEGUNDOS = 5 * 60;
 
 const TRANSICOES_VALIDAS: Record<EstadoPropostaRepairDAO, readonly EstadoPropostaRepairDAO[]> = {
   rascunho: ["ativa"],
@@ -22,31 +23,42 @@ export function garantirEstadoProposta(valor: string): EstadoPropostaRepairDAO {
 
 export function propostaPodeSerCriada(
   depositoAtivo: boolean,
+  ehOwner: boolean,
   descricao: string,
-  duracaoEmDias: number,
 ): boolean {
-  return depositoAtivo && textoNaoVazio(descricao) && duracaoPropostaValida(duracaoEmDias);
+  return (depositoAtivo || ehOwner) && textoNaoVazio(descricao);
 }
 
 export function garantirPodeCriarProposta(
   depositoAtivo: boolean,
+  ehOwner: boolean,
   descricao: string,
-  duracaoEmDias: number,
 ): true {
-  if (!propostaPodeSerCriada(depositoAtivo, descricao, duracaoEmDias)) {
+  if (!propostaPodeSerCriada(depositoAtivo, ehOwner, descricao)) {
     throw new RepairDAODominioError(
       "proposta_invalida",
-      "A proposta exige deposito ativo, descricao valida e duracao entre 1 e 30 dias.",
-      { depositoAtivo, descricao, duracaoEmDias },
+      "A proposta exige deposito ativo ou permissao de owner, e descricao valida.",
+      { depositoAtivo, ehOwner, descricao },
     );
   }
 
-  garantirDuracaoProposta(duracaoEmDias);
   return true;
 }
 
-export function propostaDuracaoValida(duracaoEmDias: number): boolean {
-  return duracaoPropostaValida(duracaoEmDias);
+export function propostaDuracaoValida(duracaoEmSegundos: number): boolean {
+  return duracaoEmSegundos === DURACAO_FIXA_PROPOSTA_GOVERNANCA_SEGUNDOS;
+}
+
+export function garantirDuracaoProposta(duracaoEmSegundos: number): number {
+  if (!propostaDuracaoValida(duracaoEmSegundos)) {
+    throw new RepairDAODominioError(
+      "duracao_proposta_invalida",
+      `A duracao da proposta precisa ser exatamente ${DURACAO_FIXA_PROPOSTA_GOVERNANCA_SEGUNDOS} segundos.`,
+      { duracaoEmSegundos },
+    );
+  }
+
+  return duracaoEmSegundos;
 }
 
 export function propostaPodeReceberVoto(
@@ -90,7 +102,7 @@ export function propostaPodeSerExecutada(
 }
 
 export function governancaAtingiuQuorum(totalTokensVotados: number): boolean {
-  return garantirNumeroMaiorQueZero(totalTokensVotados, "total de tokens votados") >= REPAIRDAO_LIMITES.quorumGovernancaInicial;
+  return Number.isFinite(totalTokensVotados) && totalTokensVotados >= 1000;
 }
 
 export function propostaAprovada(

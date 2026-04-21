@@ -16,6 +16,7 @@ export type DepositConfigurationPanelStatusProps = {
 	loading: boolean;
 	connected: boolean;
 	isOwner: boolean;
+	canCreateProposal: boolean;
 	walletAddress: string | null;
 	donoAtualCurto: string;
 	minDeposit: string;
@@ -44,8 +45,8 @@ export function DepositConfigurationPanelView({ status, alerts, form }: DepositC
 		return <DepositConfigurationPanelLoading />;
 	}
 
-	const statusLabel = getDepositConfigurationStatusLabel(status.isOwner);
-	const statusColor = getDepositConfigurationStatusColor(status.isOwner);
+	const statusLabel = getDepositConfigurationStatusLabel(status.isOwner, status.canCreateProposal);
+	const statusColor = getDepositConfigurationStatusColor(status.isOwner, status.canCreateProposal);
 	const walletNotice = getDepositConfigurationWalletNotice(status.walletAddress);
 
 	return (

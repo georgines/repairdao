@@ -74,6 +74,8 @@ describe("useSystemConfiguration", () => {
 			donoTokenAtualCurto: "0xtoke...wner",
 			isTokenOwner: true,
 			isOwner: true,
+			isDepositActive: false,
+			canCreateProposal: true,
 			connected: true,
 			walletAddress: "0xowner",
 			refresh: vi.fn().mockResolvedValue({
@@ -147,6 +149,8 @@ describe("useSystemConfiguration", () => {
 			donoTokenAtualCurto: "0xtoke...wner",
 			isTokenOwner: true,
 			isOwner: true,
+			isDepositActive: false,
+			canCreateProposal: true,
 			connected: true,
 			walletAddress: "0xowner",
 			refresh,
@@ -208,6 +212,8 @@ describe("useSystemConfiguration", () => {
 			donoTokenAtualCurto: "0xtoke...wner",
 			isTokenOwner: true,
 			isOwner: true,
+			isDepositActive: false,
+			canCreateProposal: true,
 			connected: true,
 			walletAddress: "0xowner",
 			refresh,
@@ -245,6 +251,8 @@ describe("useSystemConfiguration", () => {
 			donoTokenAtualCurto: "Carteira desconectada",
 			isTokenOwner: false,
 			isOwner: false,
+			isDepositActive: false,
+			canCreateProposal: false,
 			connected: false,
 			walletAddress: null,
 			refresh: vi.fn(),
@@ -265,8 +273,8 @@ describe("useSystemConfiguration", () => {
 			await flush();
 		});
 
-		expect(getLatest()?.minDepositError).toBe("Conecte a carteira para alterar o deposito minimo.");
-		expect(getLatest()?.tokensPerEthError).toBe("Conecte a carteira para alterar a taxa de cambio.");
+		expect(getLatest()?.minDepositError).toBe("Conecte a carteira para criar a proposta do deposito minimo.");
+		expect(getLatest()?.tokensPerEthError).toBe("Conecte a carteira para criar a proposta da taxa de cambio.");
 		expect(serviceMocks.atualizarMinDepositNoContrato).not.toHaveBeenCalled();
 		expect(serviceMocks.atualizarTokensPerEthNoContrato).not.toHaveBeenCalled();
 	});
