@@ -31,6 +31,69 @@ const technician: UserSummary = {
 	updatedAt: "2026-04-17T10:00:00.000Z",
 };
 
+const baseProps = {
+	header: {
+		totalTechnicians: 1,
+		filteredTechnicians: [technician],
+		selectedTechnician: technician,
+		contractedTechnician: null,
+		hasOpenOrder: false,
+	},
+	filters: {
+		query: "",
+		minReputation: 0,
+		hasResults: true,
+		onQueryChange: vi.fn(),
+		onMinReputationChange: vi.fn(),
+		onClearFilters: vi.fn(),
+	},
+	table: {
+		filteredTechnicians: [technician],
+		selectedTechnician: technician,
+		canHire: true,
+		onSelectTechnician: vi.fn(),
+		onHireTechnician: vi.fn(),
+	},
+	modal: {
+		technicianModalMode: null as "details" | "hire" | null,
+		technicianModalOpened: false,
+		selectedTechnician: technician,
+		serviceDescription: "",
+		submittingRequest: false,
+		requestError: null as string | null,
+		onCloseTechnicianModal: vi.fn(),
+		onServiceDescriptionChange: vi.fn(),
+		onConfirmTechnicianHire: vi.fn().mockResolvedValue(undefined),
+	},
+};
+
+type DeepPartial<T> = {
+	[K in keyof T]?: T[K] extends (...args: unknown[]) => unknown ? T[K] : T[K] extends object ? DeepPartial<T[K]> : T[K];
+};
+
+function mergeProps(overrides: DeepPartial<typeof baseProps> = {}) {
+	return {
+		...baseProps,
+		...overrides,
+		header: {
+			...baseProps.header,
+			...(overrides.header ?? {}),
+		},
+		filters: {
+			...baseProps.filters,
+			...(overrides.filters ?? {}),
+		},
+		table: {
+			...baseProps.table,
+			...(overrides.table ?? {}),
+		},
+		modal: {
+			...baseProps.modal,
+			...(overrides.modal ?? {}),
+		},
+	};
+}
+
 describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 	beforeEach(() => {
 		Object.defineProperty(window, "matchMedia", {
@@ -55,30 +118,7 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 
 	it("exibe a tabela de tecnicos e os botoes de acao", () => {
 		renderWithMantine(
-			<TechnicianDiscoveryPanelView
-				query=""
-				minReputation={0}
-				totalTechnicians={1}
-				filteredTechnicians={[technician]}
-				selectedTechnician={technician}
-				contractedTechnician={null}
-				hasOpenOrder={false}
-				canHire
-				technicianModalMode={null}
-				technicianModalOpened={false}
-				hasResults
-				serviceDescription=""
-				submittingRequest={false}
-				requestError={null}
-				onQueryChange={vi.fn()}
-				onMinReputationChange={vi.fn()}
-				onSelectTechnician={vi.fn()}
-				onHireTechnician={vi.fn()}
-				onCloseTechnicianModal={vi.fn()}
-				onServiceDescriptionChange={vi.fn()}
-				onConfirmTechnicianHire={vi.fn().mockResolvedValue(undefined)}
-				onClearFilters={vi.fn()}
-			/>,
+			<TechnicianDiscoveryPanelView {...mergeProps()} />,
 		);
 
 		expect(screen.getByText("Encontre tecnicos elegiveis")).toBeDefined();
@@ -91,28 +131,15 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 	it("esconde o botao de contratar quando existe ordem aberta", () => {
 		renderWithMantine(
 			<TechnicianDiscoveryPanelView
-				query=""
-				minReputation={0}
-				totalTechnicians={1}
-				filteredTechnicians={[technician]}
-				selectedTechnician={technician}
-				contractedTechnician={technician}
-				hasOpenOrder
-				canHire={false}
-				technicianModalMode={null}
-				technicianModalOpened={false}
-				hasResults
-				serviceDescription=""
-				submittingRequest={false}
-				requestError={null}
-				onQueryChange={vi.fn()}
-				onMinReputationChange={vi.fn()}
-				onSelectTechnician={vi.fn()}
-				onHireTechnician={vi.fn()}
-				onCloseTechnicianModal={vi.fn()}
-				onServiceDescriptionChange={vi.fn()}
-				onConfirmTechnicianHire={vi.fn().mockResolvedValue(undefined)}
-				onClearFilters={vi.fn()}
+				{...mergeProps({
+					header: {
+						contractedTechnician: technician,
+						hasOpenOrder: true,
+					},
+					table: {
+						canHire: false,
+					},
+				})}
 			/>,
 		);
 
@@ -123,28 +150,12 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 	it("abre o modal com os detalhes do tecnico selecionado", () => {
 		renderWithMantine(
 			<TechnicianDiscoveryPanelView
-				query=""
-				minReputation={0}
-				totalTechnicians={1}
-				filteredTechnicians={[technician]}
-				selectedTechnician={technician}
-				contractedTechnician={null}
-				hasOpenOrder={false}
-				canHire
-				technicianModalMode="details"
-				technicianModalOpened
-				hasResults
-				serviceDescription=""
-				submittingRequest={false}
-				requestError={null}
-				onQueryChange={vi.fn()}
-				onMinReputationChange={vi.fn()}
-				onSelectTechnician={vi.fn()}
-				onHireTechnician={vi.fn()}
-				onCloseTechnicianModal={vi.fn()}
-				onServiceDescriptionChange={vi.fn()}
-				onConfirmTechnicianHire={vi.fn().mockResolvedValue(undefined)}
-				onClearFilters={vi.fn()}
+				{...mergeProps({
+					modal: {
+						technicianModalMode: "details",
+						technicianModalOpened: true,
+					},
+				})}
 			/>,
 		);
 
@@ -157,28 +168,13 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 	it("mostra a confirmacao de contratacao no modal", () => {
 		renderWithMantine(
 			<TechnicianDiscoveryPanelView
-				query=""
-				minReputation={0}
-				totalTechnicians={1}
-				filteredTechnicians={[technician]}
-				selectedTechnician={technician}
-				contractedTechnician={null}
-				hasOpenOrder={false}
-				canHire
-				technicianModalMode="hire"
-				technicianModalOpened
-				hasResults
-				serviceDescription="Troca de cabo"
-				submittingRequest={false}
-				requestError={null}
-				onQueryChange={vi.fn()}
-				onMinReputationChange={vi.fn()}
-				onSelectTechnician={vi.fn()}
-				onHireTechnician={vi.fn()}
-				onCloseTechnicianModal={vi.fn()}
-				onServiceDescriptionChange={vi.fn()}
-				onConfirmTechnicianHire={vi.fn().mockResolvedValue(undefined)}
-				onClearFilters={vi.fn()}
+				{...mergeProps({
+					modal: {
+						technicianModalMode: "hire",
+						technicianModalOpened: true,
+						serviceDescription: "Troca de cabo",
+					},
+				})}
 			/>,
 		);
 
@@ -196,28 +192,23 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 
 		renderWithMantine(
 			<TechnicianDiscoveryPanelView
-				query=""
-				minReputation={0}
-				totalTechnicians={1}
-				filteredTechnicians={[technician]}
-				selectedTechnician={null}
-				contractedTechnician={null}
-				hasOpenOrder={false}
-				canHire
-				technicianModalMode={null}
-				technicianModalOpened={false}
-				hasResults
-				serviceDescription=""
-				submittingRequest={false}
-				requestError={null}
-				onQueryChange={onQueryChange}
-				onMinReputationChange={onMinReputationChange}
-				onSelectTechnician={onSelectTechnician}
-				onHireTechnician={onHireTechnician}
-				onCloseTechnicianModal={onCloseTechnicianModal}
-				onServiceDescriptionChange={vi.fn()}
-				onConfirmTechnicianHire={vi.fn().mockResolvedValue(undefined)}
-				onClearFilters={vi.fn()}
+				{...mergeProps({
+					header: {
+						selectedTechnician: null,
+					},
+					table: {
+						selectedTechnician: null,
+						onSelectTechnician,
+						onHireTechnician,
+					},
+					filters: {
+						onQueryChange,
+						onMinReputationChange,
+					},
+					modal: {
+						onCloseTechnicianModal,
+					},
+				})}
 			/>,
 		);
 
@@ -243,34 +234,21 @@ describe("components/technicians/TechnicianDiscoveryPanelView", () => {
 		function Harness() {
 			const [serviceDescription, setServiceDescription] = useState("");
 
-			return (
-				<TechnicianDiscoveryPanelView
-					query=""
-					minReputation={0}
-					totalTechnicians={1}
-					filteredTechnicians={[technician]}
-					selectedTechnician={technician}
-					contractedTechnician={null}
-					hasOpenOrder={false}
-					canHire
-					technicianModalMode="hire"
-					technicianModalOpened
-					hasResults
-					serviceDescription={serviceDescription}
-					submittingRequest={false}
-					requestError={null}
-					onQueryChange={vi.fn()}
-					onMinReputationChange={vi.fn()}
-					onSelectTechnician={vi.fn()}
-					onHireTechnician={vi.fn()}
-					onCloseTechnicianModal={vi.fn()}
-					onServiceDescriptionChange={(value) => {
-						onServiceDescriptionChange(value);
-						setServiceDescription(value);
-					}}
-					onConfirmTechnicianHire={onConfirmTechnicianHire}
-					onClearFilters={vi.fn()}
-				/>
+		return (
+			<TechnicianDiscoveryPanelView
+				{...mergeProps({
+					modal: {
+						technicianModalMode: "hire",
+						technicianModalOpened: true,
+						serviceDescription,
+						onServiceDescriptionChange: (value) => {
+							onServiceDescriptionChange(value);
+							setServiceDescription(value);
+						},
+						onConfirmTechnicianHire,
+					},
+				})}
+			/>
 			);
 		}
 
