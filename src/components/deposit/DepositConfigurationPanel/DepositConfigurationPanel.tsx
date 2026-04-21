@@ -13,18 +13,24 @@ export function DepositConfigurationPanel() {
 
 	return (
 		<DepositConfigurationPanelView
-			loading={panel.loading}
-			error={panel.error}
-			formError={panel.formError}
-			connected={panel.connected}
-			isOwner={panel.isOwner}
-			walletAddress={panel.walletAddress}
-			donoAtualCurto={panel.donoAtualCurto}
-			minDeposit={panel.minDeposit}
-			editingMinDeposit={panel.editingMinDeposit}
-			saving={panel.saving}
-			onEditingMinDepositChange={panel.setEditingMinDeposit}
-			onSubmit={panel.submit}
+			status={{
+				loading: panel.loading,
+				connected: panel.connected,
+				isOwner: panel.isOwner,
+				walletAddress: panel.walletAddress,
+				donoAtualCurto: panel.donoAtualCurto,
+				minDeposit: panel.minDeposit,
+			}}
+			alerts={{
+				error: panel.error,
+				formError: panel.formError,
+			}}
+			form={{
+				editingMinDeposit: panel.editingMinDeposit,
+				saving: panel.saving,
+				onEditingMinDepositChange: panel.setEditingMinDeposit,
+				onSubmit: panel.submit,
+			}}
 		/>
 	);
 }

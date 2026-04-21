@@ -12,42 +12,41 @@ import {
 	getDepositConfigurationWalletNotice,
 } from "@/services/deposit/depositConfigurationPresentation";
 
-type DepositConfigurationPanelViewProps = {
+export type DepositConfigurationPanelStatusProps = {
 	loading: boolean;
-	error: string | null;
-	formError: string | null;
 	connected: boolean;
 	isOwner: boolean;
 	walletAddress: string | null;
 	donoAtualCurto: string;
 	minDeposit: string;
+};
+
+export type DepositConfigurationPanelAlertsProps = {
+	error: string | null;
+	formError: string | null;
+};
+
+export type DepositConfigurationPanelFormProps = {
 	editingMinDeposit: string;
 	saving: boolean;
 	onEditingMinDepositChange: (value: string) => void;
 	onSubmit: () => Promise<void>;
 };
 
-export function DepositConfigurationPanelView({
-	loading,
-	error,
-	formError,
-	connected,
-	isOwner,
-	walletAddress,
-	donoAtualCurto,
-	minDeposit,
-	editingMinDeposit,
-	saving,
-	onEditingMinDepositChange,
-	onSubmit,
-}: DepositConfigurationPanelViewProps) {
-	if (loading) {
+export type DepositConfigurationPanelViewProps = {
+	status: DepositConfigurationPanelStatusProps;
+	alerts: DepositConfigurationPanelAlertsProps;
+	form: DepositConfigurationPanelFormProps;
+};
+
+export function DepositConfigurationPanelView({ status, alerts, form }: DepositConfigurationPanelViewProps) {
+	if (status.loading) {
 		return <DepositConfigurationPanelLoading />;
 	}
 
-	const statusLabel = getDepositConfigurationStatusLabel(isOwner);
-	const statusColor = getDepositConfigurationStatusColor(isOwner);
-	const walletNotice = getDepositConfigurationWalletNotice(walletAddress);
+	const statusLabel = getDepositConfigurationStatusLabel(status.isOwner);
+	const statusColor = getDepositConfigurationStatusColor(status.isOwner);
+	const walletNotice = getDepositConfigurationWalletNotice(status.walletAddress);
 
 	return (
 		<Paper p="lg" withBorder radius="md" className={styles.card}>
@@ -55,20 +54,20 @@ export function DepositConfigurationPanelView({
 				<DepositConfigurationPanelHeader
 					statusLabel={statusLabel}
 					statusColor={statusColor}
-					minDeposit={minDeposit}
-					donoAtualCurto={donoAtualCurto}
+					minDeposit={status.minDeposit}
+					donoAtualCurto={status.donoAtualCurto}
 					walletNotice={walletNotice}
 				/>
 
-				<DepositConfigurationPanelAlerts error={error} formError={formError} />
+				<DepositConfigurationPanelAlerts error={alerts.error} formError={alerts.formError} />
 
 				<DepositConfigurationPanelForm
-					connected={connected}
-					isOwner={isOwner}
-					editingMinDeposit={editingMinDeposit}
-					saving={saving}
-					onEditingMinDepositChange={onEditingMinDepositChange}
-					onSubmit={onSubmit}
+					connected={status.connected}
+					isOwner={status.isOwner}
+					editingMinDeposit={form.editingMinDeposit}
+					saving={form.saving}
+					onEditingMinDepositChange={form.onEditingMinDepositChange}
+					onSubmit={form.onSubmit}
 				/>
 			</Stack>
 		</Paper>

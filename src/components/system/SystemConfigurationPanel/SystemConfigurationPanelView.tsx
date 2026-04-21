@@ -13,22 +13,31 @@ import {
 	getSystemConfigurationWalletNotice,
 } from "@/services/system/systemConfigurationPresentation";
 
-type SystemConfigurationPanelViewProps = {
+export type SystemConfigurationPanelStatusProps = {
 	loading: boolean;
-	error: string | null;
-	minDepositError: string | null;
-	tokensPerEthError: string | null;
 	connected: boolean;
 	isDepositOwner: boolean;
 	isTokenOwner: boolean;
 	walletAddress: string | null;
+};
+
+export type SystemConfigurationPanelOverviewProps = {
 	donoDepositoAtualCurto: string;
 	donoTokenAtualCurto: string;
 	minDeposit: string;
-	editingMinDeposit: string;
-	savingMinDeposit: boolean;
 	tokensPerEth: string;
+};
+
+export type SystemConfigurationPanelAlertsProps = {
+	error: string | null;
+	minDepositError: string | null;
+	tokensPerEthError: string | null;
+};
+
+export type SystemConfigurationPanelSettingsProps = {
+	editingMinDeposit: string;
 	editingTokensPerEth: string;
+	savingMinDeposit: boolean;
 	savingTokensPerEth: boolean;
 	onEditingMinDepositChange: (value: string) => void;
 	onEditingTokensPerEthChange: (value: string) => void;
@@ -36,35 +45,21 @@ type SystemConfigurationPanelViewProps = {
 	onSubmitTokensPerEth: () => Promise<void>;
 };
 
-export function SystemConfigurationPanelView({
-	loading,
-	error,
-	minDepositError,
-	tokensPerEthError,
-	connected,
-	isDepositOwner,
-	isTokenOwner,
-	walletAddress,
-	donoDepositoAtualCurto,
-	donoTokenAtualCurto,
-	minDeposit,
-	editingMinDeposit,
-	savingMinDeposit,
-	tokensPerEth,
-	editingTokensPerEth,
-	savingTokensPerEth,
-	onEditingMinDepositChange,
-	onEditingTokensPerEthChange,
-	onSubmitMinDeposit,
-	onSubmitTokensPerEth,
-}: SystemConfigurationPanelViewProps) {
-	if (loading) {
+export type SystemConfigurationPanelViewProps = {
+	status: SystemConfigurationPanelStatusProps;
+	overview: SystemConfigurationPanelOverviewProps;
+	alerts: SystemConfigurationPanelAlertsProps;
+	settings: SystemConfigurationPanelSettingsProps;
+};
+
+export function SystemConfigurationPanelView({ status, overview, alerts, settings }: SystemConfigurationPanelViewProps) {
+	if (status.loading) {
 		return <SystemConfigurationPanelLoading />;
 	}
 
-	const statusLabel = getSystemConfigurationStatusLabel(isDepositOwner, isTokenOwner);
-	const statusColor = getSystemConfigurationStatusColor(isDepositOwner, isTokenOwner);
-	const walletNotice = getSystemConfigurationWalletNotice(walletAddress);
+	const statusLabel = getSystemConfigurationStatusLabel(status.isDepositOwner, status.isTokenOwner);
+	const statusColor = getSystemConfigurationStatusColor(status.isDepositOwner, status.isTokenOwner);
+	const walletNotice = getSystemConfigurationWalletNotice(status.walletAddress);
 
 	return (
 		<Paper p="lg" withBorder radius="md" className={styles.card}>
@@ -72,41 +67,41 @@ export function SystemConfigurationPanelView({
 				<SystemConfigurationPanelHeader statusLabel={statusLabel} statusColor={statusColor} />
 
 				<SystemConfigurationPanelOverview
-					minDeposit={minDeposit}
-					tokensPerEth={tokensPerEth}
-					donoDepositoAtualCurto={donoDepositoAtualCurto}
-					donoTokenAtualCurto={donoTokenAtualCurto}
+					minDeposit={overview.minDeposit}
+					tokensPerEth={overview.tokensPerEth}
+					donoDepositoAtualCurto={overview.donoDepositoAtualCurto}
+					donoTokenAtualCurto={overview.donoTokenAtualCurto}
 					walletNotice={walletNotice}
 				/>
 
-				<SystemConfigurationPanelAlert title="Falha ao carregar" message={error} />
+				<SystemConfigurationPanelAlert title="Falha ao carregar" message={alerts.error} />
 
 				<SystemConfigurationPanelSetting
 					title="Deposito minimo"
 					description="Valor exigido para ativacao da conta."
 					errorTitle="Nao foi possivel salvar"
-					errorMessage={minDepositError}
-					value={editingMinDeposit}
-					disabled={!connected || !isDepositOwner}
-					saving={savingMinDeposit}
+					errorMessage={alerts.minDepositError}
+					value={settings.editingMinDeposit}
+					disabled={!status.connected || !status.isDepositOwner}
+					saving={settings.savingMinDeposit}
 					unitLabel="RPT"
 					submitLabel="Salvar deposito minimo"
-					onChange={onEditingMinDepositChange}
-					onSubmit={onSubmitMinDeposit}
+					onChange={settings.onEditingMinDepositChange}
+					onSubmit={settings.onSubmitMinDeposit}
 				/>
 
 				<SystemConfigurationPanelSetting
 					title="Taxa de cambio ETH para RPT"
 					description="Quantidade de RPT emitida para cada 1 ETH."
 					errorTitle="Nao foi possivel salvar"
-					errorMessage={tokensPerEthError}
-					value={editingTokensPerEth}
-					disabled={!connected || !isTokenOwner}
-					saving={savingTokensPerEth}
+					errorMessage={alerts.tokensPerEthError}
+					value={settings.editingTokensPerEth}
+					disabled={!status.connected || !status.isTokenOwner}
+					saving={settings.savingTokensPerEth}
 					unitLabel="RPT"
 					submitLabel="Salvar taxa de cambio"
-					onChange={onEditingTokensPerEthChange}
-					onSubmit={onSubmitTokensPerEth}
+					onChange={settings.onEditingTokensPerEthChange}
+					onSubmit={settings.onSubmitTokensPerEth}
 				/>
 			</Stack>
 		</Paper>

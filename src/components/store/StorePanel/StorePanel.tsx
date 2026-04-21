@@ -13,19 +13,23 @@ function StorePanelContainer({ onPurchased }: StorePanelContainerProps) {
 
 	return (
 		<StorePanelView
-			ethBalance={panel.ethBalance}
-			usdBalance={panel.usdBalance}
-			ethUsdPrice={panel.ethUsdPrice}
-			rptBalance={panel.rptBalance}
-			tokensPerEth={panel.tokensPerEth}
-			rptPreview={panel.rptPreview}
-			walletNotice={panel.walletNotice}
-			quantityEth={panel.quantityEth}
-			buying={panel.buying}
-			error={panel.error}
-			onQuantityEthChange={panel.handleQuantityEthChange}
-			onBuy={panel.handleBuy}
-			connected={panel.connected}
+			balance={{
+				ethBalance: panel.ethBalance,
+				usdBalance: panel.usdBalance,
+				ethUsdPrice: panel.ethUsdPrice,
+				rptBalance: panel.rptBalance,
+				tokensPerEth: panel.tokensPerEth,
+				walletNotice: panel.walletNotice,
+			}}
+			purchase={{
+				rptPreview: panel.rptPreview,
+				quantityEth: panel.quantityEth,
+				buying: panel.buying,
+				error: panel.error,
+				connected: panel.connected,
+				onQuantityEthChange: panel.handleQuantityEthChange,
+				onBuy: panel.handleBuy,
+			}}
 		/>
 	);
 }

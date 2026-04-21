@@ -12,6 +12,45 @@ function renderWithMantine(node: ReactElement) {
 	return renderToStaticMarkup(<MantineProvider>{node}</MantineProvider>);
 }
 
+const baseProps = {
+	balance: {
+		ethBalance: "0.5",
+		usdBalance: "1000",
+		ethUsdPrice: "2000",
+		rptBalance: "10",
+		tokensPerEth: "250",
+		walletNotice: null as string | null,
+	},
+	purchase: {
+		rptPreview: "62.5",
+		quantityEth: "0,25",
+		buying: false,
+		error: null as string | null,
+		connected: true,
+		onQuantityEthChange: () => {},
+		onBuy: () => {},
+	},
+};
+
+type DeepPartial<T> = {
+	[K in keyof T]?: T[K] extends (...args: unknown[]) => unknown ? T[K] : T[K] extends object ? DeepPartial<T[K]> : T[K];
+};
+
+function mergeProps(overrides: DeepPartial<typeof baseProps> = {}) {
+	return {
+		...baseProps,
+		...overrides,
+		balance: {
+			...baseProps.balance,
+			...(overrides.balance ?? {}),
+		},
+		purchase: {
+			...baseProps.purchase,
+			...(overrides.purchase ?? {}),
+		},
+	};
+}
+
 describe("StorePanelView", () => {
 	let container: HTMLDivElement;
 	let root: ReturnType<typeof createRoot>;
@@ -42,23 +81,7 @@ describe("StorePanelView", () => {
 	});
 
 	it("renderiza a compra com saldos em ETH e USD", () => {
-		const markup = renderWithMantine(
-			<StorePanelView
-				ethBalance="0.5"
-				usdBalance="1000"
-				ethUsdPrice="2000"
-				rptBalance="10"
-				tokensPerEth="250"
-				rptPreview="62.5"
-				walletNotice={null}
-				quantityEth="0,25"
-				buying={false}
-				error={null}
-				onQuantityEthChange={() => {}}
-				onBuy={() => {}}
-				connected={true}
-			/>,
-		);
+		const markup = renderWithMantine(<StorePanelView {...mergeProps()} />);
 
 		expect(markup).toContain("Trocar ETH por RPT");
 		expect(markup).toContain("1 ETH = 250,00 RPT");
@@ -75,19 +98,21 @@ describe("StorePanelView", () => {
 	it("mostra zero e aviso quando a carteira esta desconectada", () => {
 		const markup = renderWithMantine(
 			<StorePanelView
-				ethBalance="0"
-				usdBalance="0"
-				ethUsdPrice="0"
-				rptBalance="0"
-				tokensPerEth="0"
-				rptPreview="0"
-				walletNotice="Carteira desconectada"
-				quantityEth="0,10"
-				buying={false}
-				error={null}
-				onQuantityEthChange={() => {}}
-				onBuy={() => {}}
-				connected={false}
+				{...mergeProps({
+					balance: {
+						ethBalance: "0",
+						usdBalance: "0",
+						ethUsdPrice: "0",
+						rptBalance: "0",
+						tokensPerEth: "0",
+						walletNotice: "Carteira desconectada",
+					},
+					purchase: {
+						rptPreview: "0",
+						quantityEth: "0,10",
+						connected: false,
+					},
+				})}
 			/>,
 		);
 
@@ -103,19 +128,19 @@ describe("StorePanelView", () => {
 	it("exibe valores grandes de RPT sem abreviar", () => {
 		const markup = renderWithMantine(
 			<StorePanelView
-				ethBalance="0"
-				usdBalance="0"
-				ethUsdPrice="2000"
-				rptBalance="1000000"
-				tokensPerEth="1000000"
-				rptPreview="1000000"
-				walletNotice={null}
-				quantityEth="1"
-				buying={false}
-				error={null}
-				onQuantityEthChange={() => {}}
-				onBuy={() => {}}
-				connected={true}
+				{...mergeProps({
+					balance: {
+						ethBalance: "0",
+						usdBalance: "0",
+						ethUsdPrice: "2000",
+						rptBalance: "1000000",
+						tokensPerEth: "1000000",
+					},
+					purchase: {
+						rptPreview: "1000000",
+						quantityEth: "1",
+					},
+				})}
 			/>,
 		);
 
@@ -132,19 +157,23 @@ describe("StorePanelView", () => {
 			root.render(
 				<MantineProvider>
 					<StorePanelView
-						ethBalance="0"
-						usdBalance="0"
-						ethUsdPrice="0"
-						rptBalance="0"
-						tokensPerEth="0"
-						rptPreview="0"
-						walletNotice="Carteira desconectada"
-						quantityEth="0,10"
-						buying={false}
-						error="falha de compra"
-						onQuantityEthChange={onQuantityEthChange}
-						onBuy={onBuy}
-						connected={true}
+						{...mergeProps({
+							balance: {
+								ethBalance: "0",
+								usdBalance: "0",
+								ethUsdPrice: "0",
+								rptBalance: "0",
+								tokensPerEth: "0",
+								walletNotice: "Carteira desconectada",
+							},
+							purchase: {
+								rptPreview: "0",
+								quantityEth: "0,10",
+								error: "falha de compra",
+								onQuantityEthChange,
+								onBuy,
+							},
+						})}
 					/>
 				</MantineProvider>,
 			);

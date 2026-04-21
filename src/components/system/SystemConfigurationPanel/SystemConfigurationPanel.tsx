@@ -39,26 +39,34 @@ export function SystemConfigurationPanel() {
 
 	return (
 		<SystemConfigurationPanelView
-			loading={panel.loading}
-			error={panel.error}
-			minDepositError={panel.minDepositError}
-			tokensPerEthError={panel.tokensPerEthError}
-			connected={panel.connected}
-			isDepositOwner={panel.isDepositOwner}
-			isTokenOwner={panel.isTokenOwner}
-			walletAddress={panel.walletAddress}
-			donoDepositoAtualCurto={panel.donoDepositoAtualCurto}
-			donoTokenAtualCurto={panel.donoTokenAtualCurto}
-			minDeposit={panel.minDeposit}
-			editingMinDeposit={panel.editingMinDeposit}
-			savingMinDeposit={panel.savingMinDeposit}
-			tokensPerEth={panel.tokensPerEth}
-			editingTokensPerEth={panel.editingTokensPerEth}
-			savingTokensPerEth={panel.savingTokensPerEth}
-			onEditingMinDepositChange={panel.setEditingMinDeposit}
-			onEditingTokensPerEthChange={panel.setEditingTokensPerEth}
-			onSubmitMinDeposit={panel.submitMinDeposit}
-			onSubmitTokensPerEth={panel.submitTokensPerEth}
+			status={{
+				loading: panel.loading,
+				connected: panel.connected,
+				isDepositOwner: panel.isDepositOwner,
+				isTokenOwner: panel.isTokenOwner,
+				walletAddress: panel.walletAddress,
+			}}
+			overview={{
+				donoDepositoAtualCurto: panel.donoDepositoAtualCurto,
+				donoTokenAtualCurto: panel.donoTokenAtualCurto,
+				minDeposit: panel.minDeposit,
+				tokensPerEth: panel.tokensPerEth,
+			}}
+			alerts={{
+				error: panel.error,
+				minDepositError: panel.minDepositError,
+				tokensPerEthError: panel.tokensPerEthError,
+			}}
+			settings={{
+				editingMinDeposit: panel.editingMinDeposit,
+				editingTokensPerEth: panel.editingTokensPerEth,
+				savingMinDeposit: panel.savingMinDeposit,
+				savingTokensPerEth: panel.savingTokensPerEth,
+				onEditingMinDepositChange: panel.setEditingMinDeposit,
+				onEditingTokensPerEthChange: panel.setEditingTokensPerEth,
+				onSubmitMinDeposit: panel.submitMinDeposit,
+				onSubmitTokensPerEth: panel.submitTokensPerEth,
+			}}
 		/>
 	);
 }
