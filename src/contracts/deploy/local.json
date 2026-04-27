@@ -1,0 +1,14 @@
+{
+  "network": "localhost",
+  "deployedAt": "2026-04-23T20:33:24.772Z",
+  "deployer": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+  "contracts": {
+    "RepairToken": "0x7ef8E99980Da5bcEDcF7C10f41E55f759F6A174B",
+    "RepairBadge": "0x82B769500E34362a76DF81150e12C746093D954F",
+    "RepairDeposit": "0x66Db6d191cd163F56197b767928A507dF8b47AA7",
+    "RepairReputation": "0xbD3afEF4b26918cDb922F9D80aeA9b8e64524432",
+    "RepairEscrow": "0x3200B3E272007a8685B0C66c84eb4c03e7E29ed1",
+    "RepairGovernance": "0x591b594f01ae53BFf6Fb44C5dA0a16a62c2f3f6c",
+    "PriceFeed": "0x77c7E3905c21177Be97956c6620567596492C497"
+  }
+}
