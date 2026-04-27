@@ -27,7 +27,7 @@ next-env.d.ts
 *.tsbuildinfo
 
 # runtime data
-.env*
+.env
 .vercel
 .DS_Store
 *.pem
