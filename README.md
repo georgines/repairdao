@@ -1,43 +1,114 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# repairdao
 
-## Getting Started
+App Next.js do RepairDAO. A aplicação usa Prisma para dados locais e consome os contratos do projeto `repairdao-contracts`.
 
-First, run the development server:
+Neste repositório fica a interface web do projeto, incluindo navegação, persistência local, integração com carteira e consumo dos contratos implantados em rede local ou Sepolia.
+
+## Requisitos
+
+- Git
+- Node.js 20 ou superior
+- Yarn 1.x
+
+## Clone
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/georgines/repairdao.git
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Para uso integrado em rede local, mantenha `repairdao-contracts` como pasta irmã:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+workspace/
+|- repairdao/
+|- repairdao-contracts/
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Se for usar a blockchain local, clone também o repositório de contratos:
 
-## Governanca
+```bash
+git clone https://github.com/georgines/repairdao-contracts.git
+```
 
-- Propostas de governanca podem ser abertas pelo `owner` ou por qualquer usuario com deposito ativo.
-- O prazo de votacao e fixo em `5 minutes`.
-- A governanca so pode alterar os parametros globais `tokensPerEth` e `minDeposit`.
-- Toda mudanca precisa passar por voto e quorum; o `owner` nao pode burlar essa etapa.
+## Configuração
 
-## Learn More
+1. Duplique `.env.example` como `.env`.
+2. Preencha `SEPOLIA_RPC_URL` se for usar Sepolia.
+3. `NEXT_PUBLIC_NETWORK` define apenas a rede padrão inicial. Depois disso, a rede pode ser trocada no seletor da interface.
 
-To learn more about Next.js, take a look at the following resources:
+## Instalação
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+yarn install
+yarn run prisma:generate
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Se for usar a blockchain local, instale também as dependências em `repairdao-contracts`:
 
-## Deploy on Vercel
+```bash
+cd ../repairdao-contracts
+yarn install
+cd ../repairdao
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Subir com blockchain local
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Terminal 1, na pasta irmã `repairdao-contracts`:
+
+```bash
+yarn run node
+```
+
+Terminal 2, na pasta irmã `repairdao-contracts`:
+
+```bash
+yarn run deploy:local
+```
+
+Terminal 3, neste repositório:
+
+```bash
+yarn run db:reset
+yarn run dev
+```
+
+App disponível em `http://localhost:3000`.
+
+## Subir com Sepolia
+
+Se `src/contracts/deploy/sepolia.json` estiver alinhado ao deploy desejado e `SEPOLIA_RPC_URL` estiver preenchido:
+
+```bash
+yarn run db:reset
+yarn run dev
+```
+
+## RPC Sepolia
+
+Para configurar `SEPOLIA_RPC_URL`, escolha uma destas opções:
+
+```env
+SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/SUA_CHAVE_AQUI
+```
+
+Use esse formato no `.env` quando tiver uma chave própria.
+
+Se preferir não usar chave em desenvolvimento, use um endpoint público:
+
+```env
+SEPOLIA_RPC_URL=https://rpc.sepolia.org
+```
+
+ou
+
+```env
+SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+```
+
+As RPCs públicas costumam ser suficientes para desenvolvimento e testes, mas tendem a ter mais instabilidade e limite menor do que provedores com chave própria.
+
+## Testes
+
+```bash
+yarn run test
+```
